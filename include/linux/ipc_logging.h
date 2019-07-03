@@ -94,10 +94,11 @@ int tsv_pointer_write(struct encode_context *ectxt, void *pointer);
 int tsv_int32_write(struct encode_context *ectxt, int32_t n);
 
 /*
- * tsv_int32_write: Writes a 32-bit integer value
+ * tsv_byte_array_write: Writes a byte array
  *
- * @ectxt: Context initialized by calling msg_encode_start()
- * @n:     Integer to write
+ * @ectxt:     Context initialized by calling msg_encode_start()
+ * @data:      Pointer to byte array
+ * @data_size: Size of byte array
  */
 int tsv_byte_array_write(struct encode_context *ectxt,
 			 void *data, int data_size);
@@ -110,8 +111,9 @@ int tsv_byte_array_write(struct encode_context *ectxt,
 void msg_encode_end(struct encode_context *ectxt);
 
 /*
- * msg_encode_end: Complete the message encode process
+ * ipc_log_write: Commits message to logging ring buffer
  *
+ * @ctxt:  Logging context
  * @ectxt: Temporary storage which holds the encoded message
  */
 void ipc_log_write(void *ctxt, struct encode_context *ectxt);
@@ -192,7 +194,7 @@ int32_t tsv_int32_read(struct encode_context *ectxt,
 		       struct decode_context *dctxt, const char *format);
 
 /*
- * tsv_int32_read: Reads a 32-bit integer value
+ * tsv_byte_array_read: Reads a byte array
  *
  * @ectxt:  Context retrieved by reading from log space
  * @dctxt:  Temporary storage to hold the decoded message

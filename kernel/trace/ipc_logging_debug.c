@@ -127,20 +127,14 @@ static ssize_t debug_read_cont(struct file *file, char __user *buff,
 	return debug_read_helper(file, buff, count, ppos, 1);
 }
 
-static int debug_open(struct inode *inode, struct file *file)
-{
-	file->private_data = inode->i_private;
-	return 0;
-}
-
 static const struct file_operations debug_ops = {
 	.read = debug_read,
-	.open = debug_open,
+	.open = simple_open,
 };
 
 static const struct file_operations debug_ops_cont = {
 	.read = debug_read_cont,
-	.open = debug_open,
+	.open = simple_open,
 };
 
 static void debug_create(const char *name, mode_t mode,

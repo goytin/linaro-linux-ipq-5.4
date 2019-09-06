@@ -752,6 +752,8 @@ int __qti_scm_dload(struct device *dev, u32 svc_id, u32 cmd_id, void *cmd_buf, v
 	desc.args[0] = TCSR_BOOT_MISC_REG;
 	if (enable == SET_MAGIC_WARMRESET)
 		desc.args[1] = DLOAD_MODE_ENABLE_WARMRESET;
+	else if (enable == ABNORMAL_MAGIC)
+		desc.args[1] = DLOAD_MODE_DISABLE_ABNORMALRESET;
 	else
 		desc.args[1] = enable ? DLOAD_MODE_ENABLE : DLOAD_MODE_DISABLE;
 

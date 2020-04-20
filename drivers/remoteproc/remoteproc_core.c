@@ -1993,6 +1993,26 @@ static const struct device_type rproc_type = {
 	.release	= rproc_type_release,
 };
 
+static int rproc_alloc_ops(struct rproc *rproc, const struct rproc_ops *ops)
+{
+	rproc->ops = kmemdup(ops, sizeof(*ops), GFP_KERNEL);
+	if (!rproc->ops)
+		return -ENOMEM;
+
+	if (rproc->ops->load)
+		return 0;
+
+	/* Default to ELF loader if no load function is specified */
+	rproc->ops->load = rproc_elf_load_segments;
+	rproc->ops->parse_fw = rproc_elf_load_rsc_table;
+	rproc->ops->find_loaded_rsc_table = rproc_elf_find_loaded_rsc_table;
+	if (!rproc->ops->sanity_check)
+		rproc->ops->sanity_check = rproc_elf_sanity_check;
+	rproc->ops->get_boot_addr = rproc_elf_get_boot_addr;
+
+	return 0;
+}
+
 /**
  * rproc_alloc() - allocate a remote processor handle
  * @dev: the underlying device
@@ -2049,8 +2069,7 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 		return NULL;
 	}
 
-	rproc->ops = kmemdup(ops, sizeof(*ops), GFP_KERNEL);
-	if (!rproc->ops) {
+	if (rproc_alloc_ops(rproc, ops)) {
 		kfree(p);
 		kfree(rproc);
 		return NULL;
@@ -2079,15 +2098,6 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 	dev_set_name(&rproc->dev, "remoteproc%d", rproc->index);
 
 	atomic_set(&rproc->power, 0);
-
-	/* Default to ELF loader if no load function is specified */
-	if (!rproc->ops->load) {
-		rproc->ops->load = rproc_elf_load_segments;
-		rproc->ops->parse_fw = rproc_elf_load_rsc_table;
-		rproc->ops->find_loaded_rsc_table = rproc_elf_find_loaded_rsc_table;
-		rproc->ops->sanity_check = rproc_elf_sanity_check;
-		rproc->ops->get_boot_addr = rproc_elf_get_boot_addr;
-	}
 
 	mutex_init(&rproc->lock);
 

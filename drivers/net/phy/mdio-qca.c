@@ -37,8 +37,8 @@
 #define MDIO_CTRL_4_ACCESS_CODE_C45_ADDR	0
 #define MDIO_CTRL_4_ACCESS_CODE_C45_WRITE	1
 #define MDIO_CTRL_4_ACCESS_CODE_C45_READ	2
-#define CTRL_0_REG_DEFAULT_VALUE	0x1500F
-#define CTRL_0_REG_C45_DEFAULT_VALUE	0x1510F
+#define CTRL_0_REG_DEFAULT_VALUE(div)		(0x15000 | (div & 0xff))
+#define CTRL_0_REG_C45_DEFAULT_VALUE(div)	(0x15100 | (div & 0xff))
 
 #define QCA_MDIO_RETRY	1000
 #define QCA_MDIO_DELAY	10
@@ -51,11 +51,30 @@
 #define GCC_GEPHY_ADDR	0x1856004
 #define REG_SIZE		4
 
+/* macro for mht chipset start */
+#define EPHY_CFG		0xC90F018
+#define GEPHY0_TX_CBCR		0xC800058
+#define SRDS0_SYS_CBCR		0xC8001A8
+#define SRDS1_SYS_CBCR		0xC8001AC
+#define EPHY0_SYS_CBCR		0xC8001B0
+#define EPHY1_SYS_CBCR		0xC8001B4
+#define EPHY2_SYS_CBCR		0xC8001B8
+#define EPHY3_SYS_CBCR		0xC8001BC
+#define GCC_GEPHY_MISC		0xC800304
+#define PHY_ADDR_LENGTH		5
+#define PHY_ADDR_NUM		4
+#define UNIPHY_ADDR_NUM		3
+#define MII_HIGH_ADDR_PREFIX	0x18
+#define MII_LOW_ADDR_PREFIX	0x10
+static DEFINE_MUTEX(switch_mdio_lock);
+/* macro for mht chipset end */
+
 struct qca_mdio_data {
 	struct mii_bus *mii_bus;
 	struct clk *mdio_clk;
 	void __iomem *membase;
 	int phy_irq[PHY_MAX_ADDR];
+	int clk_div;
 };
 
 static int qca_mdio_wait_busy(struct qca_mdio_data *am)
@@ -91,7 +110,7 @@ static int qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
 		unsigned int mmd = (regnum >> 16) & 0x1F;
 		unsigned int reg = regnum & 0xFFFF;
 
-		writel(CTRL_0_REG_C45_DEFAULT_VALUE,
+		writel(CTRL_0_REG_C45_DEFAULT_VALUE(am->clk_div),
 		       am->membase + MDIO_CTRL_0_REG);
 		/* issue the phy address and mmd */
 		writel((mii_id << 8) | mmd, am->membase + MDIO_CTRL_1_REG);
@@ -100,7 +119,7 @@ static int qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
 		cmd = MDIO_CTRL_4_ACCESS_START |
 			MDIO_CTRL_4_ACCESS_CODE_C45_ADDR;
 	} else {
-		writel(CTRL_0_REG_DEFAULT_VALUE, am->membase + MDIO_CTRL_0_REG);
+		writel(CTRL_0_REG_DEFAULT_VALUE(am->clk_div), am->membase + MDIO_CTRL_0_REG);
 		/* issue the phy address and reg */
 		writel((mii_id << 8) | regnum, am->membase + MDIO_CTRL_1_REG);
 		cmd = MDIO_CTRL_4_ACCESS_START | MDIO_CTRL_4_ACCESS_CODE_READ;
@@ -140,7 +159,7 @@ static int qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
 		unsigned int mmd = (regnum >> 16) & 0x1F;
 		unsigned int reg = regnum & 0xFFFF;
 
-		writel(CTRL_0_REG_C45_DEFAULT_VALUE,
+		writel(CTRL_0_REG_C45_DEFAULT_VALUE(am->clk_div),
 		       am->membase + MDIO_CTRL_0_REG);
 		/* issue the phy address and mmd */
 		writel((mii_id << 8) | mmd, am->membase + MDIO_CTRL_1_REG);
@@ -152,7 +171,7 @@ static int qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
 		if (qca_mdio_wait_busy(am))
 			return -ETIMEDOUT;
 	} else {
-		writel(CTRL_0_REG_DEFAULT_VALUE, am->membase + MDIO_CTRL_0_REG);
+		writel(CTRL_0_REG_DEFAULT_VALUE(am->clk_div), am->membase + MDIO_CTRL_0_REG);
 		/* issue the phy address and reg */
 		writel((mii_id << 8) | regnum, am->membase + MDIO_CTRL_1_REG);
 	}
@@ -246,6 +265,238 @@ static void qca_tcsr_ldo_rdy_set(bool ready)
 	iounmap(tcsr_base);
 }
 
+static inline void split_addr(u32 regaddr, u16 *r1, u16 *r2, u16 *page, u16 *switch_phy_id)
+{
+	*r1 = regaddr & 0x1c;
+
+	regaddr >>= 5;
+	*r2 = regaddr & 0x7;
+
+	regaddr >>= 3;
+	*page = regaddr & 0xffff;
+
+	regaddr >>= 16;
+	*switch_phy_id = regaddr & 0xff;
+}
+
+u32 qca_mii_read(struct mii_bus *bus, u32 reg)
+{
+	u16 r1, r2, page, switch_phy_id;
+	int lo, hi;
+
+	split_addr(reg, &r1, &r2, &page, &switch_phy_id);
+
+	mutex_lock(&switch_mdio_lock);
+	qca_mdio_write(bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
+			switch_phy_id & 0x1f, page);
+	udelay(100);
+	lo = qca_mdio_read(bus, MII_LOW_ADDR_PREFIX | r2, r1);
+	hi = qca_mdio_read(bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1));
+	mutex_unlock(&switch_mdio_lock);
+
+	return (hi << 16) | lo;
+}
+
+void qca_mii_write(struct mii_bus *bus, u32 reg, u32 val)
+{
+	u16 r1, r2, page, switch_phy_id;
+	u16 lo, hi;
+
+	split_addr(reg, &r1, &r2, &page, &switch_phy_id);
+	lo = val & 0xffff;
+	hi = val >> 16;
+
+	mutex_lock(&switch_mdio_lock);
+	qca_mdio_write(bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
+			switch_phy_id & 0x1f, page);
+	udelay(100);
+	qca_mdio_write(bus, MII_LOW_ADDR_PREFIX | r2, r1, lo);
+	qca_mdio_write(bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1), hi);
+	mutex_unlock(&switch_mdio_lock);
+}
+
+static inline void qca_mht_clk_enable(struct mii_bus *mii_bus, u32 reg)
+{
+	u32 val;
+
+	val = qca_mii_read(mii_bus, reg);
+	val |= BIT(0);
+	qca_mii_write(mii_bus, reg, val);
+}
+
+static inline void qca_mht_clk_disable(struct mii_bus *mii_bus, u32 reg)
+{
+	u32 val;
+
+	val = qca_mii_read(mii_bus, reg);
+	val &= ~BIT(0);
+	qca_mii_write(mii_bus, reg, val);
+}
+
+static inline void qca_mht_clk_reset(struct mii_bus *mii_bus, u32 reg)
+{
+	u32 val;
+
+	val = qca_mii_read(mii_bus, reg);
+	val |= BIT(2);
+	qca_mii_write(mii_bus, reg, val);
+
+	usleep_range(20000, 21000);
+
+	val &= ~BIT(2);
+	qca_mii_write(mii_bus, reg, val);
+}
+
+static void qca_mht_clock_init(struct mii_bus *mii_bus)
+{
+	u32 val = 0;
+	int i;
+
+	/* Enable serdes */
+	qca_mht_clk_enable(mii_bus, SRDS0_SYS_CBCR);
+	qca_mht_clk_enable(mii_bus, SRDS1_SYS_CBCR);
+
+	/* Reset serdes */
+	qca_mht_clk_reset(mii_bus, SRDS0_SYS_CBCR);
+	qca_mht_clk_reset(mii_bus, SRDS1_SYS_CBCR);
+
+	/* Disable EPHY GMII clock */
+	i = 0;
+	while (i < 2 * PHY_ADDR_NUM) {
+		qca_mht_clk_disable(mii_bus, GEPHY0_TX_CBCR + i*0x20);
+		i++;
+	}
+
+	/* Enable ephy */
+	qca_mht_clk_enable(mii_bus, EPHY0_SYS_CBCR);
+	qca_mht_clk_enable(mii_bus, EPHY1_SYS_CBCR);
+	qca_mht_clk_enable(mii_bus, EPHY2_SYS_CBCR);
+	qca_mht_clk_enable(mii_bus, EPHY3_SYS_CBCR);
+
+	/* Reset ephy */
+	qca_mht_clk_reset(mii_bus, EPHY0_SYS_CBCR);
+	qca_mht_clk_reset(mii_bus, EPHY1_SYS_CBCR);
+	qca_mht_clk_reset(mii_bus, EPHY2_SYS_CBCR);
+	qca_mht_clk_reset(mii_bus, EPHY3_SYS_CBCR);
+
+	/* Deassert EPHY DSP */
+	val = qca_mii_read(mii_bus, GCC_GEPHY_MISC);
+	val &= ~GENMASK(4, 0);
+	qca_mii_write(mii_bus, GCC_GEPHY_MISC, val);
+
+	/* Enable efuse loading into analog circuit */
+	val = qca_mii_read(mii_bus, EPHY_CFG);
+	/* BIT20 for PHY0 and PHY1, BIT21 for PHY2 and PHY3 */
+	val &= ~GENMASK(21, 20);
+	qca_mii_write(mii_bus, EPHY_CFG, val);
+
+	/* Sleep 10ms */
+	usleep_range(10000, 11000);
+}
+
+static void qca_phy_addr_fixup(struct mii_bus *mii_bus, struct device_node *np)
+{
+	void __iomem *ephy_cfg_base;
+	struct device_node *child;
+	int phy_index, addr, len;
+	const __be32 *phy_cfg, *uniphy_cfg;
+	u32 val;
+	bool mdio_access = false;
+	unsigned long phyaddr_mask = 0;
+
+	phy_cfg = of_get_property(np, "phyaddr_fixup", &len);
+	uniphy_cfg = of_get_property(np, "uniphyaddr_fixup", NULL);
+
+	/*
+	 * For MDIO access, phyaddr_fixup only provides the register address,
+	 * as for local bus, the register length also needs to be provided
+	 */
+	if(!phy_cfg || (len != (2 * sizeof(__be32)) && len != sizeof(__be32)))
+		return;
+
+	if (len == sizeof(__be32))
+		mdio_access = true;
+
+	if (!mdio_access) {
+		ephy_cfg_base = ioremap_nocache(be32_to_cpup(phy_cfg), be32_to_cpup(phy_cfg + 1));
+		if (!ephy_cfg_base)
+			return;
+		val = readl(ephy_cfg_base);
+	} else
+		val = qca_mii_read(mii_bus, be32_to_cpup(phy_cfg));
+
+	phy_index = 0;
+	addr = 0;
+	for_each_available_child_of_node(np, child) {
+		if (phy_index >= PHY_ADDR_NUM)
+			break;
+
+		addr = of_mdio_parse_addr(&mii_bus->dev, child);
+		if (addr < 0) {
+			continue;
+		}
+		phyaddr_mask |= BIT(addr);
+
+		if (!of_find_property(child, "fixup", NULL))
+			continue;
+
+		addr &= GENMASK(4, 0);
+		val &= ~(GENMASK(4, 0) << (phy_index * PHY_ADDR_LENGTH));
+		val |= addr << (phy_index * PHY_ADDR_LENGTH);
+		phy_index++;
+	}
+
+	/* Programe the PHY address */
+	dev_info(mii_bus->parent, "programe EPHY reg 0x%x with 0x%x\n",
+			be32_to_cpup(phy_cfg), val);
+
+	if (!mdio_access) {
+		writel(val, ephy_cfg_base);
+		iounmap(ephy_cfg_base);
+	} else {
+		qca_mii_write(mii_bus, be32_to_cpup(phy_cfg), val);
+
+		/* Programe the UNIPHY address if uniphyaddr_fixup specified.
+		 * the UNIPHY address will select three MDIO address from
+		 * unoccupied MDIO address space. */
+		if (uniphy_cfg) {
+			val = qca_mii_read(mii_bus, be32_to_cpup(uniphy_cfg));
+
+			/* For qca8386, the switch occupies the other 16 MDIO address,
+			 * for example, if the phy address is in the range of 0 to 15,
+			 * the switch will occupy the MDIO address from 16 to 31. */
+			if (addr > 15)
+				phyaddr_mask |= GENMASK(15, 0);
+			else
+				phyaddr_mask |= GENMASK(31, 16);
+
+			phy_index = 0;
+			for_each_clear_bit_from(addr, &phyaddr_mask, PHY_MAX_ADDR) {
+				if (phy_index >= UNIPHY_ADDR_NUM)
+					break;
+				val &= ~(GENMASK(4, 0) << (phy_index * PHY_ADDR_LENGTH));
+				val |= addr << (phy_index * PHY_ADDR_LENGTH);
+				phy_index++;
+			}
+
+			if (phy_index < UNIPHY_ADDR_NUM) {
+				for_each_clear_bit(addr, &phyaddr_mask, PHY_MAX_ADDR) {
+					if (phy_index >= UNIPHY_ADDR_NUM)
+						break;
+					val &= ~(GENMASK(4, 0) << (phy_index * PHY_ADDR_LENGTH));
+					val |= addr << (phy_index * PHY_ADDR_LENGTH);
+					phy_index++;
+				}
+			}
+
+			dev_info(mii_bus->parent, "programe UNIPHY reg 0x%x with 0x%x\n",
+					be32_to_cpup(uniphy_cfg), val);
+
+			qca_mii_write(mii_bus, be32_to_cpup(uniphy_cfg), val);
+		}
+	}
+}
+
 static int qca_mdio_probe(struct platform_device *pdev)
 {
 	struct qca_mdio_data *am;
@@ -300,7 +551,8 @@ static int qca_mdio_probe(struct platform_device *pdev)
 		goto err_disable_clk;
 	}
 
-	writel(CTRL_0_REG_DEFAULT_VALUE, am->membase + MDIO_CTRL_0_REG);
+	am->clk_div = 0xf;
+	writel(CTRL_0_REG_DEFAULT_VALUE(am->clk_div), am->membase + MDIO_CTRL_0_REG);
 
 	am->mii_bus->name = "qca_mdio";
 	am->mii_bus->read = &qca_mdio_read;
@@ -315,6 +567,11 @@ static int qca_mdio_probe(struct platform_device *pdev)
 	}
 
 	platform_set_drvdata(pdev, am);
+
+	qca_phy_addr_fixup(am->mii_bus, pdev->dev.of_node);
+
+	if (of_property_read_bool(pdev->dev.of_node, "mdio_clk_fixup"))
+		qca_mht_clock_init(am->mii_bus);
 
 	ret = of_mdiobus_register(am->mii_bus, pdev->dev.of_node);
 	if (ret)

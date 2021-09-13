@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2015, 2017-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2015, 2017-2018, 2021, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -166,7 +166,7 @@ void check_and_create_debugfs(void)
 {
 	mutex_lock(&ipc_log_debugfs_init_lock);
 	if (!root_dent) {
-		root_dent = debugfs_create_dir("ipc_logging", 0);
+		root_dent = debugfs_create_dir("ipc_logging", NULL);
 
 		if (IS_ERR(root_dent)) {
 			pr_err("%s: unable to create debugfs %ld\n",

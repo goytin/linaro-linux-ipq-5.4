@@ -71,7 +71,7 @@
 #define AT803X_PHY_ID_MASK			0xffffffef
 #define AT8032_PHY_ID_MASK			0xffffffff
 
-MODULE_DESCRIPTION("Atheros 803x PHY driver");
+MODULE_DESCRIPTION("Qualcomm Atheros AR803x and QCA808X PHY driver");
 MODULE_AUTHOR("Matus Ujhelyi");
 MODULE_LICENSE("GPL");
 
@@ -539,7 +539,19 @@ static struct phy_driver at803x_driver[] = {
 	.read_status		= genphy_read_status,
 	.ack_interrupt		= at803x_ack_interrupt,
 	.config_intr		= at803x_config_intr,
-} };
+}, {
+	/* Qualcomm QCA8081 */
+	PHY_ID_MATCH_EXACT(QCA8081_PHY_ID),
+	.name			= "Qualcomm QCA8081",
+	.config_intr		= at803x_config_intr,
+	.handle_interrupt	= at803x_handle_interrupt,
+	.get_tunable		= at803x_get_tunable,
+	.set_tunable		= at803x_set_tunable,
+	.set_wol		= at803x_set_wol,
+	.get_wol		= at803x_get_wol,
+	.suspend		= genphy_suspend,
+	.resume			= genphy_resume,
+}, };
 
 module_phy_driver(at803x_driver);
 
@@ -548,6 +560,7 @@ static struct mdio_device_id __maybe_unused atheros_tbl[] = {
 	{ ATH8031_PHY_ID, AT803X_PHY_ID_MASK },
 	{ ATH8032_PHY_ID, AT8032_PHY_ID_MASK },
 	{ ATH8035_PHY_ID, AT803X_PHY_ID_MASK },
+	{ PHY_ID_MATCH_EXACT(QCA8081_PHY_ID) },
 	{ }
 };
 

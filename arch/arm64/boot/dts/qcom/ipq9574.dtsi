@@ -914,9 +914,6 @@
 
 			dcc-ram-offset = <0x6000>;
 
-			clocks = <&gcc GCC_DCC_CLK>;
-			clock-names = "dcc_clk";
-
 			qca,save-reg;
 		};
 

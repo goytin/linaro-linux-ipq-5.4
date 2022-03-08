@@ -53,6 +53,7 @@ dtb-$(CONFIG_ARCH_QCOM) += ipq5018-mp02.1.dtb
 dtb-$(CONFIG_ARCH_QCOM) += ipq5018-mp03.1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-mp03.1-c2.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-mp03.1-c3.dtb
+dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-db-mp03.1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-mp03.3.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-mp03.3-c2.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-mp03.3-c3.dtb

@@ -19,19 +19,26 @@ static struct lm_svc_ctx *lm_svc;
 
 static struct kobject *lm_kobj;
 
-void license_table_creation(uint32_t lic_file_count);
+static uint32_t license_file_count = MAX_NUM_OF_LICENSES;
 
-static ssize_t file_count_store(struct kobject *kobj, struct kobj_attribute *attr,
+void license_table_creation(uint32_t lic_file_count);
+void free_license_table(void);
+
+static ssize_t update_license_store(struct kobject *kobj, struct kobj_attribute *attr,
 			   const char *buf, size_t count)
 {
-	uint32_t lic_file_count, ret;
+	uint32_t update, ret;
 	bool *license_loaded;
 
-	ret = kstrtouint(buf, 10, (unsigned int *)&lic_file_count);
+	ret = kstrtouint(buf, 10, (unsigned int *)&update);
 
 	if (ret){
 		pr_err("Error while parsing the input %d\n", ret);
-		return ret;
+		return -EINVAL;
+	}
+	if(update != 1) {
+		pr_err("Push 1 to update the licenses\n");
+		return -EINVAL;
 	}
 
 	if (!lm_svc) {
@@ -42,27 +49,20 @@ static ssize_t file_count_store(struct kobject *kobj, struct kobj_attribute *att
 	license_loaded = &lm_svc->license_loaded;
 
 	if (*license_loaded) {
-		pr_err("License files loaded already\n");
-		return count;
-	}
-	pr_info("Given license files count: %d\n",lic_file_count);
-
-	if (lic_file_count > MAX_NUM_OF_LICENSES) {
-		lic_file_count = MAX_NUM_OF_LICENSES;
-		pr_err("Number of license input is greather than"
-			" MAX_NUM_OF_LICENSES 10, so assiging it to max\n");
+		pr_err("License files loaded already, Reloading it\n");
+		free_license_table();
+		*license_loaded = false;
 	}
 
-	license_table_creation(lic_file_count);
+	license_table_creation(license_file_count);
 	*license_loaded = true;
-	pr_info("Loaded license files count: %d\n", lm_svc->num_of_license);
+	pr_info("Number of license files loaded: %d\n", lm_svc->num_of_license);
 
 	return count;
 }
 
-volatile int file_count;
-static struct kobj_attribute lm_svc_attr =
-	__ATTR(file_count, 0660, NULL, file_count_store);
+static struct kobj_attribute lm_update_license_attr =
+	__ATTR(update_licenses, 0200, NULL, update_license_store);
 
 void license_table_creation(uint32_t lic_file_count)
 {
@@ -133,7 +133,7 @@ void free_license_table(void)
 		if(license_list[i]->buffer) {
 			free_pages((unsigned long)license_list[i]->buffer,
 					license_list[i]->order);
-			pr_emerg("Freed 0x%p size: %lld\n",
+			pr_debug("Freed 0x%p size: %lld\n",
 				license_list[i]->buffer, license_list[i]->size);
 			kfree(license_list[i]);
 		}
@@ -152,9 +152,10 @@ static void qmi_handle_license_termination_mode_req(struct qmi_handle *handle,
 	struct client_info *client;
 	int ret;
 	bool *license_loaded = &lm_svc->license_loaded;
+	struct feature_info *itr, *tmp;
 
 	if(*license_loaded == false) {
-		license_table_creation(MAX_NUM_OF_LICENSES);
+		license_table_creation(license_file_count);
 		*license_loaded = true;
 	}
 
@@ -182,6 +183,16 @@ static void qmi_handle_license_termination_mode_req(struct qmi_handle *handle,
 	client->sq_node = sq->sq_node;
 	client->sq_port = sq->sq_port;
 	list_add_tail(&client->node, &lm_svc->clients_connected);
+
+	if (!list_empty(&lm_svc->clients_feature_list)) {
+		list_for_each_entry_safe(itr, tmp, &lm_svc->clients_feature_list,
+								node) {
+			if (itr->sq_node == sq->sq_node && itr->sq_port == sq->sq_port) {
+				list_del(&itr->node);
+				kfree(itr);
+			}
+		}
+	}
 
 	resp->termination_mode =  lm_svc->termination_mode;
 	resp->reserved = 77;
@@ -269,6 +280,117 @@ free_resp_buf:
 
 }
 
+static void qmi_handle_feature_list_req(struct qmi_handle *handle,
+			struct sockaddr_qrtr *sq,
+			struct qmi_txn *txn,
+			const void *decoded_msg)
+{
+	struct qmi_lm_feature_list_req_msg_v01 *req;
+	struct qmi_lm_feature_list_resp_msg_v01 *resp;
+	struct feature_info *licensed_features;
+	int i, ret;
+
+	req = (struct qmi_lm_feature_list_req_msg_v01 *)decoded_msg;
+
+	pr_debug("Licensed Features: Request rcvd, node_id: 0x%x", sq->sq_node);
+
+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+	if (!resp) {
+		pr_err("%s: Memory allocation failed for resp buffer\n",
+							__func__);
+		goto free_resp_buf;
+	}
+	resp->resp.result = QMI_RESULT_FAILURE_V01;
+
+	if(!req->feature_list_valid) {
+		pr_err("No Features are licensed in node 0x%x\n",sq->sq_node);
+	}
+
+	licensed_features = kzalloc(sizeof(*licensed_features), GFP_KERNEL);
+	if (!licensed_features) {
+		pr_err("%s: Memory allocation failed for feature list\n",
+							__func__);
+		goto send_resp;
+	}
+
+	licensed_features->sq_node = sq->sq_node;
+	licensed_features->sq_port = sq->sq_port;
+	if(!req->feature_list_valid) {
+		licensed_features->len = 0;
+	} else {
+		licensed_features->len = req->feature_list_len;
+		if(licensed_features->len > QMI_LM_MAX_FEATURE_LIST_V01) {
+			pr_err("Feature_list larger than QMI_MAX_FEATURE_LIST_V01"
+					"%d, so assiging it to max \n",
+					QMI_LM_MAX_FEATURE_LIST_V01);
+			licensed_features->len = QMI_LM_MAX_FEATURE_LIST_V01;
+		}
+
+		for(i =0; i<licensed_features->len; i++)
+			licensed_features->list[i] = req->feature_list[i];
+
+	}
+	list_add_tail(&licensed_features->node, &lm_svc->clients_feature_list);
+	resp->resp.result = QMI_RESULT_SUCCESS_V01;
+
+send_resp:
+	ret = qmi_send_response(handle, sq, txn,
+			QMI_LM_FEATURE_LIST_RESP_V01,
+			QMI_LM_FEATURE_LIST_RESP_MSG_V01_MAX_MSG_LEN,
+			qmi_lm_feature_list_resp_msg_v01_ei, resp);
+	if (ret < 0)
+		pr_err("%s: Sending license termination response failed"
+					"with error_code:%d\n",__func__,ret);
+	else
+		pr_debug("Licensed Features: Response sent, Result code "
+			"%d\n", resp->resp.result);
+free_resp_buf:
+	kfree(resp);
+
+}
+
+static ssize_t licensed_features_store(struct kobject *kobj, struct kobj_attribute *attr,
+			   const char *buf, size_t count)
+{
+	uint32_t feature_list, ret, i;
+	struct feature_info *itr, *tmp;
+
+	ret = kstrtouint(buf, 10, (unsigned int *)&feature_list);
+
+	if (ret){
+		pr_err("Error while parsing the input %d\n", ret);
+		return -EINVAL;
+	}
+	if(feature_list != 1) {
+		pr_err("Push 1 to view the client's licensed features\n");
+		return -EINVAL;
+	}
+
+	if (!list_empty(&lm_svc->clients_feature_list)) {
+		list_for_each_entry_safe(itr, tmp, &lm_svc->clients_feature_list,
+								node) {
+			if(itr->len == 0) {
+				pr_info("\nClient Node:0x%x Port:%d,"
+					" No feature licensed\n",itr->sq_node,
+					itr->sq_port);
+			} else {
+				pr_info("\nClient Node:0x%x Port:%d,"
+					" %d features licensed\n"
+					" Feature List:\n", itr->sq_node,
+					itr->sq_port, itr->len);
+				for(i=0;i<itr->len;i++)
+					 pr_info(" %d\n",itr->list[i]);
+			}
+		}
+	} else
+		pr_info("Client's licensed feature list not available\n");
+
+	return count;
+}
+
+static struct kobj_attribute lm_licensed_features_attr =
+	__ATTR(licensed_features, 0200, NULL, licensed_features_store);
+
 static void lm_qmi_svc_disconnect_cb(struct qmi_handle *qmi,
 	unsigned int node, unsigned int port)
 {
@@ -305,6 +427,13 @@ static struct qmi_msg_handler lm_req_handlers[] = {
 		.ei = qmi_lm_download_license_req_msg_v01_ei,
 		.decoded_size = QMI_LM_DOWNLOAD_LICENSE_REQ_MSG_V01_MAX_MSG_LEN,
 		.fn = qmi_handle_license_download_req,
+	},
+	{
+		.type = QMI_REQUEST,
+		.msg_id = QMI_LM_FEATURE_LIST_REQ_V01,
+		.ei = qmi_lm_feature_list_req_msg_v01_ei,
+		.decoded_size = QMI_LM_FEATURE_LIST_REQ_MSG_V01_MAX_MSG_LEN,
+		.fn = qmi_handle_feature_list_req,
 	},
 	{}
 };
@@ -384,14 +513,19 @@ skip_device_mode:
 	}
 
 	INIT_LIST_HEAD(&svc->clients_connected);
+	INIT_LIST_HEAD(&svc->clients_feature_list);
 
 	lm_svc = svc;
 
 	/* Creating a directory in /sys/kernel/ */
 	lm_kobj = kobject_create_and_add("license_manager", kernel_kobj);
 	if (lm_kobj) {
-		if (sysfs_create_file(lm_kobj, &lm_svc_attr.attr)) {
-			pr_err("Cannot create sysfs file for license manager\n");
+		if (sysfs_create_file(lm_kobj, &lm_update_license_attr.attr)) {
+			pr_err("Cannot create update_license sysfs file for lm\n");
+			kobject_put(lm_kobj);
+		}
+		if (sysfs_create_file(lm_kobj, &lm_licensed_features_attr.attr)) {
+			pr_err("Cannot create licensed_features sysfs file for lm\n");
 			kobject_put(lm_kobj);
 		}
 	} else {
@@ -417,6 +551,7 @@ static int license_manager_remove(struct platform_device *pdev)
 {
 	struct lm_svc_ctx *svc = lm_svc;
 	struct client_info *itr, *tmp;
+	struct feature_info *iter, *temp;
 
 	qmi_handle_release(svc->lm_svc_hdl);
 
@@ -425,6 +560,13 @@ static int license_manager_remove(struct platform_device *pdev)
 								node) {
 			list_del(&itr->node);
 			kfree(itr);
+		}
+	}
+	if (!list_empty(&svc->clients_feature_list)) {
+		list_for_each_entry_safe(iter, temp, &svc->clients_feature_list,
+								node) {
+			list_del(&iter->node);
+			kfree(iter);
 		}
 	}
 

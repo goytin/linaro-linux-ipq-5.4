@@ -36,6 +36,7 @@ dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-emulation-fbc.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-emulation-ssoc.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al01-c1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al02-c1.dtb
+dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al03-c1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al02-c2.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al02-c3.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq9574-al02-c4.dtb

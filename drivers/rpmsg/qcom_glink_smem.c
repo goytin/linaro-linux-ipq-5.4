@@ -34,6 +34,29 @@
 #define SMEM_GLINK_NATIVE_XPRT_FIFO_0		479
 #define SMEM_GLINK_NATIVE_XPRT_FIFO_1		480
 
+void smem_panic_handler(void)
+{
+	void *vptr;
+	void __iomem *imptr;
+	size_t size;
+	u32 remote_pid = 1;
+
+	vptr = qcom_smem_get(remote_pid, SMEM_GLINK_NATIVE_XPRT_DESCRIPTOR,
+									&size);
+	if (IS_ERR_OR_NULL(vptr) || size != 32) {
+		pr_err("%s Unable to get smem descriptor\n", __func__);
+	} else {
+		pr_info("smem desc phys addr(0x%lx) going to be ioremapped\n",
+						(uintptr_t)qcom_smem_virt_to_phys(vptr));
+		imptr = ioremap_wc(qcom_smem_virt_to_phys(vptr), size);
+		pr_info("%s tx tail:%d tx head:%d rx tail:%d rx head:%d\n",
+				__func__, readl(imptr+0), readl(imptr+4),
+				readl(imptr+8), readl(imptr+12));
+		iounmap(imptr);
+	}
+}
+EXPORT_SYMBOL(smem_panic_handler);
+
 static size_t glink_smem_rx_avail(struct qcom_glink_pipe *np)
 {
 	struct glink_smem_pipe *pipe = to_smem_pipe(np);

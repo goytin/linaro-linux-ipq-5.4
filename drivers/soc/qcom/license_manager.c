@@ -90,7 +90,7 @@ void license_table_creation(uint32_t lic_file_count)
 			continue;
 		}
 		/*Allocate memory to hold the license file*/
-		license->order = get_order(QMI_MAX_LICENSE_SIZE_V01);
+		license->order = get_order(QMI_LM_MAX_LICENSE_SIZE_V01);
 		license->page = alloc_pages(GFP_KERNEL, license->order);
 		if (!license->page) {
 			ret = -ENOMEM;
@@ -100,13 +100,13 @@ void license_table_creation(uint32_t lic_file_count)
 			/* get the mapped virtual address of the page */
 			license->buffer = page_address(license->page);
 		}
-		memset(license->buffer, 0, QMI_MAX_LICENSE_SIZE_V01);
+		memset(license->buffer, 0, QMI_LM_MAX_LICENSE_SIZE_V01);
 		ret = kernel_read_file_from_path(license->path,
 			&license->buffer, &license->size,
-			QMI_MAX_LICENSE_SIZE_V01, READING_FIRMWARE_PREALLOC_BUFFER);
+			QMI_LM_MAX_LICENSE_SIZE_V01, READING_FIRMWARE_PREALLOC_BUFFER);
 		if (ret) {
 			if (ret == -EFBIG){
-				pr_err("Loading %s failed size bigger than MAX_LICENSE_SIZE %d\n",license->path, QMI_MAX_LICENSE_SIZE_V01);
+				pr_err("Loading %s failed size bigger than MAX_LICENSE_SIZE %d\n",license->path, QMI_LM_MAX_LICENSE_SIZE_V01);
 			} else if(ret != -ENOENT) {
 				pr_err("Loading %s failed with error %d\n", license->path, ret);
 			} else {
@@ -133,10 +133,12 @@ void free_license_table(void)
 		if(license_list[i]->buffer) {
 			free_pages((unsigned long)license_list[i]->buffer,
 					license_list[i]->order);
+			pr_emerg("Freed 0x%p size: %lld\n",
+				license_list[i]->buffer, license_list[i]->size);
 			kfree(license_list[i]);
 		}
 	}
-	kfree(license_list);
+	lm_svc->num_of_license = 0;
 
 }
 
@@ -145,8 +147,8 @@ static void qmi_handle_license_termination_mode_req(struct qmi_handle *handle,
 			struct qmi_txn *txn,
 			const void *decoded_msg)
 {
-	struct lm_get_termination_mode_req_msg_v01 *req;
-	struct lm_get_termination_mode_resp_msg_v01 *resp;
+	struct qmi_lm_get_termination_mode_req_msg_v01 *req;
+	struct qmi_lm_get_termination_mode_resp_msg_v01 *resp;
 	struct client_info *client;
 	int ret;
 	bool *license_loaded = &lm_svc->license_loaded;
@@ -156,7 +158,7 @@ static void qmi_handle_license_termination_mode_req(struct qmi_handle *handle,
 		*license_loaded = true;
 	}
 
-	req = (struct lm_get_termination_mode_req_msg_v01 *)decoded_msg;
+	req = (struct qmi_lm_get_termination_mode_req_msg_v01 *)decoded_msg;
 
 	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
 	if (!resp) {
@@ -186,13 +188,14 @@ static void qmi_handle_license_termination_mode_req(struct qmi_handle *handle,
 
 	ret = qmi_send_response(handle, sq, txn,
 			QMI_LM_GET_TERMINATION_MODE_RESP_V01,
-			LM_GET_TERMINATION_MODE_RESP_MSG_V01_MAX_MSG_LEN,
-			lm_get_termination_mode_resp_msg_v01_ei, resp);
+			QMI_LM_GET_TERMINATION_MODE_RESP_MSG_V01_MAX_MSG_LEN,
+			qmi_lm_get_termination_mode_resp_msg_v01_ei, resp);
 	if (ret < 0)
 		pr_err("%s: Sending license termination response failed"
 					"with error_code:%d\n", __func__, ret);
-	pr_debug("License termination: Response sent, license termination mode "
-			"0x%x\n", resp->termination_mode);
+	else
+		pr_debug("License termination: Response sent, license"
+			" termination mode 0x%x\n", resp->termination_mode);
 
 free_resp_mem:
 	kfree(resp);
@@ -204,13 +207,13 @@ static void qmi_handle_license_download_req(struct qmi_handle *handle,
 			const void *decoded_msg)
 {
 
-	struct lm_download_license_req_msg_v01 *req;
-	struct lm_download_license_resp_msg_v01 *resp;
+	struct qmi_lm_download_license_req_msg_v01 *req;
+	struct qmi_lm_download_license_resp_msg_v01 *resp;
 	struct license_info **license_list = lm_svc->license_list;
 	int num_of_license = lm_svc->num_of_license;
 	int ret, req_lic_index;
 
-	req = (struct lm_download_license_req_msg_v01 *)decoded_msg;
+	req = (struct qmi_lm_download_license_req_msg_v01 *)decoded_msg;
 
 	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
 	if (!resp) {
@@ -231,7 +234,7 @@ static void qmi_handle_license_download_req(struct qmi_handle *handle,
 		goto send_resp;
 	}
 
-	if (req->license_index < 0 || (req->license_index > num_of_license)) {
+	if (req->license_index < 0 || (req->license_index >= num_of_license)) {
 		pr_err("%s: unexpected license_index in request: %d\n",
 					__func__, req->license_index);
 		goto free_resp_buf;
@@ -252,13 +255,13 @@ static void qmi_handle_license_download_req(struct qmi_handle *handle,
 send_resp:
 	ret = qmi_send_response(handle, sq, txn,
 			QMI_LM_DOWNLOAD_RESP_V01,
-			LM_DOWNLOAD_LICENSE_RESP_MSG_V01_MAX_MSG_LEN,
-			lm_download_license_resp_msg_v01_ei, resp);
+			QMI_LM_DOWNLOAD_LICENSE_RESP_MSG_V01_MAX_MSG_LEN,
+			qmi_lm_download_license_resp_msg_v01_ei, resp);
 	if (ret < 0)
 		pr_err("%s: Sending license termination response failed"
 					"with error_code:%d\n",__func__,ret);
-
-	pr_debug("License download: Response sent, license buffer "
+	else
+		pr_debug("License download: Response sent, license buffer "
 			"size :0x%x, valid: %d next_lic_index %d\n",
 			resp->data_len, resp->data_valid, resp->next_lic_index);
 free_resp_buf:
@@ -292,15 +295,15 @@ static struct qmi_msg_handler lm_req_handlers[] = {
 	{
 		.type = QMI_REQUEST,
 		.msg_id = QMI_LM_GET_TERMINATION_MODE_REQ_V01,
-		.ei = lm_get_termination_mode_req_msg_v01_ei,
-		.decoded_size = LM_GET_TERMINATION_MODE_REQ_MSG_V01_MAX_MSG_LEN,
+		.ei = qmi_lm_get_termination_mode_req_msg_v01_ei,
+		.decoded_size = QMI_LM_GET_TERMINATION_MODE_REQ_MSG_V01_MAX_MSG_LEN,
 		.fn = qmi_handle_license_termination_mode_req,
 	},
 	{
 		.type = QMI_REQUEST,
 		.msg_id = QMI_LM_DOWNLOAD_REQ_V01,
-		.ei = lm_download_license_req_msg_v01_ei,
-		.decoded_size = LM_DOWNLOAD_LICENSE_REQ_MSG_V01_MAX_MSG_LEN,
+		.ei = qmi_lm_download_license_req_msg_v01_ei,
+		.decoded_size = QMI_LM_DOWNLOAD_LICENSE_REQ_MSG_V01_MAX_MSG_LEN,
 		.fn = qmi_handle_license_download_req,
 	},
 	{}
@@ -371,8 +374,8 @@ skip_device_mode:
 							__func__, ret);
 		goto free_lm_svc_handle;
 	}
-	ret = qmi_add_server(svc->lm_svc_hdl, LM_SERVICE_ID_V01,
-					LM_SERVICE_VERS_V01,
+	ret = qmi_add_server(svc->lm_svc_hdl, QMI_LM_SERVICE_ID_V01,
+					QMI_LM_SERVICE_VERS_V01,
 					0);
 	if (ret < 0) {
 		pr_err("%s: failed to add license manager svc server :%d\n",
@@ -426,6 +429,7 @@ static int license_manager_remove(struct platform_device *pdev)
 	}
 
 	free_license_table();
+	kfree(svc->license_list);
 	kfree(svc->lm_svc_hdl);
 	kfree(svc);
 

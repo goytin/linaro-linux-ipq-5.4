@@ -349,47 +349,41 @@ free_resp_buf:
 
 }
 
-static ssize_t licensed_features_store(struct kobject *kobj, struct kobj_attribute *attr,
-			   const char *buf, size_t count)
+static ssize_t show_licensed_features(struct kobject *k,
+				struct kobj_attribute *attr, char *buf)
 {
-	uint32_t feature_list, ret, i;
+	uint32_t i, len = 0, max_buf_len = PAGE_SIZE;
 	struct feature_info *itr, *tmp;
 
-	ret = kstrtouint(buf, 10, (unsigned int *)&feature_list);
-
-	if (ret){
-		pr_err("Error while parsing the input %d\n", ret);
-		return -EINVAL;
-	}
-	if(feature_list != 1) {
-		pr_err("Push 1 to view the client's licensed features\n");
-		return -EINVAL;
-	}
-
 	if (!list_empty(&lm_svc->clients_feature_list)) {
-		list_for_each_entry_safe(itr, tmp, &lm_svc->clients_feature_list,
-								node) {
+		list_for_each_entry_safe(itr, tmp,
+					&lm_svc->clients_feature_list, node) {
 			if(itr->len == 0) {
-				pr_info("\nClient Node:0x%x Port:%d,"
+				len += scnprintf(buf+len, max_buf_len-len,
+					"\nClient Node:0x%x Port:%d,"
 					" No feature licensed\n",itr->sq_node,
 					itr->sq_port);
 			} else {
-				pr_info("\nClient Node:0x%x Port:%d,"
+				len += scnprintf(buf+len, max_buf_len-len,
+					"\nClient Node:0x%x Port:%d,"
 					" %d features licensed\n"
 					" Feature List:\n", itr->sq_node,
 					itr->sq_port, itr->len);
 				for(i=0;i<itr->len;i++)
-					 pr_info(" %d\n",itr->list[i]);
+					 len += scnprintf(buf+len,
+						max_buf_len-len,
+						" %d\n",itr->list[i]);
 			}
 		}
 	} else
-		pr_info("Client's licensed feature list not available\n");
+		len += scnprintf(buf+len, max_buf_len-len,
+			"Client's licensed feature list not available\n");
 
-	return count;
+	return len;
 }
 
 static struct kobj_attribute lm_licensed_features_attr =
-	__ATTR(licensed_features, 0200, NULL, licensed_features_store);
+	__ATTR(licensed_features, 0400, show_licensed_features, NULL);
 
 static void lm_qmi_svc_disconnect_cb(struct qmi_handle *qmi,
 	unsigned int node, unsigned int port)

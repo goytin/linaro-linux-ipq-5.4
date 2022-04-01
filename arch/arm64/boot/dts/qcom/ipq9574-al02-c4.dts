@@ -53,6 +53,14 @@
 				};
 			};
 
+			pwm_pins: pwm_pinmux {
+                               mux_1 {
+                                        pins = "gpio57";
+                                        function = "pwm03";
+                                        drive-strength = <8>;
+                                };
+                        };
+
 			qspi_nand_pins: qspi_nand_pins {
 				qspi_clock {
 					pins = "gpio5";
@@ -258,6 +266,14 @@
 		qpic_bam: dma@7984000 {
 			status = "ok";
 		};
+
+		pwm: pwm {
+                        pwms = <&pwm>;
+                        pinctrl-0 = <&pwm_pins>;
+                        pinctrl-names = "default";
+                        used-pwm-indices = <1>, <0>, <0>, <0>;
+                        status = "ok";
+                };
 
 		qpic_nand: nand@79b0000 {
 			status = "ok";

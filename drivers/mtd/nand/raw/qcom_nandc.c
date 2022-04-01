@@ -1501,14 +1501,16 @@ static int erase_block(struct qcom_nand_host *host, int page_addr)
 	struct nand_chip *chip = &host->chip;
 	struct qcom_nand_controller *nandc = get_qcom_nand_controller(chip);
 	u32 ers_cmd = OP_BLOCK_ERASE | PAGE_ACC | LAST_PAGE;
+	u32 addr1 = 0x0;
 
 	if (nandc->props->is_serial_nand) {
 		ers_cmd |= (SPI_WP | SPI_HOLD | SPI_TRANSFER_MODE_x1);
+		addr1 = (page_addr >> 16) & 0xffff;
 		page_addr <<= 16;
 	}
 	nandc_set_reg(nandc, NAND_FLASH_CMD, ers_cmd);
 	nandc_set_reg(nandc, NAND_ADDR0, page_addr);
-	nandc_set_reg(nandc, NAND_ADDR1, 0);
+	nandc_set_reg(nandc, NAND_ADDR1, addr1);
 	nandc_set_reg(nandc, NAND_DEV0_CFG0,
 		      host->cfg0_raw & ~(7 << CW_PER_PAGE));
 	nandc_set_reg(nandc, NAND_DEV0_CFG1, host->cfg1_raw);

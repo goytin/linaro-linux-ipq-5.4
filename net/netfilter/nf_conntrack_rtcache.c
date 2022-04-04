@@ -32,9 +32,10 @@
 static void __nf_conn_rtcache_destroy(struct nf_conn_rtcache *rtc,
 				      enum ip_conntrack_dir dir)
 {
-	struct dst_entry *dst = rtc->cached_dst[dir].dst;
+	struct dst_entry *dst = xchg(&rtc->cached_dst[dir].dst, NULL);
 
 	dst_release(dst);
+	rtc->cached_dst[dir].iif = -1;
 }
 
 static void nf_conn_rtcache_destroy(struct nf_conn *ct)
@@ -118,8 +119,6 @@ static void nf_conn_rtcache_dst_obsolete(struct nf_conn_rtcache *rtc,
 	pr_debug("Invalidate iif %d for dir %d on cache %p\n",
 		 rtc->cached_dst[dir].iif, dir, rtc);
 
-	old = xchg(&rtc->cached_dst[dir].dst, NULL);
-	dst_release(old);
 	rtc->cached_dst[dir].iif = -1;
 }
 
@@ -258,8 +257,7 @@ static int nf_rtcache_dst_remove(struct nf_conn *ct, void *data)
 
 	if (dev->ifindex == rtc->cached_dst[IP_CT_DIR_ORIGINAL].iif ||
 	    dev->ifindex == rtc->cached_dst[IP_CT_DIR_REPLY].iif) {
-		nf_conn_rtcache_dst_obsolete(rtc, IP_CT_DIR_ORIGINAL);
-		nf_conn_rtcache_dst_obsolete(rtc, IP_CT_DIR_REPLY);
+		nf_conn_rtcache_destroy(ct);
 	}
 
 	return 0;

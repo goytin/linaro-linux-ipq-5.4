@@ -1132,6 +1132,12 @@ static irqreturn_t qcom_glink_native_intr(int irq, void *data)
 		if (avail < sizeof(msg)) {
 			glinkintr[glinkintrindex].rxtail = *(pipe->tail);
 			glinkintr[glinkintrindex].rxhead = *(pipe->head);
+			if (global_timer_base) {
+				glinkintr[glinkintrindex].global_timer_lo =
+					readl_relaxed(global_timer_base + GLOBAL_TIMER_LO) - 0x13;
+				glinkintr[glinkintrindex].global_timer_hi =
+					readl_relaxed(global_timer_base + GLOBAL_TIMER_HI);
+			}
 			break;
 		}
 		glinkintr[glinkintrindex].rxtail = *(pipe->tail);

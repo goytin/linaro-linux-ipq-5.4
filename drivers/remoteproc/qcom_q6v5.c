@@ -209,6 +209,7 @@ void qcom_q6v5_panic_handler(struct qcom_q6v5 *q6v5)
 {
 	q6v5->running = false;
 
+	smem_panic_handler();
 	qcom_smem_state_update_bits(q6v5->shutdown_state,
 			BIT(q6v5->shutdown_bit), BIT(q6v5->shutdown_bit));
 	mdelay(STOP_ACK_TIMEOUT_MS);

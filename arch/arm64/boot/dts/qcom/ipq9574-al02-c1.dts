@@ -88,13 +88,6 @@
 					bias-disable;
 				};
 
-				gps_reset {
-					pins = "gpio21";
-					function = "gpio";
-					drive-strength = <8>;
-					bias-pull-down;
-				};
-
 				gps_on_off {
 					pins = "gpio7";
 					function = "gpio";

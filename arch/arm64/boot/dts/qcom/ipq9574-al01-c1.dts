@@ -57,14 +57,6 @@
 				};
 			};
 
-			pwm_pins: pwm_pinmux {
-			       mux_1 {
-					pins = "gpio57";
-					function = "pwm03";
-					drive-strength = <8>;
-				};
-			};
-
 			qspi_nand_pins: qspi_nand_pins {
 				qspi_clock {
 					pins = "gpio5";
@@ -257,14 +249,6 @@
 		};
 
 		qpic_bam: dma@7984000 {
-			status = "ok";
-		};
-
-		pwm: pwm {
-			pwms = <&pwm>;
-			pinctrl-0 = <&pwm_pins>;
-			pinctrl-names = "default";
-			used-pwm-indices = <1>, <0>, <0>, <0>;
 			status = "ok";
 		};
 
@@ -510,6 +494,56 @@
 				   <0 261 4>;			/* Misc error IRQ info */
 		};
 
+		apc_rail: apc-gpio-regulator {
+			compatible = "regulator-gpio";
+			regulator-name = "vdd-apc";
+			regulator-type = "voltage";
+			regulator-boot-on;
+			regulator-always-on;
+			regulator-min-microvolt = <850000>;
+			regulator-max-microvolt = <925000>;
+			regulator-ramp-delay = <250>; /* 20ms */
+			gpios = <&tlmm 57 GPIO_ACTIVE_HIGH>;
+			gpios-states = <0x1>;
+			states = <850000 0>, <925000 1>;
+		};
+
+		cx_rail: cx-gpio-regulator {
+			compatible = "regulator-gpio";
+			regulator-name = "vdd-cx";
+			regulator-type = "voltage";
+			regulator-boot-on;
+			regulator-always-on;
+			regulator-min-microvolt = <800000>;
+			regulator-max-microvolt = <863000>;
+			regulator-ramp-delay = <250>; /* 20ms */
+			gpios = <&tlmm 47 GPIO_ACTIVE_HIGH>;
+			gpios-states = <0x1>;
+			states = <800000 0>, <863000 1>;
+		};
+
+		mx_rail: mx-gpio-regulator {
+			compatible = "regulator-gpio";
+			regulator-name = "vdd-mx";
+			regulator-type = "voltage";
+			regulator-boot-on;
+			regulator-always-on;
+			regulator-min-microvolt = <850000>;
+			regulator-max-microvolt = <925000>;
+			regulator-ramp-delay = <250>; /* 20ms */
+			gpios = <&tlmm 45 GPIO_ACTIVE_HIGH>;
+			gpios-states = <0x1>;
+			states = <850000 0>, <925000 1>;
+		};
+
+		qcom,gpio-regulator {
+			compatible = "qcom,ipq9574-gpio-regulator";
+			reg = <0xa4000 0x1000>;
+			reg-names = "fuse_base";
+			apc-supply = <&apc_rail>;
+			cx-supply = <&cx_rail>;
+			mx-supply = <&mx_rail>;
+		};
 	};
 };
 

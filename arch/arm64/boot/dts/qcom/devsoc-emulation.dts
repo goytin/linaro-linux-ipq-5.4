@@ -117,6 +117,14 @@
 			};
 		};
 
+		dma@7984000 {
+			status = "ok";
+		};
+
+		nand: nand@79b0000 {
+			status = "ok";
+		};
+
 		acc0: clock-controller@b188000 {
 			compatible = "qcom,arm-cortex-acc";
 			reg = <0x0b188000 0x1000>;

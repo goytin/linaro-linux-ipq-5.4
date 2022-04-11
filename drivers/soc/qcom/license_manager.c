@@ -110,7 +110,7 @@ void license_table_creation(uint32_t lic_file_count)
 			} else if(ret != -ENOENT) {
 				pr_err("Loading %s failed with error %d\n", license->path, ret);
 			} else {
-				pr_err("Loading %s failed with no such file or directory\n",license->path);
+				pr_debug("Loading %s failed with no such file or directory\n",license->path);
 			}
 			free_pages((unsigned long)license->buffer, license->order);
 			kfree(license);

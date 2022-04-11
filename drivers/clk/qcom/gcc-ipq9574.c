@@ -3804,6 +3804,7 @@ static struct clk_branch gcc_q6_axim_clk = {
 
 static struct clk_branch gcc_wcss_q6_tbu_clk = {
 	.halt_reg = 0x12050,
+	.halt_check = BRANCH_HALT_DELAY,
 	.clkr = {
 		.enable_reg = 0xb00c,
 		.enable_mask = BIT(6),

@@ -793,34 +793,26 @@
 &pcie0_rp {
 	status = "ok";
 
+#if defined(__CNSS2__)
 	mhi_0: qcom,mhi@0 {
 		reg = <0 0 0 0 0 >;
 		qrtr_instance_id = <0x20>;
 		#address-cells = <0x2>;
 		#size-cells = <0x2>;
-#if defined(__CNSS2__)
 #if !defined(__IPQ_MEM_PROFILE_256_MB__)
 		memory-region = <0>,<&mhi_region0>;
 #endif
+	};
 #else
-#ifdef __IPQ_MEM_PROFILE_512_MB__
-		base-addr = <0x4E900000>;
-		m3-dump-addr = <0x4FD00000>;
-		etr-addr = <0x4FE00000>;
-		qcom,caldb-addr = <0x4FF00000>;
-		pageable-addr = <0x50700000>;
-#else
-		base-addr = <0x51100000>;
-		m3-dump-addr = <0x53400000>;
-		etr-addr = <0x53500000>;
-		qcom,caldb-addr = <0x53600000>;
-		pageable-addr = <0x53E00000>;
-#endif
+	mhi_0: wifi@0 {
+		reg = <0 0 0 0 0 >;
+		qrtr_instance_id = <0x20>;
 		qcom,board_id= <0xa4>;
+		memory-region = <&qcn9000_pcie0>;
 
 		pcie0_mhi: pcie0_mhi {
 			status = "ok";
 		};
-#endif
 	};
+#endif
 };

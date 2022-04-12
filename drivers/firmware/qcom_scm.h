@@ -216,6 +216,8 @@ extern int __qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 #define DLOAD_MODE_ENABLE			0x10ull
 #define SET_MAGIC_WARMRESET			0x2
 #define DLOAD_MODE_ENABLE_WARMRESET		0x20ull
+#define ABNORMAL_MAGIC				0x3
+#define DLOAD_MODE_DISABLE_ABNORMALRESET	0x40ull
 #define TCSR_Q6SS_BOOT_TRIG_REG			0x193d204ull
 #define SET_KERNEL_COMPLETE			(~BIT(10))
 

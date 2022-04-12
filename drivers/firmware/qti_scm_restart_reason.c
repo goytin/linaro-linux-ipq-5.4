@@ -20,6 +20,7 @@
 #include <linux/moduleparam.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
+#include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/notifier.h>
 #include <linux/reboot.h>
@@ -113,8 +114,20 @@ static struct notifier_block reboot_nb = {
 	.priority = INT_MIN,
 };
 
+static const struct of_device_id scm_restart_reason_match_table[] = {
+	{ .compatible = "qti,scm_restart_reason",
+	  .data = (void *)CLEAR_MAGIC,
+	},
+	{ .compatible = "qti_ipq6018,scm_restart_reason",
+	  .data = (void *)ABNORMAL_MAGIC,
+	},
+	{}
+};
+MODULE_DEVICE_TABLE(of, scm_restart_reason_match_table);
+
 static int scm_restart_reason_probe(struct platform_device *pdev)
 {
+	const struct of_device_id *id;
 	int ret, dload_dis_sec;
 	struct device_node *np;
 	unsigned int magic_cookie = SET_MAGIC_WARMRESET;
@@ -124,6 +137,10 @@ static int scm_restart_reason_probe(struct platform_device *pdev)
 	np = of_node_get(pdev->dev.of_node);
 	if (!np)
 		return 0;
+
+	id = of_match_device(scm_restart_reason_match_table, &pdev->dev);
+	if (!id)
+		return -ENODEV;
 
 	ret = of_property_read_u32(np, "dload_status", &dload_dis);
 	if (ret)
@@ -166,13 +183,12 @@ static int scm_restart_reason_probe(struct platform_device *pdev)
 	/* Ensure Disable before enabling the dload and sdi bits
 	 * to make sure they are disabled during boot */
 	if (dload_dis) {
-		if (!dload_warm_reset)
-			scm_restart_dload_mode_disable();
-		else
-			qti_scm_dload(QCOM_SCM_SVC_BOOT,
-				       SCM_CMD_TZ_FORCE_DLOAD_ID,
-				       &magic_cookie, dload_reg);
 		scm_restart_sdi_disable();
+		if (!dload_warm_reset)
+			magic_cookie = (uintptr_t)id->data;
+		qti_scm_dload(QCOM_SCM_SVC_BOOT, SCM_CMD_TZ_FORCE_DLOAD_ID,
+				       &magic_cookie, dload_reg);
+
 	} else {
 		scm_restart_dload_mode_enable();
 	}
@@ -201,12 +217,6 @@ static int scm_restart_reason_remove(struct platform_device *pdev)
 	unregister_reboot_notifier(&reboot_nb);
 	return 0;
 }
-
-static const struct of_device_id scm_restart_reason_match_table[] = {
-	{ .compatible = "qti,scm_restart_reason", },
-	{}
-};
-MODULE_DEVICE_TABLE(of, scm_restart_reason_match_table);
 
 static struct platform_driver scm_restart_reason_driver = {
 	.probe      = scm_restart_reason_probe,

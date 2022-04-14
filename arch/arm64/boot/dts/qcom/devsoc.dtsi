@@ -181,6 +181,15 @@
 			};
 		};
 
+		ess-instance {
+			compatible = "qcom,ess-instance";
+			ess-switch@3a000000 {
+				compatible = "qcom,ess-switch-ipq53xx";
+				switch_access_mode = "local bus";
+				reg = <0x3a000000 0x1000000>;
+			};
+		};
+
 		timer {
 			compatible = "arm,armv8-timer";
 			interrupts = <GIC_PPI 2 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_LOW)>,

@@ -40,15 +40,17 @@
 	status = "disabled";
 };
 
-&wifi4 {
+&wifi6 {
 	/* QCN9224 split-radio 2.4G + 5G */
+	hremote_node = <&qcn9224_pcie2>;
 	board_id = <0x03>;
 	firmware_name = "amss_dualmac.bin";
 	status = "ok";
 };
 
-&wifi5 {
+&wifi7 {
 	/* QCN9224 split-radio 5G + 6G */
+	hremote_node = <&qcn9224_pcie3>;
 	board_id = <0x06>;
 	firmware_name = "amss_dualmac.bin";
 	status = "ok";

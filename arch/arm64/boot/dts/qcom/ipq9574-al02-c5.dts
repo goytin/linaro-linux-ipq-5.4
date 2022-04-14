@@ -139,7 +139,7 @@
 	board_id = <0xb6>;
 };
 
-&wifi6 {
+&wifi3 {
 #if !defined(__IPQ_MEM_PROFILE_256_MB__) && !defined(__IPQ_MEM_PROFILE_512_MB__)
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
 	 * +=========+==============+=========+

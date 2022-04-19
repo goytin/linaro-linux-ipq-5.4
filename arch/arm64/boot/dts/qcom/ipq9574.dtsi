@@ -213,6 +213,13 @@
 		dma-ranges;
 		compatible = "simple-bus";
 
+		reg_update: reg_update@400000 {
+			compatible = "ipq,reg_update";
+			reg = <0x00400000 0x6148>;
+			reg-names = "memnoc";
+			status = "ok";
+		};
+
 		apcs_glb: mailbox@b111000 {
 			compatible = "qcom,ipq9574-apcs-apps-global";
 			reg = <0x0b111000 0x1000>;

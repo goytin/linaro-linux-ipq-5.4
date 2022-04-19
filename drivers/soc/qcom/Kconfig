@@ -70,6 +70,12 @@ config QCOM_SDM845_LLCC
 	  data required to configure LLCC so that clients can start using the
 	  LLCC slices.
 
+config IPQ_REG_UPDATE
+	bool "QTI, Subsystem register update driver"
+	depends on ARCH_QCOM
+	help
+	  Generic driver to configure required registers
+
 config IPQ_SUBSYSTEM_RAMDUMP
 	bool "QTI, Subsystem ramdump driver"
 	depends on ARCH_QCOM

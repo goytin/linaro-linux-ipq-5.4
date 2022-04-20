@@ -123,7 +123,7 @@ struct feature_info {
 };
 
 static const char * const license_path = "/license";
-static const char * const license_extn = ".pem";
+static const char * const license_extn = ".pfm";
 
 struct qmi_elem_info qmi_lm_get_termination_mode_req_msg_v01_ei[] = {
 	{

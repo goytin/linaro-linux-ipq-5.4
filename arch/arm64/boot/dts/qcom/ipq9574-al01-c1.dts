@@ -36,7 +36,6 @@
 
 	chosen {
 		stdout-path = "serial0";
-		bootargs-append = " clk_ignore_unused";
 	};
 
 	soc {

@@ -2248,7 +2248,7 @@ static struct clk_branch gcc_nssnoc_nsscc_clk = {
 			.parent_hws = (const struct clk_hw *[]){
 					&pcnoc_bfdcd_clk_src.clkr.hw },
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -2659,7 +2659,7 @@ static struct clk_branch gcc_nssnoc_snoc_clk = {
 			.parent_hws = (const struct clk_hw *[]){
 					&system_noc_bfdcd_clk_src.clkr.hw },
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -2675,7 +2675,7 @@ static struct clk_branch gcc_nssnoc_snoc_1_clk = {
 			.parent_hws = (const struct clk_hw *[]){
 					&system_noc_bfdcd_clk_src.clkr.hw },
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IGNORE_UNUSED,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -3436,21 +3436,6 @@ static struct clk_fixed_factor qdss_dap_sync_clk_src = {
 	},
 };
 
-static struct clk_branch gcc_dcc_clk = {
-	.halt_reg = 0x35004,
-	.clkr = {
-		.enable_reg = 0x35004,
-		.enable_mask = BIT(0),
-		.hw.init = &(struct clk_init_data){
-			.name = "gcc_dcc_clk",
-			.parent_hws = (const struct clk_hw *[]){
-					&qdss_dap_sync_clk_src.hw },
-			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
-			.ops = &clk_branch2_ops,
-		},
-	},
-};
 
 static struct clk_branch gcc_qdss_tsctr_div4_clk = {
 	.halt_reg = 0x2d04c,
@@ -4238,23 +4223,7 @@ static struct clk_branch gcc_xo_clk = {
 			.parent_hws = (const struct clk_hw *[]){
 					&gcc_xo_clk_src.clkr.hw },
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
-			.ops = &clk_branch2_ops,
-		},
-	},
-};
-
-static struct clk_branch gcc_dcc_xo_clk = {
-	.halt_reg = 0x35008,
-	.clkr = {
-		.enable_reg = 0x35008,
-		.enable_mask = BIT(0),
-		.hw.init = &(struct clk_init_data){
-			.name = "gcc_dcc_xo_clk",
-			.parent_hws = (const struct clk_hw *[]){
-					&gcc_xo_clk_src.clkr.hw },
-			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IS_CRITICAL,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -4395,7 +4364,7 @@ static struct clk_branch gcc_xo_div4_clk = {
 			.parent_hws = (const struct clk_hw *[]){
 					&gcc_xo_div4_clk_src.hw },
 			.num_parents = 1,
-			.flags = CLK_SET_RATE_PARENT,
+			.flags = CLK_SET_RATE_PARENT | CLK_IS_CRITICAL,
 			.ops = &clk_branch2_ops,
 		},
 	},
@@ -4607,7 +4576,6 @@ static struct clk_regmap *gcc_ipq9574_clks[] = {
 	[GCC_UNIPHY2_AHB_CLK] = &gcc_uniphy2_ahb_clk.clkr,
 	[GCC_CMN_12GPLL_AHB_CLK] = &gcc_cmn_12gpll_ahb_clk.clkr,
 	[GCC_CMN_12GPLL_APU_CLK] = &gcc_cmn_12gpll_apu_clk.clkr,
-	[GCC_DCC_CLK] = &gcc_dcc_clk.clkr,
 	[SYSTEM_NOC_BFDCD_CLK_SRC] = &system_noc_bfdcd_clk_src.clkr,
 	[GCC_NSSNOC_SNOC_CLK] = &gcc_nssnoc_snoc_clk.clkr,
 	[GCC_NSSNOC_SNOC_1_CLK] = &gcc_nssnoc_snoc_1_clk.clkr,
@@ -4697,7 +4665,6 @@ static struct clk_regmap *gcc_ipq9574_clks[] = {
 	[GCC_XO_CLK_SRC] = &gcc_xo_clk_src.clkr,
 	[GCC_NSSNOC_XO_DCD_CLK] = &gcc_nssnoc_xo_dcd_clk.clkr,
 	[GCC_XO_CLK] = &gcc_xo_clk.clkr,
-	[GCC_DCC_XO_CLK] = &gcc_dcc_xo_clk.clkr,
 	[GCC_NSSNOC_QOSGEN_REF_CLK] = &gcc_nssnoc_qosgen_ref_clk.clkr,
 	[GCC_NSSNOC_TIMEOUT_REF_CLK] = &gcc_nssnoc_timeout_ref_clk.clkr,
 	[GCC_XO_DIV4_CLK] = &gcc_xo_div4_clk.clkr,
@@ -4850,7 +4817,6 @@ static struct clk_regmap *gcc_ipq9574_dummy_clks[] = {
 	[GCC_UNIPHY2_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_uniphy2_ahb_clk),
 	[GCC_CMN_12GPLL_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_cmn_12gpll_ahb_clk),
 	[GCC_CMN_12GPLL_APU_CLK] = DEFINE_DUMMY_CLK(gcc_cmn_12gpll_apu_clk),
-	[GCC_DCC_CLK] = DEFINE_DUMMY_CLK(gcc_dcc_clk),
 	[SYSTEM_NOC_BFDCD_CLK_SRC] = DEFINE_DUMMY_CLK(system_noc_bfdcd_clk_src),
 	[GCC_NSSNOC_SNOC_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_snoc_clk),
 	[GCC_NSSNOC_SNOC_1_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_snoc_1_clk),
@@ -4942,7 +4908,6 @@ static struct clk_regmap *gcc_ipq9574_dummy_clks[] = {
 	[GCC_XO_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_xo_clk_src),
 	[GCC_NSSNOC_XO_DCD_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_xo_dcd_clk),
 	[GCC_XO_CLK] = DEFINE_DUMMY_CLK(gcc_xo_clk),
-	[GCC_DCC_XO_CLK] = DEFINE_DUMMY_CLK(gcc_dcc_xo_clk),
 	[GCC_NSSNOC_QOSGEN_REF_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_qosgen_ref_clk),
 	[GCC_NSSNOC_TIMEOUT_REF_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_timeout_ref_clk),
 	[GCC_XO_DIV4_CLK] = DEFINE_DUMMY_CLK(gcc_xo_div4_clk),

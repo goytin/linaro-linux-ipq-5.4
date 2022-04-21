@@ -64,9 +64,9 @@
 	 * +--------+--------------+-------------------------+
 	 * |QCN9000 |  0x4F100000  |          38MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  MHI0  |  0x51700000  |           9MB           |
+	 * |  MHI0  |  0x51700000  |           5MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  MHI1  |  0x52000000  |           9MB           |
+	 * |  MHI1  |  0x51C00000  |           5MB           |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
 	 * |      Rest of the memory for Linux               |
@@ -145,13 +145,13 @@
 		mhi_region0: dma_pool0@51700000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x51700000 0x0 0x00900000>;
+			reg = <0x0 0x51700000 0x0 0x00500000>;
 		};
 
-		mhi_region1: dma_pool1@52000000 {
+		mhi_region1: dma_pool1@51C00000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x52000000 0x0 0x00900000>;
+			reg = <0x0 0x51C00000 0x0 0x00500000>;
 		};
 #endif
 #else
@@ -193,9 +193,9 @@
 	 * +--------+--------------+-------------------------+
 	 * |QCN9000 |  0x50000000  |          53MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  MHI0  |  0x53500000  |           9MB           |
+	 * |  MHI0  |  0x53500000  |           5MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  MHI1  |  0x53E00000  |           9MB           |
+	 * |  MHI1  |  0x53A00000  |           5MB           |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
 	 * |      Rest of the memory for Linux               |
@@ -275,13 +275,13 @@
 		mhi_region0: dma_pool0@53500000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x53500000 0x0 0x00900000>;
+			reg = <0x0 0x53500000 0x0 0x00500000>;
 		};
 
-		mhi_region1: dma_pool1@53E00000 {
+		mhi_region1: dma_pool1@53A00000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x53E00000 0x0 0x00900000>;
+			reg = <0x0 0x53A00000 0x0 0x00500000>;
 
 
 		};
@@ -305,6 +305,8 @@
 	mhi_1: qcom,mhi@1 {
 		reg = <0 0 0 0 0 >;
 		qrtr_instance_id = <0x21>;
+		qti,disable-rddm-prealloc;
+		qti,rddm-seg-len = <0x1000>;
 		#address-cells = <0x2>;
 		#size-cells = <0x2>;
 #if defined(__CNSS2__)
@@ -320,6 +322,8 @@
 	mhi_0: qcom,mhi@0 {
 		reg = <0 0 0 0 0 >;
 		qrtr_instance_id = <0x20>;
+		qti,disable-rddm-prealloc;
+		qti,rddm-seg-len = <0x1000>;
 		#address-cells = <0x2>;
 		#size-cells = <0x2>;
 #if defined(__CNSS2__)

@@ -862,6 +862,7 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
 	phys_addr_t cma_addr;
 	size_t cma_size;
 	u32 soc_info;
+	u32 major_ver_bshift, major_ver_bmask, minor_ver_bshift, minor_ver_bmask;
 	int ret, i;
 
 	if (!mhi_cntrl)
@@ -948,10 +949,27 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
 					SOC_HW_VERSION_FAM_NUM_SHFT;
 	mhi_cntrl->device_number = (soc_info & SOC_HW_VERSION_DEV_NUM_BMSK) >>
 					SOC_HW_VERSION_DEV_NUM_SHFT;
-	mhi_cntrl->major_version = (soc_info & SOC_HW_VERSION_MAJOR_VER_BMSK) >>
-					SOC_HW_VERSION_MAJOR_VER_SHFT;
-	mhi_cntrl->minor_version = (soc_info & SOC_HW_VERSION_MINOR_VER_BMSK) >>
-					SOC_HW_VERSION_MINOR_VER_SHFT;
+
+	switch (mhi_cntrl->dev_id) {
+	case QCN9224_DEVICE_ID:
+		major_ver_bshift = QCN9224_SOC_HW_VERSION_MAJOR_VER_SHFT;
+		major_ver_bmask = QCN9224_SOC_HW_VERSION_MAJOR_VER_BMSK;
+		minor_ver_bshift = QCN9224_SOC_HW_VERSION_MINOR_VER_SHFT;
+		minor_ver_bmask = QCN9224_SOC_HW_VERSION_MINOR_VER_BMSK;
+		break;
+
+	case QCN9000_DEVICE_ID:
+	default:
+		major_ver_bshift = QCN9000_SOC_HW_VERSION_MAJOR_VER_SHFT;
+		major_ver_bmask = QCN9000_SOC_HW_VERSION_MAJOR_VER_BMSK;
+		minor_ver_bshift = QCN9000_SOC_HW_VERSION_MINOR_VER_SHFT;
+		minor_ver_bmask = QCN9000_SOC_HW_VERSION_MINOR_VER_BMSK;
+	}
+
+	mhi_cntrl->major_version = (soc_info & major_ver_bmask) >>
+		major_ver_bshift;
+	mhi_cntrl->minor_version = (soc_info & minor_ver_bmask) >>
+		minor_ver_bshift;
 
 	mhi_cntrl->index = ida_alloc(&mhi_controller_ida, GFP_KERNEL);
 	if (mhi_cntrl->index < 0) {

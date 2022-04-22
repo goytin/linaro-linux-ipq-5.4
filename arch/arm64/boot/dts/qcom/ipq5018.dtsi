@@ -97,7 +97,7 @@
 			compatible = "qcom,scm";
 		};
 
-		qfprom {
+		qfprom: qfprom {
 			compatible = "qcom,qfprom-sec";
 			img-addr = <0x4A800000>;
 			img-size = <0x00400000>;
@@ -111,7 +111,7 @@
 		#hwlock-cells = <1>;
 	};
 
-	smem {
+	smem: smem {
 		compatible = "qcom,smem";
 		memory-region = <&smem_region>;
 		hwlocks = <&tcsr_mutex 0>;

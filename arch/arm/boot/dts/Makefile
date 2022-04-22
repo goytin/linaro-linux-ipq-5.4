@@ -853,6 +853,7 @@ dtb-$(CONFIG_ARCH_QCOM) += \
 	ipq5018-mp03.1-c2.dtb \
 	ipq5018-mp03.1-c3.dtb \
 	ipq5018-mp03.3.dtb \
+	ipq5018-db-mp03.1.dtb \
 	ipq5018-mp03.3-c2.dtb \
 	ipq5018-mp03.3-c3.dtb \
 	ipq5018-mp03.3-c4.dtb \

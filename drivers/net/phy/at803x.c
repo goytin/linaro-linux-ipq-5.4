@@ -14,7 +14,13 @@
 #include <linux/etherdevice.h>
 #include <linux/of_gpio.h>
 #include <linux/gpio/consumer.h>
+#include <linux/bitfield.h>
 
+#define AT803X_SPECIFIC_FUNCTION_CONTROL        0x10
+#define AT803X_SFC_MDI_CROSSOVER_MODE_M		GENMASK(6, 5)
+#define AT803X_SFC_AUTOMATIC_CROSSOVER		0x3
+#define AT803X_SFC_MANUAL_MDIX			0x1
+#define AT803X_SFC_MANUAL_MDI			0x0
 #define AT803X_SPECIFIC_STATUS			0x11
 #define AT803X_SS_SPEED_MASK			GENMASK(15, 14)
 #define AT803X_SS_SPEED_1000			2
@@ -66,6 +72,9 @@
 
 #define AT803X_DEBUG_REG_5			0x05
 #define AT803X_DEBUG_TX_CLK_DLY_EN		BIT(8)
+
+#define QCA8081_PHY_ID 0x004dd101
+#define QCA8081_PHY_ID_MASK 0xffffff00
 
 #define ATH8030_PHY_ID 0x004dd076
 #define ATH8031_PHY_ID 0x004dd074
@@ -240,7 +249,7 @@ static int at803x_set_wol(struct phy_device *phydev,
 			return -EINVAL;
 
 		for (i = 0; i < 3; i++)
-			phy_write_mmd(phydev, AT803X_DEVICE_ADDR, offsets[i],
+			phy_write_mmd(phydev, MDIO_MMD_PCS, offsets[i],
 				      mac[(i * 2) + 1] | (mac[(i * 2)] << 8));
 
 		/* Enable WOL function */
@@ -279,7 +288,7 @@ static int at803x_set_wol(struct phy_device *phydev,
 
 	irq_enabled &= ~AT803X_INTR_ENABLE_WOL;
 	if (ret & irq_enabled && !phy_polling_mode(phydev))
-		phy_trigger_machine(phydev);
+		phy_queue_state_machine(phydev, 0);
 
 	return 0;
 }
@@ -591,6 +600,29 @@ static int at803x_read_status(struct phy_device *phydev)
 	return 0;
 }
 
+static int at803x_config_mdix(struct phy_device *phydev, u8 ctrl)
+{
+	u16 val;
+
+	switch (ctrl) {
+	case ETH_TP_MDI:
+		val = AT803X_SFC_MANUAL_MDI;
+		break;
+	case ETH_TP_MDI_X:
+		val = AT803X_SFC_MANUAL_MDIX;
+		break;
+	case ETH_TP_MDI_AUTO:
+		val = AT803X_SFC_AUTOMATIC_CROSSOVER;
+		break;
+	default:
+		return 0;
+	}
+
+	return phy_modify_changed(phydev, AT803X_SPECIFIC_FUNCTION_CONTROL,
+			  AT803X_SFC_MDI_CROSSOVER_MODE_M,
+			  FIELD_PREP(AT803X_SFC_MDI_CROSSOVER_MODE_M, val));
+}
+
 static int at803x_config_aneg(struct phy_device *phydev)
 {
 	int ret;
@@ -758,7 +790,8 @@ static int qca808x_read_status(struct phy_device *phydev)
 	 * occurs.
 	 */
 	if (!phydev->link) {
-		if (phydev->master_slave_state == MASTER_SLAVE_STATE_ERR) {
+		int val = phy_read(phydev, MII_STAT1000);
+		if (val & LPA_1000MSFAIL) {
 			qca808x_phy_ms_seed_enable(phydev, false);
 		} else {
 			qca808x_phy_ms_random_seed_set(phydev);
@@ -847,12 +880,11 @@ static struct phy_driver at803x_driver[] = {
 	.config_intr		= at803x_config_intr,
 }, {
 	/* Qualcomm QCA8081 */
-	PHY_ID_MATCH_EXACT(QCA8081_PHY_ID),
-	.name			= "Qualcomm QCA8081",
+	.phy_id                 = QCA8081_PHY_ID,
+	.phy_id_mask		= QCA8081_PHY_ID_MASK,
+	.name			= "QCA808X ethernet",
 	.config_intr		= at803x_config_intr,
-	.handle_interrupt	= at803x_handle_interrupt,
-	.get_tunable		= at803x_get_tunable,
-	.set_tunable		= at803x_set_tunable,
+	.ack_interrupt		= at803x_ack_interrupt,
 	.set_wol		= at803x_set_wol,
 	.get_wol		= at803x_get_wol,
 	.get_features		= at803x_get_features,
@@ -871,7 +903,7 @@ static struct mdio_device_id __maybe_unused atheros_tbl[] = {
 	{ ATH8031_PHY_ID, AT803X_PHY_ID_MASK },
 	{ ATH8032_PHY_ID, AT8032_PHY_ID_MASK },
 	{ ATH8035_PHY_ID, AT803X_PHY_ID_MASK },
-	{ PHY_ID_MATCH_EXACT(QCA8081_PHY_ID) },
+	{ QCA8081_PHY_ID, QCA8081_PHY_ID_MASK},
 	{ }
 };
 

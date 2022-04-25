@@ -682,4 +682,11 @@
 		compatible = "arm,psci-1.0";
 		method = "smc";
 	};
+
+	qti,sps {
+		compatible = "qti,msm-sps-4k";
+		qti,pipe-attr-ee;
+	};
 };
+
+#include "devsoc-coresight.dtsi"

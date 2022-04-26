@@ -3242,12 +3242,14 @@ static int qspi_get_appropriate_phase(struct qcom_nand_controller *nandc, u8 *ph
 
 static int qpic_serial_check_status(__le32 *status)
 {
-	if (*(__le32 *)status & FLASH_ERROR) {
-		if (*(__le32 *)status & FS_MPU_ERR)
+	u32 flash  = le32_to_cpu(*(__le32 *)status);
+
+	if (flash & FLASH_ERROR) {
+		if (flash & FS_MPU_ERR)
 			return -EPERM;
-		if (*(__le32 *)status & FS_TIMEOUT_ERR)
+		if (flash & FS_TIMEOUT_ERR)
 			return -ETIMEDOUT;
-		if (*(__le32 *)status & FS_OP_ERR)
+		if (flash & FS_OP_ERR)
 			return -EIO;
 	}
 	return 0;
@@ -3382,6 +3384,8 @@ static int qcom_serial_set_feature(struct qcom_nand_controller *nandc,
 	 * so after issueing command in read_reg_dma function read reg_read_buf
 	 * buffer
 	 */
+	nandc_read_buffer_sync(nandc, true);
+
 	ret = qpic_serial_check_status(nandc->reg_read_buf);
 	if (ret) {
 		dev_err(nandc->dev, "Error in executing command:%d\n",command);
@@ -3456,6 +3460,7 @@ static int qspi_nand_device_config(struct qcom_nand_controller *nandc,
 			dev_dbg(nandc->dev, "Continous buffer mode enabled on power on\n");
 		}
 	}
+
 	qcom_check_quad_mode(mtd, host);
 
 	if (!host->check_qe_bit) {

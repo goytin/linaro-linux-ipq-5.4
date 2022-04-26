@@ -1138,7 +1138,8 @@ static irqreturn_t qcom_glink_native_intr(int irq, void *data)
 				glinkintr[glinkintrindex].global_timer_hi =
 					readl_relaxed(global_timer_base + GLOBAL_TIMER_HI);
 			}
-			break;
+			ret = -1;
+			goto log_kernel_ts;
 		}
 		glinkintr[glinkintrindex].rxtail = *(pipe->tail);
 		glinkintr[glinkintrindex].rxhead = *(pipe->head);
@@ -1209,7 +1210,7 @@ static irqreturn_t qcom_glink_native_intr(int irq, void *data)
 			ret = -EINVAL;
 			break;
 		}
-
+log_kernel_ts:
 		glinkintr[glinkintrindex++].timestamp =
 			ktime_to_ms(ktime_get());
 		glinkintrindex &= (RPMLOG_SIZE - 1);

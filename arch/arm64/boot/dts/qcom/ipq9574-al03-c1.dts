@@ -21,6 +21,11 @@
 
 	aliases {
 		serial0 = &blsp1_uart2;
+		ethernet0 = "/soc/dp1";
+		ethernet1 = "/soc/dp2";
+		ethernet2 = "/soc/dp3";
+		ethernet3 = "/soc/dp4";
+		ethernet4 = "/soc/dp5";
 	};
 
 	chosen {
@@ -121,6 +126,66 @@
 
 		rpm-glink {
 			status = "disabled";
+		};
+
+		dp1 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <1>;
+			reg = <0x3a500000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
+			local-mac-address = [000000000000];
+			qcom,phy-mdio-addr = <1>;
+			phy-mode = "sgmii";
+		};
+
+		dp2 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <2>;
+			reg = <0x3a504000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
+			local-mac-address = [000000000000];
+			qcom,phy-mdio-addr = <2>;
+			phy-mode = "sgmii";
+		};
+
+		dp3 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <3>;
+			reg = <0x3a508000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
+			local-mac-address = [000000000000];
+			qcom,phy-mdio-addr = <3>;
+			phy-mode = "sgmii";
+		};
+
+		dp4 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <4>;
+			reg = <0x3a50c000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
+			local-mac-address = [000000000000];
+			qcom,phy-mdio-addr = <4>;
+			phy-mode = "sgmii";
+		};
+
+		dp5 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <6>;
+			reg = <0x3a514000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
+			local-mac-address = [000000000000];
+			qcom,phy-mdio-addr = <0>;
+			phy-mode = "sgmii";
 		};
 
 		qpic_bam: dma@7984000 {
@@ -226,6 +291,158 @@
 
 		pcie2_phy: phy@8c000 {
 			status = "ok";
+		};
+
+		mdio@90000 {
+			status = "ok";
+			pinctrl-0 = <&mdio_pins>;
+			pinctrl-names = "default";
+			/*gpio60 for manhattan reset*/
+			phy-reset-gpio = <&tlmm 60 0>;
+			phyaddr_fixup = <0xC90F018>;
+			uniphyaddr_fixup = <0xC90F014>;
+			mdio_clk_fixup; /* MDIO clock sequence fix up flag */
+
+			phy0: ethernet-phy@0 {
+				reg = <1>;
+				fixup;
+			};
+			phy1: ethernet-phy@1 {
+				reg = <2>;
+				fixup;
+			};
+			phy2: ethernet-phy@2 {
+				reg = <3>;
+				fixup;
+			};
+			phy3: ethernet-phy@3 {
+				reg = <4>;
+				fixup;
+			};
+			phy4: ethernet-phy@4 {
+				compatible ="ethernet-phy-ieee802.3-c45";
+				reg = <0>;
+			};
+		};
+
+		ess-instance {
+			num_devices = <0x1>;
+			ess-switch@3a000000 {
+				switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
+				switch_lan_bmp = <0x1e>; /* lan port bitmap */
+				switch_wan_bmp = <0x40>; /* wan port bitmap */
+				switch_mac_mode = <0x15>; /* mac mode for uniphy instance0*/
+				switch_mac_mode1 = <0xff>; /* mac mode for uniphy instance1*/
+				switch_mac_mode2 = <0xd>; /* mac mode for uniphy instance2*/
+				bm_tick_mode = <0>; /* bm tick mode */
+				tm_tick_mode = <1>; /* tm tick mode */
+				cmnblk_clk = "internal_96MHz"; /* cmnblk clk*/
+				qcom,port_phyinfo {
+					port@0 {
+						port_id = <1>;
+						phy_address = <1>;
+					};
+					port@1 {
+						port_id = <2>;
+						phy_address = <2>;
+					};
+					port@2 {
+						port_id = <3>;
+						phy_address = <3>;
+					};
+					port@3 {
+						port_id = <4>;
+						phy_address = <4>;
+					};
+					port@4 {
+						port_id = <6>;
+						phy_address = <0>;
+						ethernet-phy-ieee802.3-c45;
+					};
+				};
+
+				led_source@0 {
+					source = <0>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@3 {
+					source = <3>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@6 {
+					source = <6>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@9 {
+					source = <9>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+			};
+		};
+
+		/* EDMA host driver configuration for the board */
+		edma@3ab00000 {
+			qcom,txdesc-ring-start = <8>;		/* Tx desc ring start ID */
+			qcom,txdesc-rings = <24>;		/* Total number of Tx desc rings to be provisioned */
+			qcom,txcmpl-ring-start = <8>;		/* Tx complete ring start ID */
+			qcom,txcmpl-rings = <24>;		/* Total number of Tx complete rings to be provisioned */
+			qcom,rxfill-ring-start = <4>;		/* Rx fill ring start ID */
+			qcom,rxfill-rings = <4>;		/* Total number of Rx fill rings to be provisioned */
+			qcom,rxdesc-ring-start = <20>;		/* Rx desc ring start ID */
+			qcom,rxdesc-rings = <4>;		/* Total number of Rx desc rings to be provisioned */
+			qcom,rx-page-mode = <0>;		/* Rx fill ring page mode */
+			qcom,tx-map-priority-level = <1>;	/* Tx priority level per port */
+			qcom,rx-map-priority-level = <1>;	/* Rx priority level per core */
+			qcom,txdesc-map = <8 9 10 11>,		/* Port0 per-core Tx ring map */
+					<12 13 14 15>,		/* Port1 per-core Tx ring map */
+					<16 17 18 19>,		/* Port2 per-core Tx ring map */
+					<20 21 22 23>,		/* Port3 per-core Tx ring map */
+					<24 25 26 27>,		/* Port4 per-core Tx ring map */
+					<28 29 30 31>;		/* Port5 per-core Tx ring map */
+			qcom,txdesc-fc-grp-map = <1 2 3 4 5 6>;	/* Per GMAC flow control group map */
+			qcom,rxfill-map = <4 5 6 7>;		/* Per-core Rx fill ring map */
+			qcom,rxdesc-map = <20 21 22 23>;	/* Per-core Rx desc ring map */
+			interrupts = <0 371 4>,			/* Tx complete ring id #8 IRQ info */
+				   <0 372 4>,			/* Tx complete ring id #9 IRQ info */
+				   <0 373 4>,			/* Tx complete ring id #10 IRQ info */
+				   <0 374 4>,			/* Tx complete ring id #11 IRQ info */
+				   <0 375 4>,			/* Tx complete ring id #12 IRQ info */
+				   <0 376 4>,			/* Tx complete ring id #13 IRQ info */
+				   <0 377 4>,			/* Tx complete ring id #14 IRQ info */
+				   <0 378 4>,			/* Tx complete ring id #15 IRQ info */
+				   <0 379 4>,			/* Tx complete ring id #16 IRQ info */
+				   <0 380 4>,			/* Tx complete ring id #17 IRQ info */
+				   <0 381 4>,			/* Tx complete ring id #18 IRQ info */
+				   <0 382 4>,			/* Tx complete ring id #19 IRQ info */
+				   <0 383 4>,			/* Tx complete ring id #20 IRQ info */
+				   <0 384 4>,			/* Tx complete ring id #21 IRQ info */
+				   <0 509 4>,			/* Tx complete ring id #22 IRQ info */
+				   <0 508 4>,			/* Tx complete ring id #23 IRQ info */
+				   <0 507 4>,			/* Tx complete ring id #24 IRQ info */
+				   <0 506 4>,			/* Tx complete ring id #25 IRQ info */
+				   <0 505 4>,			/* Tx complete ring id #26 IRQ info */
+				   <0 504 4>,			/* Tx complete ring id #27 IRQ info */
+				   <0 503 4>,			/* Tx complete ring id #28 IRQ info */
+				   <0 502 4>,			/* Tx complete ring id #29 IRQ info */
+				   <0 501 4>,			/* Tx complete ring id #30 IRQ info */
+				   <0 500 4>,			/* Tx complete ring id #31 IRQ info */
+				   <0 351 4>,			/* Rx desc ring id #20 IRQ info */
+				   <0 352 4>,			/* Rx desc ring id #21 IRQ info */
+				   <0 353 4>,			/* Rx desc ring id #22 IRQ info */
+				   <0 354 4>,			/* Rx desc ring id #23 IRQ info */
+				   <0 261 4>;			/* Misc error IRQ info */
 		};
 	};
 };

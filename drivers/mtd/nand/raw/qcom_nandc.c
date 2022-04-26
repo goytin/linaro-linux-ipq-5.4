@@ -2893,8 +2893,21 @@ static int qcom_nand_attach_chip(struct nand_chip *chip)
 
 	mtd_set_ooblayout(mtd, &qcom_nand_ooblayout_ops);
 
+	/* Free the initially allocated BAM transaction for reading the ONFI params */
+	if (nandc->props->is_bam)
+		free_bam_transaction(nandc);
+
 	nandc->max_cwperpage = max_t(unsigned int, nandc->max_cwperpage,
 				     cwperpage);
+
+	if (nandc->props->is_bam) {
+		nandc->bam_txn = alloc_bam_transaction(nandc);
+		if (!nandc->bam_txn) {
+			dev_err(nandc->dev,
+				"failed to allocate bam transaction\n");
+			return -ENOMEM;
+		}
+	}
 
 	/*
 	 * DATA_UD_BYTES varies based on whether the read/write command protects
@@ -2966,7 +2979,7 @@ static int qcom_nand_attach_chip(struct nand_chip *chip)
 	nandc->regs->erased_cw_detect_cfg_set =
 		cpu_to_le32(SET_ERASED_PAGE_DET);
 
-	dev_info(nandc->dev,
+	dev_dbg(nandc->dev,
 		"cfg0 %x cfg1 %x ecc_buf_cfg %x ecc_bch cfg %x cw_size %d cw_data %d strength %d parity_bytes %d steps %d\n",
 		host->cfg0, host->cfg1, host->ecc_buf_cfg, host->ecc_bch_cfg,
 		host->cw_size, host->cw_data, ecc->strength, ecc->bytes,
@@ -3762,16 +3775,6 @@ static int qcom_nand_host_init_and_register(struct qcom_nand_controller *nandc,
 	if (ret) {
 		dev_err(nandc->dev, "nand scan returned error\n");
 		return ret;
-	}
-
-	if (nandc->props->is_bam) {
-		free_bam_transaction(nandc);
-		nandc->bam_txn = alloc_bam_transaction(nandc);
-		if (!nandc->bam_txn) {
-			dev_err(nandc->dev,
-				"failed to allocate bam transaction\n");
-			return -ENOMEM;
-		}
 	}
 
 	if (nandc->props->qpic_v2 && nandc->props->page_scope) {

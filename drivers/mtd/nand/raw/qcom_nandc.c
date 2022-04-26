@@ -2979,7 +2979,7 @@ static int qcom_nand_attach_chip(struct nand_chip *chip)
 	nandc->regs->erased_cw_detect_cfg_set =
 		cpu_to_le32(SET_ERASED_PAGE_DET);
 
-	dev_info(nandc->dev,
+	dev_dbg(nandc->dev,
 		"cfg0 %x cfg1 %x ecc_buf_cfg %x ecc_bch cfg %x cw_size %d cw_data %d strength %d parity_bytes %d steps %d\n",
 		host->cfg0, host->cfg1, host->ecc_buf_cfg, host->ecc_bch_cfg,
 		host->cw_size, host->cw_data, ecc->strength, ecc->bytes,

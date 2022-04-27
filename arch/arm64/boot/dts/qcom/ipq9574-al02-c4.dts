@@ -325,6 +325,7 @@
 
 		pcie0_x1: pci@28000000 {
 			perst-gpio = <&tlmm 23 1>;
+			max-payload-size = <1>; // 1-256 TLP bytes for WKK
 			status = "disabled";
 			pcie0_rp {
 				reg = <0 0 0 0 0>;

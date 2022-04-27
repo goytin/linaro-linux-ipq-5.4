@@ -458,6 +458,7 @@ struct mhi_controller {
 	void *priv_data;
 	int disable_rddm_prealloc;
 	u32 rddm_seg_len;
+	u32 dev_id;
 };
 
 /**

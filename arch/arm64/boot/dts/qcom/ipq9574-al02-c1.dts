@@ -224,7 +224,7 @@
 		};
 
 		blsp1_uart4: serial@78b3000 {
-			pinctrl-0 = <&QCC710_pins>;
+			pinctrl-0 = <&QCC710_pins &pta_QCC710>;
 			pinctrl-names = "default";
 			status = "ok";
 		};

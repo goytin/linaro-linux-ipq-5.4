@@ -522,8 +522,8 @@
         status = "ok";
 };
 
-&mlo_global_mem {
-	reg = <0x0 0x5FD00000 0x0 0xC00000>;
+&mlo_global_mem0 {
+	size = <0x0 0xC00000>;
 	status = "ok";
 };
 

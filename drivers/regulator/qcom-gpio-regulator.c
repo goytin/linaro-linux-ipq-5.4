@@ -9,6 +9,7 @@
 #include <linux/io.h>
 #include <linux/of_device.h>
 #include <linux/regulator/consumer.h>
+#include <soc/qcom/socinfo.h>
 
 #include "cpr3-regulator.h"
 
@@ -82,6 +83,7 @@ static int gpio_regulator_probe(struct platform_device *pdev)
 	u64 cpr_fuse;
 	int fused_volt;
 	int volt_select;
+	bool fix_volt_max = false;
 	int ret;
 
 	match = of_match_device(gpio_regulator_match_table, dev);
@@ -92,6 +94,11 @@ static int gpio_regulator_probe(struct platform_device *pdev)
 	if (!res || !res->start) {
 		dev_err(dev, "fuse base address is missing\n");
 		return -ENXIO;
+	}
+
+	if (device_property_read_bool(dev, "skip-voltage-scaling-turboL1-sku-quirk")) {
+		if(cpu_is_ipq9574() || cpu_is_ipq9570())
+			fix_volt_max = true;
 	}
 
 	fuse_base = devm_ioremap(&pdev->dev, res->start, resource_size(res));
@@ -126,7 +133,7 @@ static int gpio_regulator_probe(struct platform_device *pdev)
 			continue;
 		}
 
-		if (!cpr_fuse)
+		if (!cpr_fuse || fix_volt_max)
 			volt_select = reg_data->max_volt;
 		else
 			volt_select = (fused_volt > reg_data->threshold_volt) ?

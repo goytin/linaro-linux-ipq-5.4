@@ -542,6 +542,14 @@
 			apc-supply = <&apc_rail>;
 			cx-supply = <&cx_rail>;
 			mx-supply = <&mx_rail>;
+			/* AL01 RDP's scaled voltage can only support upto CPU Freq
+			 * 1.8 GHz. But SKUs like IPQ9574/IPQ9570 supports 2.2GHz of
+			 * CPU freq. So, if we do scaling on AL01 + IPQ9574/IPQ9570,
+			 * then voltage becomes insufficient when CPU operates at 2.2GHz.
+			 * Below quirk disables the voltage scaling if AL01 has
+			 * IPQ9574/IPQ9570
+			 */
+			skip-voltage-scaling-turboL1-sku-quirk;
 		};
 	};
 };

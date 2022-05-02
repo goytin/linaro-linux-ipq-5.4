@@ -696,12 +696,10 @@ void br_fdb_entry_refresh(struct net_device *dev, const char *addr, __u16 vid)
 		return;
 
 	rcu_read_lock();
-	spin_lock_bh(&p->br->hash_lock);
 	fdb = fdb_find_rcu(&p->br->fdb_hash_tbl, addr, vid);
 	if (likely(fdb)) {
 		fdb->updated = jiffies;
 	}
-	spin_unlock_bh(&p->br->hash_lock);
 	rcu_read_unlock();
 }
 EXPORT_SYMBOL_GPL(br_fdb_entry_refresh);

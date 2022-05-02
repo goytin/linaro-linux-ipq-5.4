@@ -1428,6 +1428,7 @@
 			qcom,low-frequency = <748800000>;
 			qcom,mid-frequency = <1497600000>;
 			qcom,max-frequency = <1689600000>;
+			qcom,edma-lite-enabled;
 			qcom,capwap-enabled;
 			npu-supply = <&npu_vreg>;
 			mx-supply = <&ipq9574_s4>;

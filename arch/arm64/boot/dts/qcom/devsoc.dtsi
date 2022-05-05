@@ -79,6 +79,34 @@
 		dma-ranges;
 		compatible = "simple-bus";
 
+		hs_m31phy_0: hs_m31phy@7b000 {
+			compatible = "qca,m31-usb-hsphy";
+			reg = <0x07b000 0x12C>,
+				<0x08af8800 0x400>;
+			reg-names = "m31usb_phy_base",
+					"qscratch_base";
+			phy_type= "utmi";
+
+			resets = <&gcc GCC_QUSB2_0_PHY_BCR>;
+			reset-names = "usb2_phy_reset";
+
+			status = "disabled";
+		};
+
+		ssuniphy_0: ssuniphy@4b0000 {
+			compatible = "qca,ipq5018-uni-ssphy";
+			reg = <0x4b0000 0x800>;
+			clocks = <&gcc GCC_USB0_PIPE_CLK>,
+				<&gcc GCC_USB0_PHY_CFG_AHB_CLK>;
+
+			clock-names = "pipe_clk", "phy_cfg_ahb_clk";
+
+			resets =  <&gcc GCC_USB0_PHY_BCR>;
+			reset-names = "por_rst";
+			#phy-cells = <0>;
+			status = "disabled";
+		};
+
 		prng: prng@e3000 {
 			compatible = "qcom,msm-rng";
 			reg = <0xe3000 0x1000>;
@@ -332,6 +360,65 @@
 			compatible = "qcom,smem";
 			memory-region = <&smem_region>;
 			hwlocks = <&tcsr_mutex 0>;
+		};
+
+		usb3: usb3@8A00000 {
+			compatible = "qcom,ipq5018-dwc3";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			reg = <0x8AF8800 0x100>,
+				<0x8A00000 0xe000>;
+			reg-names = "qscratch_base", "dwc3_base";
+
+			clocks = <&gcc GCC_USB0_MASTER_CLK>,
+				<&gcc GCC_USB0_SLEEP_CLK>,
+				<&gcc GCC_USB0_MOCK_UTMI_CLK>,
+				<&gcc GCC_USB0_PHY_CFG_AHB_CLK>,
+				<&gcc GCC_USB0_AUX_CLK>,
+				<&gcc GCC_USB0_LFPS_CLK>,
+				<&gcc GCC_USB0_PIPE_CLK>;
+
+			clock-names = "master",
+
+				"cfg_ahb_clk",
+				"aux_clk",
+				"lfps_clk",
+				"pipe_clk";
+
+			assigned-clocks = <&gcc GCC_USB0_MASTER_CLK>,
+					<&gcc GCC_USB0_MOCK_UTMI_CLK>;
+
+			assigned-clock-rates = <133330000>,
+						<60000000>;
+
+			resets = <&gcc GCC_USB_BCR>;
+
+			qca,host = <1>;
+			status = "disabled";
+
+			dwc_0: dwc3@8A00000 {
+				compatible = "snps,dwc3";
+				reg = <0x8A00000 0xe000>;
+				interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
+				usb-phy = <&hs_m31phy_0>;
+				#phy-cells = <0>;
+				phys = <&ssuniphy_0>;
+				phy-names = "usb3-phy";
+				snps,dis_ep_cache_eviction;
+				tx-fifo-resize;
+				snps,usb3-u1u2-disable;
+				snps,nominal-elastic-buffer;
+				snps,is-utmi-l1-suspend;
+				snps,hird-threshold = /bits/ 8 <0x0>;
+				snps,dis_u2_susphy_quirk;
+				snps,dis_u3_susphy_quirk;
+				snps,quirk-ref-clock-adjustment = <0x49459>;
+				snps,quirk-ref-clock-period = <0x10>;
+				snps,quirk-30m-sb-sel = <0x0>;
+				dr_mode = "host";
+			};
 		};
 	};
 

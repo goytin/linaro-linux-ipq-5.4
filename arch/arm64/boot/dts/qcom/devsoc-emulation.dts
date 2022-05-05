@@ -175,6 +175,16 @@
 		timer@b120000 {
 			clock-frequency = <240000>;
 		};
+
+		usb3@8A00000 {
+			status = "ok";
+
+			dwc3@8A00000 {
+				usb-phy = <>;
+				phys = <>;
+				phy-names = "";
+			};
+		};
 	};
 
 	psci {

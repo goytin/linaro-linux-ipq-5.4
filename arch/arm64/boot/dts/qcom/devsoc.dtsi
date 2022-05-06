@@ -244,6 +244,25 @@
 			status = "disabled";
 		};
 
+		sdhc_1: sdhci@7804000 {
+			compatible = "qcom,sdhci-msm-v5";
+			reg = <0x7804000 0x1000>, <0x7805000 0x1000>;
+			reg-names = "hc_mem", "cmdq_mem";
+
+			interrupts = <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SPI 316 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "hc_irq", "pwr_irq";
+
+			clocks = <&xo>,
+				<&gcc GCC_SDCC1_AHB_CLK>,
+				<&gcc GCC_SDCC1_APPS_CLK>;
+			clock-names = "xo", "iface", "core";
+			max-frequency = <192000000>;
+			bus-width = <4>;
+			non-removable;
+			status = "disabled";
+		};
+
 		spi0: spi@78b5000 {
 			compatible = "qcom,spi-qup-v2.2.1";
 			#address-cells = <1>;

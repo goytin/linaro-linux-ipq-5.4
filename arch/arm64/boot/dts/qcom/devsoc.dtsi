@@ -708,6 +708,110 @@
 				#interrupt-cells = <2>;
 			};
 		};
+
+		tcsr_q6_block: syscon@1945000 {
+			compatible = "syscon";
+			reg = <0x1945000 0xE000>;
+		};
+
+		q6v5_wcss: remoteproc@d100000 {
+			compatible = "qcom,devsoc-q6-mpd";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			reg = <0x0d100000 0x4040>,
+				<0x1938000 0x8>,
+				<0x193d204 0x4>,
+				<0x1825000 0x90b8>,
+				<0x4a1000 0x4>;
+			reg-names = "qdsp6",
+					"tcsr-msip",
+					"tcsr-q6",
+					"ce_ahb",
+					"qtimer";
+
+			interrupts-extended = <&intc GIC_SPI 421 IRQ_TYPE_EDGE_RISING>,
+					      <&wcss_smp2p_in 0 0>,
+					      <&wcss_smp2p_in 1 0>,
+					      <&wcss_smp2p_in 2 0>,
+					      <&wcss_smp2p_in 3 0>;
+			interrupt-names = "wdog",
+					  "fatal",
+					  "ready",
+					  "handover",
+					  "stop-ack";
+
+			resets = <&gcc GCC_WCSSAON_ARES>,
+				 <&gcc GCC_WCSS_BCR>,
+				 <&gcc GCC_WCSS_Q6_BCR>;
+
+			reset-names = "wcss_aon_reset",
+				      "wcss_reset",
+				      "wcss_q6_reset";
+
+			clocks =  <&gcc GCC_Q6_TSCTR_1TO2_CLK>,
+					<&gcc GCC_Q6SS_TRIG_CLK>,
+					<&gcc GCC_Q6_AXIS_CLK>,
+					<&gcc GCC_Q6_AHB_S_CLK>,
+					<&gcc GCC_Q6SS_ATBM_CLK>,
+					<&gcc GCC_Q6_AHB_CLK>,
+					<&gcc GCC_Q6_AXIM_CLK>,
+					<&gcc GCC_Q6SS_PCLKDBG_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_APB_BDG_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_NTS_CLK>,
+					<&gcc GCC_WCSS_AXIS_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_ATB_CLK>,
+					<&gcc GCC_WCSS_ECAHB_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_ATB_BDG_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_APB_CLK>,
+					<&gcc GCC_WCSS_AXIM_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_NTS_BDG_CLK>,
+					<&gcc GCC_SYS_NOC_WCSS_AHB_CLK>;
+
+			clock-names = "q6_tsctr_1to2_clk",
+					"q6ss_trig_clk",
+					"q6_axis_clk",
+					"q6_ahb_s",
+					"q6ss_atbm_clk",
+					"q6_ahb",
+					"q6_axim",
+					"q6ss_pclkdbg_clk",
+					"dbg-apb-bdg",
+					"dbg-nts",
+					"wcss_axi_s_clk",
+					"dbg-atb",
+					"wcss_ecahb",
+					"dbg-atb-bdg",
+					"dbg-apb",
+					"wcss_axi_m_clk",
+					"dbg-nts-bdg",
+					"sys_noc_wcss_ahb";
+
+			qcom,halt-regs = <&tcsr_q6_block 0xa000 0xd000 0x0>;
+
+			qcom,smem-states = <&wcss_smp2p_out 0>,
+					   <&wcss_smp2p_out 1>;
+			qcom,smem-state-names = "shutdown",
+						"stop";
+			memory-region = <&q6_region>;
+			qcom,rproc = <&q6v5_wcss>;
+			glink-edge {
+				interrupts = <GIC_SPI 417 IRQ_TYPE_EDGE_RISING>;
+				qcom,remote-pid = <1>;
+				mboxes = <&apcs_glb 8>;
+
+				qrtr_requests {
+					qcom,glink-channels = "IPCRTR";
+				};
+			};
+
+			q6_wcss_pd1: remoteproc_pd1 {
+				compatible = "qcom,devsoc-wcss-ahb-mpd";
+				reg = <0x004ab000 0x20>;
+				reg-names = "rmb";
+				qcom,halt-regs = <&tcsr_q6_block 0xa000 0xd000 0x0>;
+			};
+		};
 	};
 
 	psci {

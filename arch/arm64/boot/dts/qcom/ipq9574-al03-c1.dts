@@ -540,7 +540,7 @@
 };
 
 &wifi6 {
-	hremote_node = <&qcn9224_pcie1>;
+	hremote_node = <&qcn9224_pcie2>;
 	board_id = <0x04>;
 	status = "ok";
 };

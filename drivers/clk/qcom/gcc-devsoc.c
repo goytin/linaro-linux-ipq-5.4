@@ -374,7 +374,7 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_UNIPHY_SOFT_RESET] = {0x56104, 0, 0x32 },
 	[GCC_USB0_BCR] = { 0x3e070, 0 },
 	[GCC_USB0_PHY_BCR] = { 0x3e034, 0 },
-	[GCC_WCSS_BCR] = { 0x18000, 0 },
+	[GCC_WCSS_BCR] = { 0x18004, 0 },
 	[GCC_WCSS_DBG_ARES] = { 0x59008, 0 },
 	[GCC_WCSS_ECAHB_ARES] = { 0x59008, 1 },
 	[GCC_WCSS_ACMT_ARES] = { 0x59008, 2 },
@@ -382,8 +382,8 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_WCSS_AHB_S_ARES] = { 0x59008, 4 },
 	[GCC_WCSS_AXI_M_ARES] = { 0x59008, 5 },
 	[GCC_WCSS_AXI_S_ARES] = { 0x59008, 6 },
-	[GCC_WCSS_Q6_BCR] = { 0x18004, 0 },
-	[GCC_WCSSAON_RESET] = { 0x59010, 0},
+	[GCC_WCSS_Q6_BCR] = { 0x18000, 0 },
+	[GCC_WCSSAON_RESET] = { 0x2509C, 0},
 	[GCC_GEPHY_MISC_ARES] = { 0x56004, 0, 0xf },
 };
 

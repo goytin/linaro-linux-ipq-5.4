@@ -308,6 +308,12 @@
 			syscon = <&tcsr_mutex_regs 0 0x80>;
 			#hwlock-cells = <1>;
 		};
+
+		smem {
+			compatible = "qcom,smem";
+			memory-region = <&smem_region>;
+			hwlocks = <&tcsr_mutex 0>;
+		};
 	};
 
 	psci {

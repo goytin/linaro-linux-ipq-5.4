@@ -49,6 +49,17 @@
 	};
 };
 
+/* In AL02-C9, the max supported CPU Freq is 1.5 GHz. Disabling frequencies beyond 1.5GHz*/
+&cpu_opp_table {
+	opp-1800000000 {
+		opp-supported-hw = <0>;
+	};
+
+	opp-2208000000 {
+		opp-supported-hw = <0>;
+	};
+};
+
 /* Disable IPQ9574 integrated radio's reserved memory */
 &q6_region {
 	status = "disabled";

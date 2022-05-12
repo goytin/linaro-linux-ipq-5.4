@@ -297,6 +297,11 @@
 				nand-bus-width = <8>;
 			};
 		};
+
+		tcsr_mutex_regs: syscon@1905000 {
+			compatible = "syscon";
+			reg = <0x01905000 0x8000>;
+		};
 	};
 
 	psci {

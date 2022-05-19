@@ -676,6 +676,13 @@
 				reg = <0 0 0 0 0>;
 			};
 		};
+
+		apcs_glb: mailbox@b111000 {
+			compatible = "qcom,devsoc-apcs-apps-global";
+			reg = <0x0b111000 0x6000>;
+			#clock-cells = <1>;
+			#mbox-cells = <1>;
+		};
 	};
 
 	psci {

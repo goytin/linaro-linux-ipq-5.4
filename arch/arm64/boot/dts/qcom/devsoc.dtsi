@@ -683,6 +683,31 @@
 			#clock-cells = <1>;
 			#mbox-cells = <1>;
 		};
+
+		wcss: wcss-smp2p {
+			compatible = "qcom,smp2p";
+			qcom,smem = <435>, <428>;
+
+			interrupt-parent = <&intc>;
+			interrupts = <GIC_SPI 418 IRQ_TYPE_EDGE_RISING>;
+
+			mboxes = <&apcs_glb 9>;
+
+			qcom,local-pid = <0>;
+			qcom,remote-pid = <1>;
+
+			wcss_smp2p_out: master-kernel {
+				qcom,entry-name = "master-kernel";
+				qcom,smp2p-feature-ssr-ack;
+				#qcom,smem-state-cells = <1>;
+			};
+
+			wcss_smp2p_in: slave-kernel {
+				qcom,entry-name = "slave-kernel";
+				interrupt-controller;
+				#interrupt-cells = <2>;
+			};
+		};
 	};
 
 	psci {

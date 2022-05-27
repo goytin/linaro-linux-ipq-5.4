@@ -243,3 +243,7 @@
 	qcom,emulation;
         status = "ok";
 };
+
+&q6v5_wcss {
+	qcom,emulation;
+};

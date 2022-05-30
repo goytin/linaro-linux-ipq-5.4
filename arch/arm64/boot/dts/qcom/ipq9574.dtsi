@@ -2597,6 +2597,7 @@
 			qrtr_node_id = <0x20>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 		};
 
 		wifi2: wifi2@f00000 {
@@ -2605,6 +2606,7 @@
 			qrtr_node_id = <0x21>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 		};
 
 		wifi3: wifi3@f00000 {
@@ -2613,6 +2615,7 @@
 			qrtr_node_id = <0x22>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 		};
 
 		wifi4: wifi4@f00000 {
@@ -2621,6 +2624,7 @@
 			qrtr_node_id = <0x30>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -2891,6 +2895,7 @@
 			qrtr_node_id = <0x31>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -3160,6 +3165,7 @@
 			qrtr_node_id = <0x32>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -3429,6 +3435,7 @@
 			qrtr_node_id = <0x33>;
 			qca,auto-restart;
 			status = "disabled";
+			interrupt-bmap = <0x100503>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+

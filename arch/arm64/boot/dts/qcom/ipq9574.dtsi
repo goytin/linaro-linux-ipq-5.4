@@ -1555,6 +1555,34 @@
 				ring-name = "lookaside";
 				ring-id = /bits/ 8 <3>;
 			};
+
+			dma4 {
+				tx_cpu = /bits/ 8 <0>;
+				rx_cpu = /bits/ 8 <0>;
+				ring-name = "hybrid";
+				ring-id = /bits/ 8 <4>;
+			};
+
+			dma5 {
+				tx_cpu = /bits/ 8 <1>;
+				rx_cpu = /bits/ 8 <1>;
+				ring-name = "hybrid";
+				ring-id = /bits/ 8 <5>;
+			};
+
+			dma6 {
+				tx_cpu = /bits/ 8 <2>;
+				rx_cpu = /bits/ 8 <2>;
+				ring-name = "hybrid";
+				ring-id = /bits/ 8 <6>;
+			};
+
+			dma7 {
+				tx_cpu = /bits/ 8 <3>;
+				rx_cpu = /bits/ 8 <3>;
+				ring-name = "hybrid";
+				ring-id = /bits/ 8 <7>;
+			};
 		};
 
 		eip_crypto: eip_crypto {

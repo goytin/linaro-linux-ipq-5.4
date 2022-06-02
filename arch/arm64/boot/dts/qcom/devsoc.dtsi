@@ -834,6 +834,11 @@
 		compatible = "qti,msm-sps-4k";
 		qti,pipe-attr-ee;
 	};
+
+	qcom,test@0 {
+		compatible = "qcom,testmhi";
+		qcom,wlan-ramdump-dynamic = <0x400000>;
+	};
 };
 
 #include "devsoc-coresight.dtsi"

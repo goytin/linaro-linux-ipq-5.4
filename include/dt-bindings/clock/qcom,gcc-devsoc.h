@@ -160,12 +160,15 @@
 #define GCC_WCSS_ECAHB_CLK					149
 #define GCC_WCSS_MST_ASYNC_BDG_CLK				150
 #define GCC_WCSS_SLV_ASYNC_BDG_CLK				151
-#define GCC_XO_CLK						152
-#define GCC_XO_CLK_SRC						153
-#define GCC_XO_DIV4_CLK						154
-#define GPLL0							155
-#define GPLL2							156
-#define GPLL4							157
-#define GPLL6							158
+#define GCC_CE_AXI_CLK						152
+#define GCC_CE_PCNOC_AHB_CLK					153
+#define GCC_CE_AHB_CLK						154
+#define GCC_XO_CLK						155
+#define GCC_XO_CLK_SRC						156
+#define GCC_XO_DIV4_CLK						157
+#define GPLL0							158
+#define GPLL2							159
+#define GPLL4							160
+#define GPLL6							161
 
 #endif

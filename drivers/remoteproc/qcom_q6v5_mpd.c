@@ -55,6 +55,7 @@
 #define AXI_IDLE_REG			0x8
 
 #define HALT_ACK_TIMEOUT_MS		100
+#define MST_SLV_BDG_ACK_TIMEOUT_US	10000
 
 /* Q6SS_RESET */
 #define Q6SS_STOP_CORE			BIT(0)
@@ -80,11 +81,12 @@
 #define Q6SS_BHS_ON		BIT(24)
 #define Q6SS_CLAMP_WL		BIT(21)
 #define Q6SS_CLAMP_QMC_MEM		BIT(22)
-#define HALT_CHECK_MAX_LOOPS		200
+#define HALT_CHECK_MAX_LOOPS		10000
 #define Q6SS_XO_CBCR		GENMASK(5, 3)
 #define Q6SS_SLEEP_CBCR		GENMASK(5, 2)
 #define Q6SS_CORE_CBCR         BIT(5)
 #define Q6SS_TIMEOUT_US         1000
+#define MSIP_TIMEOUT_US         1
 
 /* Q6SS config/status registers */
 #define TCSR_GLOBAL_CFG0	0x0
@@ -135,12 +137,17 @@
 #define Q6SS_PCLKDBG_CBCR	0x24
 #define SYS_NOC_WCSS_AHB_CBCR	0x9030
 #define WCSS_SLV_ASYNC_BDG_CBCR	0x90b4
-#define WCSS_MST_ASYNC_BDG_CBCR	0x80b0
+#define WCSS_MST_ASYNC_BDG_CBCR	0x90b0
+#define CE_AXI_CBCR		0x68
+#define CE_PCNOC_AHB_CBCR	0x70
+#define CE_AHB_CBCR		0x74
 #define CLK_ON			0x1
 #define CLK_OFF			BIT(31)
 
-#define CE_AHB_CBCR		0x74
 #define Q6_PWR_DBG_CTRL		0x200c
+#define MST_BDG_RESET_ACK	0x4
+#define SLV_BDG_RESET_REQ	0x8
+#define SLV_BDG_RESET_ACK	0xc
 
 static const struct wcss_data q6_devsoc_res_init;
 static int debug_wcss;
@@ -218,6 +225,9 @@ struct q6_wcss {
 	struct clk *dbg_apb_clk;
 	struct clk *dbg_nts_bdg_clk;
 	struct clk *gcc_sys_noc_wcss_ahb_clk;
+	struct clk *gcc_ce_axi_clk;
+	struct clk *gcc_ce_pcnoc_ahb_clk;
+	struct clk *gcc_ce_ahb_clk;
 
 	struct qcom_rproc_glink glink_subdev;
 	struct qcom_rproc_ssr ssr_subdev;
@@ -454,9 +464,123 @@ static void ipq5018_clks_prepare_disable(struct q6_wcss *wcss)
 	clk_disable_unprepare(wcss->axi_s_clk);
 }
 
+void disable_devsoc_wcss_clocks(struct q6_wcss *wcss)
+{
+	int loop;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
+
+	/* wcss clocks */
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_NTS_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_NTS_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + AXIS_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + AXIS_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_ATB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_ATB_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_APB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_APB_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + AXIM_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + AXIM_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR) == CLK_OFF)
+			break;
+	}
+
+	/* ce clocks */
+	writel(0x0, rpd_wcss->ce_ahb_base + CE_AXI_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_AXI_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + CE_PCNOC_AHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_PCNOC_AHB_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, rpd_wcss->ce_ahb_base + CE_AHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_AHB_CBCR) == CLK_OFF)
+			break;
+	}
+}
+
 void disable_devsoc_clocks(struct q6_wcss *wcss)
 {
 	int loop;
+
+	writel(0x0, wcss->ce_ahb_base + ECAHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(wcss->ce_ahb_base + ECAHB_CBCR) == CLK_OFF)
+			break;
+	}
+
+	writel(0x0, wcss->ce_ahb_base + SYS_NOC_WCSS_AHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(wcss->ce_ahb_base + SYS_NOC_WCSS_AHB_CBCR) == CLK_OFF)
+			break;
+	}
 
 	writel(0x0, wcss->ce_ahb_base + Q6_TSCTR_1TO2_CBCR);
 	for (loop = 0; loop < 10; loop++) {
@@ -515,6 +639,108 @@ void disable_devsoc_clocks(struct q6_wcss *wcss)
 	}
 }
 
+int enable_devsoc_wcss_clocks(struct q6_wcss *wcss)
+{
+	int loop;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
+
+	/* wcss clocks */
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_NTS_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_NTS_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + AXIS_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + AXIS_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_ATB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_ATB_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_APB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_APB_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + AXIM_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + AXIM_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR) == CLK_ON)
+			break;
+	}
+
+	/* ce clocks */
+	writel(0x1, rpd_wcss->ce_ahb_base + CE_AXI_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_AXI_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + CE_PCNOC_AHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_PCNOC_AHB_CBCR) == CLK_ON)
+			break;
+	}
+
+	writel(0x1, rpd_wcss->ce_ahb_base + CE_AHB_CBCR);
+	for (loop = 0; loop < 10; loop++) {
+		udelay(1);
+		if (readl(rpd_wcss->ce_ahb_base + CE_AHB_CBCR) == CLK_ON)
+			break;
+	}
+
+	return 0;
+}
+
 int enable_devsoc_clocks(struct q6_wcss *wcss)
 {
 	int ret, loop = 0;
@@ -538,67 +764,10 @@ int enable_devsoc_clocks(struct q6_wcss *wcss)
 		return ret;
 	}
 
-	/* wcss clocks */
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_APB_BDG_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_NTS_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_NTS_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + AXIS_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + AXIS_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_ATB_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_ATB_CBCR) == CLK_ON)
-			break;
-	}
-
 	writel(0x1, wcss->ce_ahb_base + ECAHB_CBCR);
 	for (loop = 0; loop < 10; loop++) {
 		udelay(1);
 		if (readl(wcss->ce_ahb_base + ECAHB_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_ATB_BDG_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_APB_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_APB_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + AXIM_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + AXIM_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + DBG_IFC_NTS_BDG_CBCR) == CLK_ON)
 			break;
 	}
 
@@ -679,20 +848,6 @@ int enable_devsoc_clocks(struct q6_wcss *wcss)
 			break;
 	}
 
-	writel(0x1, wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + WCSS_SLV_ASYNC_BDG_CBCR) == CLK_ON)
-			break;
-	}
-
-	writel(0x1, wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR);
-	for (loop = 0; loop < 10; loop++) {
-		udelay(1);
-		if (readl(wcss->ce_ahb_base + WCSS_MST_ASYNC_BDG_CBCR) == CLK_ON)
-			break;
-	}
-
 	return 0;
 }
 
@@ -733,7 +888,6 @@ static int q6v7_wcss_reset(struct q6_wcss *wcss, struct rproc *rproc)
 		val |= BIT(0);
 		writel(val, upd_wcss->rmb_base + SSCAON_CONFIG);
 	}
-
 
 	/* Power debug control */
 	writel(0x1, wcss->reg_base + Q6_PWR_DBG_CTRL);
@@ -787,10 +941,6 @@ static int q6v7_wcss_reset(struct q6_wcss *wcss, struct rproc *rproc)
 	writel(0x00cdc000, wcss->reg_base + Q6SS_AHB_UPPER);
 
 	writel(0x00ca0000, wcss->reg_base + Q6SS_AHB_LOWER);
-
-	/* msip */
-	if (wcss->tcsr_msip_base)
-		writel(0x1, wcss->tcsr_msip_base);
 
 	ret = regmap_update_bits(wcss->halt_map,
 			wcss->halt_nc + TCSR_GLOBAL_CFG1,
@@ -1171,6 +1321,8 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 	int ret;
 	u32 val;
 	const struct wcss_data *desc;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
 
 	desc = of_device_get_match_data(wcss->dev);
 	if (!desc)
@@ -1195,55 +1347,79 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 		return ret;
 	}
 
-	/*Enable AHB_S clock*/
-	ret = clk_prepare_enable(wcss->gcc_abhs_cbcr);
-	if (ret) {
-		dev_err(wcss->dev,
-				"failed to enable wcss ahb_s clock\n");
-		return ret;
-	}
+	if (desc->q6ver == Q6V7) {
+		ret = enable_devsoc_wcss_clocks(wcss);
+		if (ret) {
+			pr_info("Failed to enable devsoc wcss clocks\n");
+			return ret;
+		}
 
-	/*Enable ACMT clock*/
-	ret = clk_prepare_enable(wcss->acmt_clk);
-	if (ret) {
-		dev_err(wcss->dev,
-				"failed to enable wcss acmt clock\n");
-		return ret;
-	}
+		/* msip */
+		writel(0x1, rpd_wcss->tcsr_msip_base);
 
-	/*Enable AXI_M clock*/
-	ret = clk_prepare_enable(wcss->gcc_axim_cbcr);
-	if (ret) {
-		dev_err(wcss->dev,
-				"failed to enable wcss axi_m clock\n");
-		return ret;
-	}
+		/* wait for msip status */
+		ret = readl_poll_timeout(rpd_wcss->tcsr_msip_base + 0x4,
+				val, (val & 0x1) == 0x1, 1,
+				MSIP_TIMEOUT_US * 10000);
+		if (ret) {
+			dev_err(wcss->dev,
+					"can't get MSIP STATUS rc:%d val:0x%X)\n", ret, val);
+			return ret;
+		}
+	} else {
+		/*Enable AHB_S clock*/
+		ret = clk_prepare_enable(wcss->gcc_abhs_cbcr);
+		if (ret) {
+			dev_err(wcss->dev,
+					"failed to enable wcss ahb_s clock\n");
+			return ret;
+		}
 
-	val = readl(wcss->rmb_base + SSCAON_CONFIG);
-	val &= ~SSCAON_MASK;
-	val |= SSCAON_BUS_EN;
-	writel(val, wcss->rmb_base + SSCAON_CONFIG);
+		/*Enable ACMT clock*/
+		ret = clk_prepare_enable(wcss->acmt_clk);
+		if (ret) {
+			dev_err(wcss->dev,
+					"failed to enable wcss acmt clock\n");
+			return ret;
+		}
 
-	val = readl(wcss->rmb_base + SSCAON_CONFIG);
-	val &= ~(1<<1);
-	writel(val, wcss->rmb_base + SSCAON_CONFIG);
-	mdelay(2);
+		/*Enable AXI_M clock*/
+		ret = clk_prepare_enable(wcss->gcc_axim_cbcr);
+		if (ret) {
+			dev_err(wcss->dev,
+					"failed to enable wcss axi_m clock\n");
+			return ret;
+		}
 
-	/* 5 - wait for SSCAON_STATUS */
-	ret = readl_poll_timeout(wcss->rmb_base + SSCAON_STATUS,
+		val = readl(wcss->rmb_base + SSCAON_CONFIG);
+		val &= ~SSCAON_MASK;
+		val |= SSCAON_BUS_EN;
+		writel(val, wcss->rmb_base + SSCAON_CONFIG);
+
+		val = readl(wcss->rmb_base + SSCAON_CONFIG);
+		val &= ~(1<<1);
+		writel(val, wcss->rmb_base + SSCAON_CONFIG);
+		mdelay(2);
+
+
+		/* 5 - wait for SSCAON_STATUS */
+		ret = readl_poll_timeout(wcss->rmb_base + SSCAON_STATUS,
 				val, (val & 0xffff) == 0x10, 1000,
 				Q6SS_TIMEOUT_US * 10);
-	if (ret) {
-		dev_err(wcss->dev,
-				"can't get SSCAON_STATUS rc:%d)\n", ret);
-		return ret;
+		if (ret) {
+			dev_err(wcss->dev,
+					"can't get SSCAON_STATUS rc:%d)\n", ret);
+			return ret;
+		}
 	}
 
-	/*Deassert ce reset*/
-	ret = reset_control_deassert(wcss->ce_reset);
-	if (ret) {
-		dev_err(wcss->dev, "ce_reset failed\n");
-		return ret;
+	if (desc->ce_reset_required) {
+		/*Deassert ce reset*/
+		ret = reset_control_deassert(wcss->ce_reset);
+		if (ret) {
+			dev_err(wcss->dev, "ce_reset failed\n");
+			return ret;
+		}
 	}
 
 spawn_pd:
@@ -1267,6 +1443,45 @@ static int wcss_pcie_pd_start(struct rproc *rproc)
 		wcss->state = WCSS_NORMAL;
 	}
 	return ret;
+}
+
+static void q6v7_wcss_halt_axi_port(struct q6_wcss *wcss,
+				    struct regmap *halt_map,
+				    u32 offset)
+{
+	unsigned long timeout;
+	unsigned int val;
+	int ret;
+
+	/* SET TCSR_WCSS_MST_BDG_RESET_REQ_ADDR to 0 */
+	regmap_write(halt_map, offset, 0x0);
+
+	/* Wait for MST BDG ACK */
+	timeout = jiffies + usecs_to_jiffies(MST_SLV_BDG_ACK_TIMEOUT_US);
+	for (;;) {
+		udelay(1);
+		ret = regmap_read(halt_map, offset + MST_BDG_RESET_ACK, &val);
+		if (ret || !val || time_after(jiffies, timeout))
+			break;
+	}
+
+	/* SET TCSR_WCSS_SLV_BDG_RESET_REQ_ADDR to 0x0 */
+	regmap_write(halt_map, offset + SLV_BDG_RESET_REQ, 0x0);
+
+	/* Wait for SLV BDG ACK */
+	timeout = jiffies + usecs_to_jiffies(MST_SLV_BDG_ACK_TIMEOUT_US);
+	for (;;) {
+		udelay(1);
+		ret = regmap_read(halt_map, offset + SLV_BDG_RESET_ACK, &val);
+		if (ret || !val || time_after(jiffies, timeout))
+			break;
+	}
+
+	/* SET TCSR_WCSS_MST_BDG_RESET_REQ_ADDR to 1 */
+	regmap_write(halt_map, offset, 0x1);
+
+	/* SET TCSR_WCSS_SLV_BDG_RESET_REQ_ADDR to 1 */
+	regmap_write(wcss->halt_map, offset + SLV_BDG_RESET_REQ, 0x1);
 }
 
 static void q6v6_wcss_halt_axi_port(struct q6_wcss *wcss,
@@ -1345,12 +1560,14 @@ static int q6_wcss_powerdown(struct q6_wcss *wcss)
 		return -EINVAL;
 
 	/* 1 - Assert WCSS/Q6 HALTREQ */
-	if (desc->q6ver == Q6V6)
+	if (desc->q6ver == Q6V7)
+		q6v7_wcss_halt_axi_port(wcss, wcss->halt_map, wcss->halt_wcss);
+	else if (desc->q6ver == Q6V6)
 		q6v6_wcss_halt_axi_port(wcss, wcss->halt_map, wcss->halt_wcss);
 	else if (desc->q6ver == Q6V5)
 		q6_wcss_halt_axi_port(wcss, wcss->halt_map, wcss->halt_wcss);
 
-	if (desc->q6ver == Q6V6) {
+	if (desc->q6ver == Q6V6 || desc->q6ver == Q6V7) {
 		val = readl(wcss->rmb_base + SSCAON_CONFIG);
 		val &= ~SSCAON_MASK;
 		val |= SSCAON_BUS_EN;
@@ -1377,16 +1594,15 @@ static int q6_wcss_powerdown(struct q6_wcss *wcss)
 				 HALT_CHECK_MAX_LOOPS);
 	if (ret) {
 		dev_err(wcss->dev,
-			"can't get SSCAON_STATUS rc:%d)\n", ret);
+			"can't get SSCAON_STATUS rc:%d val:0x%X)\n", ret, val);
 		return ret;
 	}
-
 	mdelay(2);
 
 	/* 6 - De-assert WCSS_AON reset */
 	reset_control_assert(wcss->wcss_aon_reset);
 
-	if (desc->q6ver == Q6V6) {
+	if (desc->q6ver == Q6V6 || desc->q6ver == Q6V7) {
 		val = readl(wcss->rmb_base + SSCAON_CONFIG);
 		val &= ~(1<<1);
 		writel(val, wcss->rmb_base + SSCAON_CONFIG);
@@ -1614,11 +1830,12 @@ static int wcss_pcie_pd_stop(struct rproc *rproc)
 
 static int wcss_ahb_pd_stop(struct rproc *rproc)
 {
-	struct q6_wcss *wcss = rproc->priv;
+	struct q6_wcss *wcss = rproc->priv, *rpd_wcss;
 	int ret;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
 	const struct wcss_data *desc;
 
+	rpd_wcss = rpd_rproc->priv;
 	desc = of_device_get_match_data(wcss->dev);
 	if (!desc)
 		return -EINVAL;
@@ -1651,18 +1868,25 @@ static int wcss_ahb_pd_stop(struct rproc *rproc)
 		return ret;
 	}
 
-	/*Assert ce reset*/
-	reset_control_assert(wcss->ce_reset);
-	mdelay(2);
+	if (desc->ce_reset_required) {
+		/*Assert ce reset*/
+		reset_control_assert(wcss->ce_reset);
+		mdelay(2);
+	}
 
-	/*Disable AHB_S clock*/
-	clk_disable_unprepare(wcss->gcc_abhs_cbcr);
+	if (desc->q6ver == Q6V6) {
+		/*Disable AHB_S clock*/
+		clk_disable_unprepare(wcss->gcc_abhs_cbcr);
 
-	/*Disable ACMT clock*/
-	clk_disable_unprepare(wcss->acmt_clk);
+		/*Disable ACMT clock*/
+		clk_disable_unprepare(wcss->acmt_clk);
 
-	/*Disable AXI_M clock*/
-	clk_disable_unprepare(wcss->gcc_axim_cbcr);
+		/*Disable AXI_M clock*/
+		clk_disable_unprepare(wcss->gcc_axim_cbcr);
+	} else if (desc->q6ver == Q6V7) {
+		disable_devsoc_wcss_clocks(wcss);
+		writel(0x0, rpd_wcss->tcsr_msip_base);
+	}
 
 	/* Deassert WCSS reset */
 	reset_control_deassert(wcss->wcss_reset);
@@ -2149,6 +2373,103 @@ static int ipq5018_init_wcss_clock(struct q6_wcss *wcss)
 	return 0;
 }
 
+static int devsoc_init_wcss_clock(struct q6_wcss *wcss)
+{
+	int ret;
+
+	wcss->dbg_apb_bdg_clk =
+			devm_clk_get(wcss->dev, "dbg-apb-bdg");
+	if (IS_ERR(wcss->dbg_apb_bdg_clk)) {
+		ret = PTR_ERR(wcss->dbg_apb_bdg_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "Failed to get dbg_apb_bdg_clk clock\n");
+		return ret;
+	}
+
+	wcss->dbg_nts_clk = devm_clk_get(wcss->dev, "dbg-nts");
+	if (IS_ERR(wcss->dbg_nts_clk)) {
+		ret = PTR_ERR(wcss->dbg_nts_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get dbg nts clock");
+		return PTR_ERR(wcss->dbg_nts_clk);
+	}
+
+	wcss->axi_s_clk = devm_clk_get(wcss->dev, "wcss_axi_s_clk");
+	if (IS_ERR(wcss->axi_s_clk)) {
+		ret = PTR_ERR(wcss->axi_s_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get axi_s_clk clk\n");
+		return PTR_ERR(wcss->axi_s_clk);
+	}
+
+	wcss->dbg_atb_clk = devm_clk_get(wcss->dev, "dbg-atb");
+	if (IS_ERR(wcss->dbg_atb_clk)) {
+		ret = PTR_ERR(wcss->dbg_atb_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get dbg atb clock");
+		return PTR_ERR(wcss->dbg_atb_clk);
+	}
+
+	wcss->dbg_atb_bdg_clk = devm_clk_get(wcss->dev, "dbg-atb-bdg");
+	if (IS_ERR(wcss->dbg_atb_bdg_clk)) {
+		ret = PTR_ERR(wcss->dbg_atb_bdg_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get dbg atb bdg clock");
+		return PTR_ERR(wcss->dbg_atb_bdg_clk);
+	}
+
+	wcss->dbg_apb_clk = devm_clk_get(wcss->dev, "dbg-apb");
+	if (IS_ERR(wcss->dbg_apb_clk)) {
+		ret = PTR_ERR(wcss->dbg_apb_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get dbg apb clock");
+		return PTR_ERR(wcss->dbg_apb_clk);
+	}
+
+
+	wcss->gcc_axim_cbcr = devm_clk_get(wcss->dev, "wcss_axi_m_clk");
+	if (IS_ERR(wcss->gcc_axim_cbcr)) {
+		ret = PTR_ERR(wcss->gcc_axim_cbcr);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get gcc axim clock\n");
+		return PTR_ERR(wcss->gcc_axim_cbcr);
+	}
+
+	wcss->dbg_nts_bdg_clk = devm_clk_get(wcss->dev, "dbg-nts-bdg");
+	if (IS_ERR(wcss->dbg_nts_bdg_clk)) {
+		ret = PTR_ERR(wcss->dbg_nts_bdg_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get dbg nts bdg clock");
+		return PTR_ERR(wcss->dbg_nts_bdg_clk);
+	}
+
+	wcss->gcc_ce_axi_clk = devm_clk_get(wcss->dev, "ce-axi");
+	if (IS_ERR(wcss->gcc_ce_axi_clk)) {
+		ret = PTR_ERR(wcss->gcc_ce_axi_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get ce axi clock");
+		return PTR_ERR(wcss->gcc_ce_axi_clk);
+	}
+
+	wcss->gcc_ce_pcnoc_ahb_clk = devm_clk_get(wcss->dev, "ce-pcnoc-ahb");
+	if (IS_ERR(wcss->gcc_ce_pcnoc_ahb_clk)) {
+		ret = PTR_ERR(wcss->gcc_ce_pcnoc_ahb_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get ce pcnoc ahb clock");
+		return PTR_ERR(wcss->gcc_ce_pcnoc_ahb_clk);
+	}
+
+	wcss->gcc_ce_ahb_clk = devm_clk_get(wcss->dev, "ce-ahb");
+	if (IS_ERR(wcss->gcc_ce_ahb_clk)) {
+		ret = PTR_ERR(wcss->gcc_ce_ahb_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get ce ahb clock");
+		return PTR_ERR(wcss->gcc_ce_ahb_clk);
+	}
+
+	return 0;
+}
+
 static int devsoc_init_q6_clock(struct q6_wcss *wcss)
 {
 	int ret;
@@ -2220,23 +2541,6 @@ static int devsoc_init_q6_clock(struct q6_wcss *wcss)
 		return ret;
 	}
 
-	wcss->dbg_apb_bdg_clk =
-			devm_clk_get(wcss->dev, "dbg-apb-bdg");
-	if (IS_ERR(wcss->dbg_apb_bdg_clk)) {
-		ret = PTR_ERR(wcss->dbg_apb_bdg_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "Failed to get dbg_apb_bdg_clk clock\n");
-		return ret;
-	}
-
-	wcss->dbg_nts_clk = devm_clk_get(wcss->dev, "dbg-nts");
-	if (IS_ERR(wcss->dbg_nts_clk)) {
-		ret = PTR_ERR(wcss->dbg_nts_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get dbg nts clock");
-		return PTR_ERR(wcss->dbg_nts_clk);
-	}
-
 	wcss->axi_s_clk = devm_clk_get(wcss->dev, "wcss_axi_s_clk");
 	if (IS_ERR(wcss->axi_s_clk)) {
 		ret = PTR_ERR(wcss->axi_s_clk);
@@ -2245,53 +2549,12 @@ static int devsoc_init_q6_clock(struct q6_wcss *wcss)
 		return PTR_ERR(wcss->axi_s_clk);
 	}
 
-	wcss->dbg_atb_clk = devm_clk_get(wcss->dev, "dbg-atb");
-	if (IS_ERR(wcss->dbg_atb_clk)) {
-		ret = PTR_ERR(wcss->dbg_atb_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get dbg atb clock");
-		return PTR_ERR(wcss->dbg_atb_clk);
-	}
-
 	wcss->eachb_clk = devm_clk_get(wcss->dev, "wcss_ecahb");
 	if (IS_ERR(wcss->eachb_clk)) {
 		ret = PTR_ERR(wcss->eachb_clk);
 		if (ret != -EPROBE_DEFER)
 			dev_err(wcss->dev, "failed to get  wcss ecahb clk\n");
 		return PTR_ERR(wcss->eachb_clk);
-	}
-
-	wcss->dbg_atb_bdg_clk = devm_clk_get(wcss->dev, "dbg-atb-bdg");
-	if (IS_ERR(wcss->dbg_atb_bdg_clk)) {
-		ret = PTR_ERR(wcss->dbg_atb_bdg_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get dbg atb bdg clock");
-		return PTR_ERR(wcss->dbg_atb_bdg_clk);
-	}
-
-	wcss->dbg_apb_clk = devm_clk_get(wcss->dev, "dbg-apb");
-	if (IS_ERR(wcss->dbg_apb_clk)) {
-		ret = PTR_ERR(wcss->dbg_apb_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get dbg apb clock");
-		return PTR_ERR(wcss->dbg_apb_clk);
-	}
-
-
-	wcss->gcc_axim_cbcr = devm_clk_get(wcss->dev, "wcss_axi_m_clk");
-	if (IS_ERR(wcss->gcc_axim_cbcr)) {
-		ret = PTR_ERR(wcss->gcc_axim_cbcr);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get gcc axim clock\n");
-		return PTR_ERR(wcss->gcc_axim_cbcr);
-	}
-
-	wcss->dbg_nts_bdg_clk = devm_clk_get(wcss->dev, "dbg-nts-bdg");
-	if (IS_ERR(wcss->dbg_nts_bdg_clk)) {
-		ret = PTR_ERR(wcss->dbg_nts_bdg_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get dbg nts bdg clock");
-		return PTR_ERR(wcss->dbg_nts_bdg_clk);
 	}
 
 	wcss->gcc_sys_noc_wcss_ahb_clk =
@@ -2644,13 +2907,17 @@ static const struct wcss_data q6_ipq5018_res_init = {
 };
 
 static const struct wcss_data wcss_ahb_devsoc_res_init = {
+	.init_clock = devsoc_init_wcss_clock,
 	.q6_firmware_name = "devsoc/q6_fw.mdt",
+	.aon_reset_required = true,
+	.wcss_reset_required = true,
+	.ce_reset_required = true,
 	.ops = &wcss_ahb_ipq5018_ops,
 	.need_mem_protection = false,
 	.need_auto_boot = false,
 	.q6ver = Q6V7,
 	.version = WCSS_AHB_IPQ,
-	.reset_seq = false,
+	.reset_seq = true,
 };
 
 static const struct wcss_data wcss_ahb_ipq5018_res_init = {

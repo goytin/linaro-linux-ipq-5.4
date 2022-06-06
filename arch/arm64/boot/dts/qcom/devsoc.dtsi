@@ -750,7 +750,7 @@
 			#size-cells = <1>;
 			ranges;
 			reg = <0x0d100000 0x4040>,
-				<0x1938000 0x8>,
+				<0x193d21c 0x8>,
 				<0x193d204 0x4>,
 				<0x1825000 0x90b8>,
 				<0x4a1000 0x4>;
@@ -787,15 +787,8 @@
 					<&gcc GCC_Q6_AHB_CLK>,
 					<&gcc GCC_Q6_AXIM_CLK>,
 					<&gcc GCC_Q6SS_PCLKDBG_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_APB_BDG_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_NTS_CLK>,
-					<&gcc GCC_WCSS_AXIS_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_ATB_CLK>,
 					<&gcc GCC_WCSS_ECAHB_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_ATB_BDG_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_APB_CLK>,
-					<&gcc GCC_WCSS_AXIM_CLK>,
-					<&gcc GCC_WCSS_DBG_IFC_NTS_BDG_CLK>,
+					<&gcc GCC_WCSS_AXIS_CLK>,
 					<&gcc GCC_SYS_NOC_WCSS_AHB_CLK>;
 
 			clock-names = "q6_tsctr_1to2_clk",
@@ -806,15 +799,8 @@
 					"q6_ahb",
 					"q6_axim",
 					"q6ss_pclkdbg_clk",
-					"dbg-apb-bdg",
-					"dbg-nts",
-					"wcss_axi_s_clk",
-					"dbg-atb",
 					"wcss_ecahb",
-					"dbg-atb-bdg",
-					"dbg-apb",
-					"wcss_axi_m_clk",
-					"dbg-nts-bdg",
+					"wcss_axi_s_clk",
 					"sys_noc_wcss_ahb";
 
 			qcom,halt-regs = <&tcsr_q6_block 0xa000 0xd000 0x0>;
@@ -839,7 +825,38 @@
 				compatible = "qcom,devsoc-wcss-ahb-mpd";
 				reg = <0x004ab000 0x20>;
 				reg-names = "rmb";
-				qcom,halt-regs = <&tcsr_q6_block 0xa000 0xd000 0x0>;
+				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
+
+				resets = <&gcc GCC_WCSSAON_ARES>,
+						<&gcc GCC_WCSS_BCR>,
+						<&gcc GCC_CE_BCR>;
+				reset-names = "wcss_aon_reset",
+						"wcss_reset",
+						"ce_reset";
+
+				clocks = <&gcc GCC_WCSS_DBG_IFC_APB_BDG_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_NTS_CLK>,
+					<&gcc GCC_WCSS_AXIS_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_ATB_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_ATB_BDG_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_APB_CLK>,
+					<&gcc GCC_WCSS_AXIM_CLK>,
+					<&gcc GCC_WCSS_DBG_IFC_NTS_BDG_CLK>,
+					<&gcc GCC_CE_AXI_CLK>,
+					<&gcc GCC_CE_PCNOC_AHB_CLK>,
+					<&gcc GCC_CE_AHB_CLK>;
+
+				clock-names = "dbg-apb-bdg",
+						"dbg-nts",
+						"wcss_axi_s_clk",
+						"dbg-atb",
+						"dbg-atb-bdg",
+						"dbg-apb",
+						"wcss_axi_m_clk",
+						"dbg-nts-bdg",
+						"ce-axi",
+						"ce-pcnoc-ahb",
+						"ce-ahb";
 			};
 		};
 	};

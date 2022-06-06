@@ -75,6 +75,16 @@
 		};
 	};
 
+	firmware {
+		scm {
+			compatible = "qcom,scm";
+		};
+
+		qfprom {
+			compatible = "qcom,qfprom-sec";
+		};
+	};
+
 	soc: soc {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -823,6 +833,28 @@
 				qcom,halt-regs = <&tcsr_q6_block 0xa000 0xd000 0x0>;
 			};
 		};
+	};
+
+	pmu {
+		compatible = "arm,cortex-a53-pmu";
+		interrupts = <GIC_PPI 7 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+	};
+
+	pmu-v7 {
+		compatible = "arm,cortex-a7-pmu";
+		interrupts = <GIC_PPI 7 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+	};
+
+	qti,tzlog {
+		compatible = "qti,tzlog";
+		interrupts = <GIC_SPI 267 IRQ_TYPE_EDGE_RISING>;
+		qti,tz-diag-buf-size = <0x3000>;
+		qti,tz-ring-off = <7>;
+		qti,tz-log-pos-info-off = <810>;
+	};
+
+	qti,scm_restart_reason {
+		compatible = "qti,scm_restart_reason";
 	};
 
 	psci {

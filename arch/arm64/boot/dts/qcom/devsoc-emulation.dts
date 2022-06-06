@@ -62,6 +62,16 @@
 		};
 	};
 
+	firmware {
+		scm {
+			status = "disabled";
+		};
+
+		qfprom {
+			status = "disabled";
+		};
+	};
+
 	soc {
 		pinctrl@1000000 {
 			emmc_pins: emmc_pins {
@@ -234,6 +244,14 @@
 	};
 
 	psci {
+		status = "disabled";
+	};
+
+	qti,tzlog {
+		status = "disabled";
+	};
+
+	qti,scm_restart_reason {
 		status = "disabled";
 	};
 

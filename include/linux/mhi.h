@@ -459,6 +459,8 @@ struct mhi_controller {
 	int disable_rddm_prealloc;
 	u32 rddm_seg_len;
 	u32 dev_id;
+	u8 *bootargs_buf;
+	dma_addr_t bootargs_dma;
 };
 
 /**

@@ -593,7 +593,7 @@ int mhi_alloc_bhie_table(struct mhi_controller *mhi_cntrl,
 			 bool is_fbc);
 void mhi_free_bhie_table(struct mhi_controller *mhi_cntrl,
 			 struct image_info *image_info, bool is_fbc);
-
+void mhi_free_boot_args(struct mhi_controller *mhi_cntrl);
 /* Power management APIs */
 enum mhi_pm_state __must_check mhi_tryset_pm_state(
 					struct mhi_controller *mhi_cntrl,

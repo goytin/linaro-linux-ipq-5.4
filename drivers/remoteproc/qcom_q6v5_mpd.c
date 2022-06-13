@@ -30,6 +30,7 @@
 #include "qcom_q6v5.h"
 
 #define WCSS_CRASH_REASON		421
+#define WCSS_SMEM_HOST			1
 
 #define Q6_BOOT_TRIG_SVC_ID		0x5
 #define Q6_BOOT_TRIG_CMD_ID		0x2
@@ -253,6 +254,7 @@ struct wcss_data {
 				void (*handover)(struct qcom_q6v5 *q6));
 	const char *q6_firmware_name;
 	int crash_reason_smem;
+	int remote_id;
 	u32 version;
 	u32 reset_cmd_id;
 	bool aon_reset_required;
@@ -2560,7 +2562,7 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	wcss->pd_asid = qcom_get_pd_asid(wcss->dev->of_node);
 
 	if (desc->init_irq) {
-		ret = desc->init_irq(&wcss->q6, pdev, rproc, 0,
+		ret = desc->init_irq(&wcss->q6, pdev, rproc, desc->remote_id,
 				desc->crash_reason_smem, NULL);
 		if (ret)
 			goto free_rproc;
@@ -2616,6 +2618,7 @@ static const struct wcss_data q6_devsoc_res_init = {
 	.init_irq = qcom_q6v5_init,
 	.q6_firmware_name = "devsoc/q6_fw.mdt",
 	.crash_reason_smem = WCSS_CRASH_REASON,
+	.remote_id = WCSS_SMEM_HOST,
 	.aon_reset_required = true,
 	.wcss_q6_reset_required = true,
 	.ssr_name = "q6wcss",

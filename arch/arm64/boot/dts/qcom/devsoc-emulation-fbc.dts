@@ -37,6 +37,16 @@
 		stdout-path = "serial0";
 	};
 
+	firmware {
+		scm {
+			status = "disabled";
+		};
+
+		qfprom {
+			status = "disabled";
+		};
+	};
+
 	soc {
 		pinctrl@1000000 {
 			emmc_pins: emmc_pins {
@@ -100,7 +110,6 @@
 		serial@78b0000 {
 			pinctrl-0 = <&serial_1_pins>;
 			pinctrl-names = "default";
-			status = "ok";
 		};
 
 		spi@78b5000 {
@@ -133,6 +142,7 @@
 
 		timer@b120000 {
 			clock-frequency = <240000>;
+			status = "disabled";
 		};
 
 		usb3@8A00000 {
@@ -186,6 +196,15 @@
 				};
 			};
 		};
+
+	};
+
+	qti,tzlog {
+		status = "disabled";
+	};
+
+	qti,scm_restart_reason {
+		status = "disabled";
 	};
 
 };

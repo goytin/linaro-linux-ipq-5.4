@@ -803,7 +803,11 @@
 };
 
 &wifi1 {
+#if defined (__CNSS2__)
 	/delete-property/ mem-region;
+#else
+	/delete-property/ memory-region;
+#endif
 	status = "disabled";
 };
 

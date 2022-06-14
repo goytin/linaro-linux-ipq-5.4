@@ -196,15 +196,10 @@ uint32_t ipq_lpass_pcm_validate_params(struct ipq_lpass_pcm_params *params,
 	config->bit_width = params->bit_width;
 	config->slot_count = params->slot_count;
 	config->slot_width = params->bit_width;
-	if (ipq_hw == IPQ9574) {
-		config->sync_type = TDM_LONG_SYNC_TYPE;
-		config->sync_delay = TDM_DATA_DELAY_1_CYCLE;
-	} else {
-		config->sync_type = TDM_SHORT_SYNC_TYPE;
-		config->sync_delay = TDM_DATA_DELAY_0_CYCLE;
-	}
+	config->sync_type = TDM_SHORT_SYNC_TYPE;
 	config->ctrl_data_oe = TDM_CTRL_DATA_OE_ENABLE;
 	config->invert_sync = TDM_LONG_SYNC_NORMAL;
+	config->sync_delay = TDM_DATA_DELAY_0_CYCLE;
 
 	return 0;
 }
@@ -332,7 +327,7 @@ static int ipq_lpass_setup_bit_clock(uint32_t clk_rate)
 			return -EINVAL;
 		} else {
 			ipq_lpass_lpaif_muxsetup(INTERFACE_SECONDARY,
-						TDM_MODE_MASTER);
+						TDM_MODE_SLAVE);
 		}
 	} else {
 

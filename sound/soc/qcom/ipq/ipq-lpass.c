@@ -1217,11 +1217,11 @@ void ipq_lpass_lpaif_muxsetup(uint32_t intf, uint32_t mode)
 	uint32_t val, src;
 
 	if (mode == TDM_MODE_MASTER) {
-		val = (ipq_hw == IPQ9574) ? 2 : 3;
+		val = (ipq_hw == IPQ9574) ? 0 : 3;
 		src = 0;
 	} else {
-		val = 1;
-		src = 1;
+		val = (ipq_hw == IPQ9574) ? 0 : 1;
+		src = (ipq_hw == IPQ9574) ? 0 : 1;
 	}
 
 	switch(intf) {

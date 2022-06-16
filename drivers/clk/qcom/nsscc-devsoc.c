@@ -1041,6 +1041,7 @@ static const struct qcom_reset_map nss_cc_devsoc_resets[] = {
 	[NSS_CC_UNIPHY_PORT1_RX_CLK_ARES] = { 0x4b4, 2 },
 	[NSS_CC_UNIPHY_PORT1_TX_CLK_ARES] = { 0x4b8, 2 },
 	[NSS_CC_UNIPHY_PORT2_RX_CLK_ARES] = { 0x4bc, 2 },
+	[NSS_CC_UNIPHY_PORT2_TX_CLK_ARES] = { 0x4c0, 2 },
 	[NSS_CC_XGMAC0_PTP_REF_CLK_ARES] = { 0x438, 2 },
 	[NSS_CC_XGMAC1_PTP_REF_CLK_ARES] = { 0x43c, 2 },
 };

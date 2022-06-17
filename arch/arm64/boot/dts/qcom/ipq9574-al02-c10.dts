@@ -19,12 +19,30 @@
 
 	soc {
 		dp1 {
-			/delete-property/ qcom,link-poll;
+			qcom,id = <5>;
+			reg = <0x3a510000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,phy-mdio-addr = <8>;
 		};
 
-		/delete-node/ dp2;
-		/delete-node/ dp3;
+		dp2 {
+			qcom,id = <6>;
+			reg = <0x3a514000 0x4000>;
+			qcom,mactype = <1>;
+			qcom,phy-mdio-addr = <0>;
+		};
+
+		dp3 {
+			qcom,id = <1>;
+			reg = <0x3a001000 0x200>;
+			qcom,mactype = <0>;
+			/delete-property/qcom,link-poll;
+			/delete-property/qcom,phy-mdio-addr;
+		};
+
 		/delete-node/ dp4;
+		/delete-node/ dp5;
+		/delete-node/ dp6;
 
 		mdio0:mdio@90000 {
 			/*gpio60 for manhattan reset*/

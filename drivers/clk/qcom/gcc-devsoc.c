@@ -3097,6 +3097,60 @@ static struct clk_branch gcc_wcss_slv_async_bdg_clk = {
 	},
 };
 
+static struct clk_branch gcc_ce_axi_clk = {
+	.halt_reg = 0x25068,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x25068,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_ce_axi_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gpll4.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
+static struct clk_branch gcc_ce_pcnoc_ahb_clk = {
+	.halt_reg = 0x25070,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x25070,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_ce_pcnoc_ahb_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gpll0.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
+static struct clk_branch gcc_ce_ahb_clk = {
+	.halt_reg = 0x25074,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x25074,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_ce_ahb_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gpll4.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static struct clk_branch gcc_xo_clk = {
 	.halt_reg = 0x34018,
 	.halt_check = BRANCH_HALT,
@@ -3351,6 +3405,9 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_WCSS_ECAHB_CLK] = DEFINE_DUMMY_CLK(gcc_wcss_ecahb_clk),
 	[GCC_WCSS_MST_ASYNC_BDG_CLK] = DEFINE_DUMMY_CLK(gcc_wcss_mst_async_bdg_clk),
 	[GCC_WCSS_SLV_ASYNC_BDG_CLK] = DEFINE_DUMMY_CLK(gcc_wcss_slv_async_bdg_clk),
+	[GCC_CE_AXI_CLK] = DEFINE_DUMMY_CLK(gcc_ce_axi_clk),
+	[GCC_CE_PCNOC_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_ce_pcnoc_ahb_clk),
+	[GCC_CE_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_ce_ahb_clk),
 	[GCC_XO_CLK] = DEFINE_DUMMY_CLK(gcc_xo_clk),
 	[GCC_XO_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_xo_clk_src),
 	[GCC_XO_DIV4_CLK] = DEFINE_DUMMY_CLK(gcc_xo_div4_clk),
@@ -3514,6 +3571,9 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GCC_WCSS_ECAHB_CLK] = &gcc_wcss_ecahb_clk.clkr,
 	[GCC_WCSS_MST_ASYNC_BDG_CLK] = &gcc_wcss_mst_async_bdg_clk.clkr,
 	[GCC_WCSS_SLV_ASYNC_BDG_CLK] = &gcc_wcss_slv_async_bdg_clk.clkr,
+	[GCC_CE_AXI_CLK] = &gcc_ce_axi_clk.clkr,
+	[GCC_CE_PCNOC_AHB_CLK] = &gcc_ce_pcnoc_ahb_clk.clkr,
+	[GCC_CE_AHB_CLK] = &gcc_ce_ahb_clk.clkr,
 	[GCC_XO_CLK] = &gcc_xo_clk.clkr,
 	[GCC_XO_CLK_SRC] = &gcc_xo_clk_src.clkr,
 	[GCC_XO_DIV4_CLK] = &gcc_xo_div4_clk.clkr,
@@ -3675,6 +3735,7 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_WCSS_AXI_S_ARES] = { 0x25098, 2 },
 	[GCC_WCSS_AXI_M_ARES] = { 0x25098, 3 },
 	[GCC_WCSSAON_ARES] = { 0x2509C },
+	[GCC_CE_BCR] = {0x18008},
 	[GCC_PCIE3X2_PIPE_ARES] = { 0x28058, 0 },
 	[GCC_PCIE3X2_CORE_STICKY_ARES] = { 0x28058, 1 },
 	[GCC_PCIE3X2_AXI_S_STICKY_ARES] = { 0x28058, 2 },

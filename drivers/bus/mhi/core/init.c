@@ -320,7 +320,7 @@ int mhi_init_dev_ctxt(struct mhi_controller *mhi_cntrl)
 		tmp &= ~EV_CTX_INTMODC_MASK;
 		tmp &= ~EV_CTX_INTMODT_MASK;
 		tmp |= (mhi_event->intmod << EV_CTX_INTMODT_SHIFT);
-		er_ctxt->intmod = tmp;
+		er_ctxt->intmod = cpu_to_le32(tmp);
 
 		er_ctxt->ertype = cpu_to_le32(MHI_ER_TYPE_VALID);
 		er_ctxt->msivec = cpu_to_le32(mhi_event->irq);

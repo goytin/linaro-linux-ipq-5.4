@@ -13,6 +13,7 @@
 #include <linux/types.h>
 
 #include "pcie-designware.h"
+#include "pcie-designware-debugfs.h"
 
 /*
  * These interfaces resemble the pci_find_*capability() interfaces, but these
@@ -577,4 +578,8 @@ void dw_pcie_setup(struct dw_pcie *pci)
 		       PCIE_PL_CHK_REG_CHK_REG_START;
 		dw_pcie_writel_dbi(pci, PCIE_PL_CHK_REG_CONTROL_STATUS, val);
 	}
+
+	ret = create_debugfs_files(pci);
+	if (ret)
+		dev_err(pci->dev, "Couldn't create debugfs files\n");
 }

@@ -197,6 +197,9 @@
 			};
 		};
 
+		q6v5_wcss: remoteproc@d100000 {
+			qcom,emulation;
+		};
 	};
 
 	qti,tzlog {

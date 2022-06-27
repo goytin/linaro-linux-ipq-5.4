@@ -3537,6 +3537,78 @@ static struct clk_branch gcc_im_sleep_clk = {
 	},
 };
 
+static struct clk_branch gcc_nssnoc_pcnoc_1_clk = {
+	.halt_reg = 0x17080,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x17080,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_nssnoc_pcnoc_1_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gcc_pcnoc_bfdcd_clk_src.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
+static struct clk_branch gcc_mem_noc_ahb_clk = {
+	.halt_reg = 0x1900c,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x1900c,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_mem_noc_ahb_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gcc_pcnoc_bfdcd_clk_src.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
+static struct clk_branch gcc_mem_noc_apss_axi_clk = {
+	.halt_reg = 0x1901c,
+	.halt_check = BRANCH_HALT_VOTED,
+	.clkr = {
+		.enable_reg = 0xb004,
+		.enable_mask = BIT(6),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_mem_noc_apss_axi_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gcc_apss_axi_clk_src.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
+static struct clk_branch gcc_mem_noc_qosgen_extref_clk = {
+	.halt_reg = 0x19024,
+	.halt_check = BRANCH_HALT,
+	.clkr = {
+		.enable_reg = 0x19024,
+		.enable_mask = BIT(0),
+		.hw.init = &(const struct clk_init_data){
+			.name = "gcc_mem_noc_qosgen_extref_clk",
+			.parent_hws = (const struct clk_hw*[]){
+				&gcc_snoc_qosgen_extref_div_clk_src.clkr.hw,
+			},
+			.num_parents = 1,
+			.flags = CLK_SET_RATE_PARENT,
+			.ops = &clk_branch2_ops,
+		},
+	},
+};
+
 static int clk_dummy_is_enabled(struct clk_hw *hw)
 {
 	return 1;
@@ -3783,6 +3855,10 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_XO_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_xo_clk_src),
 	[GCC_XO_DIV4_CLK] = DEFINE_DUMMY_CLK(gcc_xo_div4_clk),
 	[GCC_IM_SLEEP_CLK] = DEFINE_DUMMY_CLK(gcc_im_sleep_clk),
+	[GCC_NSSNOC_PCNOC_1_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_pcnoc_1_clk),
+	[GCC_MEM_NOC_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_ahb_clk),
+	[GCC_MEM_NOC_APSS_AXI_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_apss_axi_clk),
+	[GCC_MEM_NOC_QOSGEN_EXTREF_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_qosgen_extref_clk),
 	[GPLL0] = DEFINE_DUMMY_CLK(gpll0),
 	[GPLL2] = DEFINE_DUMMY_CLK(gpll2),
 	[GPLL4] = DEFINE_DUMMY_CLK(gpll4),
@@ -3971,6 +4047,10 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GCC_XO_CLK_SRC] = &gcc_xo_clk_src.clkr,
 	[GCC_XO_DIV4_CLK] = &gcc_xo_div4_clk.clkr,
 	[GCC_IM_SLEEP_CLK] = &gcc_im_sleep_clk.clkr,
+	[GCC_NSSNOC_PCNOC_1_CLK] = &gcc_nssnoc_pcnoc_1_clk.clkr,
+	[GCC_MEM_NOC_AHB_CLK] = &gcc_mem_noc_ahb_clk.clkr,
+	[GCC_MEM_NOC_APSS_AXI_CLK] = &gcc_mem_noc_apss_axi_clk.clkr,
+	[GCC_MEM_NOC_QOSGEN_EXTREF_CLK] = &gcc_mem_noc_qosgen_extref_clk.clkr,
 	[GPLL0] = &gpll0.clkr,
 	[GPLL2] = &gpll2.clkr,
 	[GPLL4] = &gpll4.clkr,
@@ -4148,6 +4228,7 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_PCIE3X1_1_AXI_S_STICKY_ARES] = { 0x2a058, 2 },
 	[GCC_PCIE3X1_1_AXI_M_STICKY_ARES] = { 0x2a058, 3 },
 	[GCC_IM_SLEEP_CLK_ARES] = { 0x34020, 2 },
+	[GCC_NSSNOC_PCNOC_1_CLK_ARES] = { 0x17080, 2 },
 };
 
 static const struct regmap_config gcc_devsoc_regmap_config = {

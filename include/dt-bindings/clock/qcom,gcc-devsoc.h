@@ -187,9 +187,13 @@
 #define GCC_XO_CLK_SRC					177
 #define GCC_XO_DIV4_CLK					178
 #define GCC_IM_SLEEP_CLK				179
-#define GPLL0						180
-#define GPLL2						181
-#define GPLL4						182
-#define GPLL6						183
+#define GCC_NSSNOC_PCNOC_1_CLK				180
+#define GCC_MEM_NOC_AHB_CLK				181
+#define GCC_MEM_NOC_APSS_AXI_CLK			182
+#define GCC_MEM_NOC_QOSGEN_EXTREF_CLK			183
+#define GPLL0						184
+#define GPLL2						185
+#define GPLL4						186
+#define GPLL6						187
 
 #endif

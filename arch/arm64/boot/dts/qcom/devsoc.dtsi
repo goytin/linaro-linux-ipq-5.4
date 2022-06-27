@@ -1191,6 +1191,7 @@
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges;
+			firmware = "devsoc/q6_fw0.mdt";
 			reg = <0x0d100000 0x4040>,
 				<0x193d21c 0x8>,
 				<0x193d204 0x4>,
@@ -1267,6 +1268,7 @@
 				compatible = "qcom,devsoc-wcss-ahb-mpd";
 				reg = <0x004ab000 0x20>;
 				reg-names = "rmb";
+				firmware = "devsoc/q6_fw1.mdt";
 				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
 
 				resets = <&gcc GCC_WCSSAON_ARES>,

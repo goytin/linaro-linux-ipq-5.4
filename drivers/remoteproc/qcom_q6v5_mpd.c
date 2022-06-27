@@ -256,6 +256,15 @@ struct q6_wcss {
 	enum q6_wcss_state state;
 	bool backdoor;
 	bool is_emulation;
+	bool is_fw_shared;
+	int (*mdt_load_sec)(struct device *dev, const struct firmware *fw,
+			const char *fw_name, int pas_id, void *mem_region,
+			phys_addr_t mem_phys, size_t mem_size,
+			phys_addr_t *reloc_base);
+	int (*mdt_load_nosec)(struct device *dev, const struct firmware *fw,
+			const char *fw_name, int pas_id, void *mem_region,
+			phys_addr_t mem_phys, size_t mem_size,
+			phys_addr_t *reloc_base);
 };
 
 struct wcss_data {
@@ -289,6 +298,15 @@ struct wcss_data {
 	bool reset_seq;
 	bool halt_v2;
 	enum q6_version q6ver;
+	bool is_fw_shared;
+	int (*mdt_load_sec)(struct device *dev, const struct firmware *fw,
+			const char *fw_name, int pas_id, void *mem_region,
+			phys_addr_t mem_phys, size_t mem_size,
+			phys_addr_t *reloc_base);
+	int (*mdt_load_nosec)(struct device *dev, const struct firmware *fw,
+			const char *fw_name, int pas_id, void *mem_region,
+			phys_addr_t mem_phys, size_t mem_size,
+			phys_addr_t *reloc_base);
 };
 
 struct wcss_clk {
@@ -2275,26 +2293,27 @@ static int wcss_ahb_pcie_pd_load(struct rproc *rproc, const struct firmware *fw)
 	wcss_rpd = rpd_rproc->priv;
 
 	/* Simply Return in case of
-	 * 1) Root pd recovery
+	 * 1) Root pd recovery and fw shared
 	 */
-	if (wcss_rpd->state == WCSS_RESTARTING)
+	if (wcss_rpd->state == WCSS_RESTARTING && wcss->is_fw_shared)
 		return 0;
 
-	/* Don't boot rootpd rproc incase user pd recovering after crash */
-	if (wcss->state != WCSS_RESTARTING) {
+	/* Don't boot rootpd rproc incase user/root pd recovering after crash */
+	if (wcss->state != WCSS_RESTARTING &&
+			wcss_rpd->state != WCSS_RESTARTING) {
 		/* Boot rootpd rproc*/
 		ret = rproc_boot(rpd_rproc);
-		if (ret || wcss->state == WCSS_NORMAL)
+		if ((ret || wcss->state == WCSS_NORMAL) && wcss->is_fw_shared)
 			return ret;
 	}
 
 	if (wcss->need_mem_protection)
-		return qcom_mdt_load(wcss->dev, fw, rproc->firmware,
+		return wcss->mdt_load_sec(wcss->dev, fw, rproc->firmware,
 				     MPD_WCNSS_PAS_ID, wcss->mem_region,
 				     wcss->mem_phys, wcss->mem_size,
 				     &wcss->mem_reloc);
 
-	return qcom_mdt_load_no_init(wcss->dev, fw, rproc->firmware,
+	return wcss->mdt_load_nosec(wcss->dev, fw, rproc->firmware,
 				     0, wcss->mem_region, wcss->mem_phys,
 				     wcss->mem_size, &wcss->mem_reloc);
 }
@@ -3038,6 +3057,7 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	struct rproc *rproc;
 	int ret;
 	char *subdev_name;
+	const char *fw_name;
 
 	desc = of_device_get_match_data(&pdev->dev);
 	if (!desc)
@@ -3046,8 +3066,10 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	if (desc->need_mem_protection && !qcom_scm_is_available())
 		return -EPROBE_DEFER;
 
+	of_property_read_string(pdev->dev.of_node, "firmware", &fw_name);
+
 	rproc = rproc_alloc(&pdev->dev, pdev->name, desc->ops,
-			    desc->q6_firmware_name, sizeof(*wcss));
+			    fw_name, sizeof(*wcss));
 	if (!rproc) {
 		dev_err(&pdev->dev, "failed to allocate rproc\n");
 		return -ENOMEM;
@@ -3059,6 +3081,15 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	wcss->requires_force_stop = desc->requires_force_stop;
 	wcss->need_mem_protection = desc->need_mem_protection;
 	wcss->reset_cmd_id = desc->reset_cmd_id;
+	wcss->is_fw_shared = desc->is_fw_shared;
+	wcss->mdt_load_sec = desc->mdt_load_sec;
+	wcss->mdt_load_nosec = desc->mdt_load_nosec;
+
+	if (of_property_read_bool(pdev->dev.of_node, "qcom,fw_shared")) {
+		wcss->is_fw_shared = true;
+		wcss->mdt_load_sec = qcom_mdt_load_pd_seg;
+		wcss->mdt_load_nosec = qcom_mdt_load_pd_seg_no_init;
+	}
 
 	if (wcss->version != WCSS_PCIE_IPQ) {
 		ret = q6_wcss_init_mmio(wcss, pdev);
@@ -3196,6 +3227,8 @@ static const struct wcss_data wcss_ahb_devsoc_res_init = {
 	.version = WCSS_AHB_IPQ,
 	.reset_seq = true,
 	.halt_v2 = true,
+	.mdt_load_sec = qcom_mdt_load,
+	.mdt_load_nosec = qcom_mdt_load_no_init,
 };
 
 static const struct wcss_data wcss_ahb_ipq5018_res_init = {
@@ -3212,6 +3245,9 @@ static const struct wcss_data wcss_ahb_ipq5018_res_init = {
 	.q6ver = Q6V6,
 	.version = WCSS_AHB_IPQ,
 	.reset_seq = true,
+	.is_fw_shared = true,
+	.mdt_load_sec = qcom_mdt_load_pd_seg,
+	.mdt_load_nosec = qcom_mdt_load_pd_seg_no_init,
 };
 
 static const struct wcss_data wcss_pcie_ipq5018_res_init = {
@@ -3223,6 +3259,9 @@ static const struct wcss_data wcss_pcie_ipq5018_res_init = {
 	.need_auto_boot = false,
 	.q6ver = Q6V6,
 	.version = WCSS_PCIE_IPQ,
+	.is_fw_shared = true,
+	.mdt_load_sec = qcom_mdt_load_pd_seg,
+	.mdt_load_nosec = qcom_mdt_load_pd_seg_no_init,
 };
 
 static const struct wcss_data q6_ipq9574_res_init = {
@@ -3263,6 +3302,9 @@ static const struct wcss_data wcss_ahb_ipq9574_res_init = {
 	.q6ver = Q6V7,
 	.version = WCSS_AHB_IPQ,
 	.reset_seq = true,
+	.is_fw_shared = true,
+	.mdt_load_sec = qcom_mdt_load_pd_seg,
+	.mdt_load_nosec = qcom_mdt_load_pd_seg_no_init,
 };
 
 static const struct wcss_data wcss_pcie_ipq9574_res_init = {
@@ -3275,6 +3317,9 @@ static const struct wcss_data wcss_pcie_ipq9574_res_init = {
 	.need_auto_boot = false,
 	.q6ver = Q6V7,
 	.version = WCSS_PCIE_IPQ,
+	.is_fw_shared = true,
+	.mdt_load_sec = qcom_mdt_load_pd_seg,
+	.mdt_load_nosec = qcom_mdt_load_pd_seg_no_init,
 };
 
 static const struct of_device_id q6_wcss_of_match[] = {

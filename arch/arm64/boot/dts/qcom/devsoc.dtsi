@@ -304,6 +304,16 @@
 			#reset-cells = <0x1>;
 		};
 
+		dcc_v2@797f000 {
+			compatible = "qcom,dcc-v2-devsoc";
+			reg = <0x40ff000 0x1000>,
+				<0x4080000 0x800>;
+			reg-names = "dcc-base", "dcc-ram-base";
+			dcc-ram-offset = <0x0>;
+			qca,save-reg;
+			status = "ok";
+		};
+
 		blsp_dma: dma@7884000 {
 			compatible = "qcom,bam-v1.7.0";
 			reg = <0x07884000 0x1d000>;

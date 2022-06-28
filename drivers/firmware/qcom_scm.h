@@ -219,7 +219,7 @@ extern int __qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 #define ABNORMAL_MAGIC				0x3
 #define DLOAD_MODE_DISABLE_ABNORMALRESET	0x40ull
 #define TCSR_Q6SS_BOOT_TRIG_REG			0x193d204ull
-#define SET_KERNEL_COMPLETE			(~BIT(10))
+#define SET_KERNEL_COMPLETE			(~BIT(11))
 
 #define PD_LOAD_SVC_ID          0x2
 #define PD_LOAD_CMD_ID          0x16

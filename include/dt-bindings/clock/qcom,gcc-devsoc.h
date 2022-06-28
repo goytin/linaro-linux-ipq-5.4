@@ -190,10 +190,11 @@
 #define GCC_NSSNOC_PCNOC_1_CLK				180
 #define GCC_MEM_NOC_AHB_CLK				181
 #define GCC_MEM_NOC_APSS_AXI_CLK			182
-#define GCC_MEM_NOC_QOSGEN_EXTREF_CLK			183
-#define GPLL0						184
-#define GPLL2						185
-#define GPLL4						186
-#define GPLL6						187
+#define GCC_SNOC_QOSGEN_EXTREF_DIV_CLK_SRC		183
+#define GCC_MEM_NOC_QOSGEN_EXTREF_CLK			184
+#define GPLL0						185
+#define GPLL2						186
+#define GPLL4						187
+#define GPLL6						188
 
 #endif

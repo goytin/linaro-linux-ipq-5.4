@@ -99,6 +99,7 @@
 				switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
 				switch_lan_bmp = <0x3e>; /* lan port bitmap */
 				switch_wan_bmp = <0x0>;  /* wan port bitmap */
+				tm_tick_mode = <1>; /* tm tick mode */
 				qcom,port_phyinfo {
 					port@0 {
 						port_id = <0>;

@@ -3591,6 +3591,21 @@ static struct clk_branch gcc_mem_noc_apss_axi_clk = {
 	},
 };
 
+static struct clk_regmap_div gcc_snoc_qosgen_extref_div_clk_src = {
+	.reg = 0x2e010,
+	.shift = 0,
+	.width = 2,
+	.clkr.hw.init = &(const struct clk_init_data) {
+		.name = "gcc_snoc_qosgen_extref_div_clk_src",
+		.parent_hws = (const struct clk_hw*[]){
+			&gcc_xo_clk_src.clkr.hw,
+		},
+		.num_parents = 1,
+		.flags = CLK_SET_RATE_PARENT,
+		.ops = &clk_regmap_div_ro_ops,
+	},
+};
+
 static struct clk_branch gcc_mem_noc_qosgen_extref_clk = {
 	.halt_reg = 0x19024,
 	.halt_check = BRANCH_HALT,
@@ -3858,6 +3873,7 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_NSSNOC_PCNOC_1_CLK] = DEFINE_DUMMY_CLK(gcc_nssnoc_pcnoc_1_clk),
 	[GCC_MEM_NOC_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_ahb_clk),
 	[GCC_MEM_NOC_APSS_AXI_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_apss_axi_clk),
+	[GCC_SNOC_QOSGEN_EXTREF_DIV_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_snoc_qosgen_extref_div_clk_src),
 	[GCC_MEM_NOC_QOSGEN_EXTREF_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_qosgen_extref_clk),
 	[GPLL0] = DEFINE_DUMMY_CLK(gpll0),
 	[GPLL2] = DEFINE_DUMMY_CLK(gpll2),
@@ -4050,6 +4066,7 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GCC_NSSNOC_PCNOC_1_CLK] = &gcc_nssnoc_pcnoc_1_clk.clkr,
 	[GCC_MEM_NOC_AHB_CLK] = &gcc_mem_noc_ahb_clk.clkr,
 	[GCC_MEM_NOC_APSS_AXI_CLK] = &gcc_mem_noc_apss_axi_clk.clkr,
+	[GCC_SNOC_QOSGEN_EXTREF_DIV_CLK_SRC] = &gcc_snoc_qosgen_extref_div_clk_src.clkr,
 	[GCC_MEM_NOC_QOSGEN_EXTREF_CLK] = &gcc_mem_noc_qosgen_extref_clk.clkr,
 	[GPLL0] = &gpll0.clkr,
 	[GPLL2] = &gpll2.clkr,

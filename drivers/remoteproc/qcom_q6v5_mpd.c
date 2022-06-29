@@ -82,7 +82,7 @@
 #define Q6SS_BHS_ON		BIT(24)
 #define Q6SS_CLAMP_WL		BIT(21)
 #define Q6SS_CLAMP_QMC_MEM		BIT(22)
-#define HALT_CHECK_MAX_LOOPS		10000
+#define HALT_CHECK_MAX_LOOPS		20000
 #define Q6SS_XO_CBCR		GENMASK(5, 3)
 #define Q6SS_SLEEP_CBCR		GENMASK(5, 2)
 #define Q6SS_CORE_CBCR         BIT(5)
@@ -1592,8 +1592,8 @@ static int q6_wcss_powerdown(struct q6_wcss *wcss)
 
 	/* 5 - wait for SSCAON_STATUS */
 	ret = readl_poll_timeout(wcss->rmb_base + SSCAON_STATUS,
-				 val, (val & 0xffff) == 0x400, 1000,
-				 HALT_CHECK_MAX_LOOPS);
+				val, (val & 0xffff) == 0x400, 1000,
+				HALT_CHECK_MAX_LOOPS);
 	if (ret) {
 		dev_err(wcss->dev,
 			"can't get SSCAON_STATUS rc:%d val:0x%X)\n", ret, val);

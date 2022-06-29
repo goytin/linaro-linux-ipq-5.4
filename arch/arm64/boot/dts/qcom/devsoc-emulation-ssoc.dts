@@ -124,6 +124,10 @@
 		timer@b120000 {
 			clock-frequency = <120000>;
 		};
+
+		q6v5_wcss: remoteproc@d100000 {
+			qcom,emulation;
+		};
 	};
 
 	psci {

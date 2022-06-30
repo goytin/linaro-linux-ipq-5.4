@@ -381,7 +381,9 @@
 };
 
 &pcie0 {
+#if defined(__CNSS2__)
 	status = "ok";
+#endif
 };
 
 &qusb_phy_1 {

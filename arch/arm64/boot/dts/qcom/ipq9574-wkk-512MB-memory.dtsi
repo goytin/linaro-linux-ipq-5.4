@@ -62,31 +62,31 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI0  |  0x4FE00000  |          14MB           |
+	 * |  Wkk1  |  0x4FE00000  |          47MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  Wkk1  |  0x50C00000  |          47MB           |
+	 * |  WKK2  |  0x52D00000  |          47MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x53B00000  |          14MB           |
+	 * |  WKK3  |  0x55C00000  |          47MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  WKK2  |  0x54900000  |          47MB           |
+	 * |  MHI0  |    DYNAMIC   |          14MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI2  |  0x57800000  |          14MB           |
+	 * |  MHI1  |    DYNAMIC   |          14MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  WKK3  |  0x58600000  |          47MB           |
+	 * |  MHI2  |    DYNAMIC   |          14MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI3  |  0x5B500000  |          14MB           |
+	 * |  MHI3  |    DYNAMIC   |          14MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
@@ -174,49 +174,49 @@
 			status = "disabled";
 		};
 
-		mhi_region0: dma_pool0@4fe00000 {
+		qcn9224_pcie1: qcn9224_pcie1@4fe00000 {
+			no-map;
+			reg = <0x0 0x4FE00000 0x0 0x02F00000>;
+			status = "disabled";
+		};
+
+		qcn9224_pcie2: qcn9224_pcie2@52d00000 {
+			no-map;
+			reg = <0x0 0x52D00000 0x0 0x02F00000>;
+			status = "disabled";
+		};
+
+		qcn9224_pcie3: qcn9224_pcie3@55C00000 {
+			no-map;
+			reg = <0x0 0x55C00000 0x0 0x02F00000>;
+			status = "disabled";
+		};
+
+		mhi_region0: dma_pool0@0 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x4FE00000 0x0 0x00E00000>;
+			size = <0x0 0x00E00000>;
 			status = "disabled";
 		};
 
-		qcn9224_pcie1: qcn9224_pcie1@50C00000 {
-			no-map;
-			reg = <0x0 0x50C00000 0x0 0x02F00000>;
-			status = "disabled";
-		};
-
-		mhi_region1: dma_pool1@53B00000 {
+		mhi_region1: dma_pool1@1 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x53B00000 0x0 0x00E00000>;
+			size = <0x0 0x00E00000>;
 			status = "disabled";
 		};
 
-		qcn9224_pcie2: qcn9224_pcie2@54900000 {
-			no-map;
-			reg = <0x0 0x54900000 0x0 0x02F00000>;
-			status = "disabled";
-		};
-
-		mhi_region2: dma_pool2@57800000 {
+		mhi_region2: dma_pool2@2 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x57800000 0x0 0x00E00000>;
+			size = <0x0 0x00E00000>;
 			status = "disabled";
 		};
 
-		qcn9224_pcie3: qcn9224_pcie3@58600000 {
-			no-map;
-			reg = <0x0 0x58600000 0x0 0x02F00000>;
-			status = "disabled";
-		};
-
-		mhi_region3: dma_pool3@5b500000 {
+		mhi_region3: dma_pool3@3 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x5B500000 0x0 0x00E00000>;
+			size = <0x0 0x00E00000>;
 			status = "disabled";
 		};
 

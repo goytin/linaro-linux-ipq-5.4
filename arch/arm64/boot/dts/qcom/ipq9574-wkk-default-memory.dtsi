@@ -64,35 +64,39 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI0  |  0x51700000  |          26MB           |
+	 * |  Wkk1  |  0x51700000  |          58MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  Wkk1  |  0x53100000  |          58MB           |
+	 * |  WKK2  |  0x55100000  |          58MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x56B00000  |          26MB           |
+	 * |  WKK3  |  0x58B00000  |          58MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | QCN9000|              |                         |
+	 * |  SCAN  |  0x5C500000  |          53MB           |
+	 * |  RADIO |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |  MHI0  |    DYNAMIC   |          26MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  WKK2  |  0x58500000  |          58MB           |
+	 * |  MHI1  |    DYNAMIC   |          26MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI2  |  0x5BF00000  |          26MB           |
+	 * |  MHI2  |    DYNAMIC   |          26MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  WKK3  |  0x5D900000  |          58MB           |
+	 * |  MHI3  |    DYNAMIC   |          26MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI3  |  0x61300000  |          26MB           |
-	 * |        |              |                         |
-	 * +--------+--------------+-------------------------+
-	 * |        |              |                         |
-	 * |  MLO   |  0x62D00000  |          17MB           |
+	 * |  MLO   |    DYNAMIC   |          17MB           |
 	 * |        |              |                         |
 	 * +=================================================+
 	 * |                                                 |
@@ -176,49 +180,55 @@
 			status = "disabled";
 		};
 
-		mhi_region0: dma_pool0@51700000 {
-			compatible = "shared-dma-pool";
+		qcn9224_pcie1: qcn9224_pcie1@51700000 {
 			no-map;
-			reg = <0x0 0x51700000 0x0 0x01A00000>;
+			reg = <0x0 0x51700000 0x0 0x03A00000>;
 			status = "disabled";
 		};
 
-		qcn9224_pcie1: qcn9224_pcie1@53100000 {
+		qcn9224_pcie2: qcn9224_pcie2@55100000 {
 			no-map;
-			reg = <0x0 0x53100000 0x0 0x03A00000>;
+			reg = <0x0 0x55100000 0x0 0x03A00000>;
 			status = "disabled";
 		};
 
-		mhi_region1: dma_pool1@56B00000 {
-			compatible = "shared-dma-pool";
+		qcn9224_pcie3: qcn9224_pcie3@58b00000 {
 			no-map;
-			reg = <0x0 0x56B00000 0x0 0x01A00000>;
+			reg = <0x0 0x58B00000 0x0 0x03A00000>;
 			status = "disabled";
                 };
 
-		qcn9224_pcie2: qcn9224_pcie2@58500000 {
+		qcn9000_pcie0: qcn9000_pcie0@5c500000 {
 			no-map;
-			reg = <0x0 0x58500000 0x0 0x03A00000>;
-			status = "disabled";
-		};
-
-		mhi_region2: dma_pool2@5BF00000 {
-			compatible = "shared-dma-pool";
-			no-map;
-			reg = <0x0 0x5BF00000 0x0 0x01A00000>;
-			status = "disabled";
-		};
-
-		qcn9224_pcie3: qcn9224_pcie3@5d900000 {
-			no-map;
-			reg = <0x0 0x5D900000 0x0 0x03A00000>;
+			reg = <0x0 0x5C500000 0x0 0x03A00000>;
 			status = "disabled";
                 };
 
-		mhi_region3: dma_pool3@61300000 {
+		mhi_region0: dma_pool0@0 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x61300000 0x0 0x01A00000>;
+			size = <0x0 0x01A00000>;
+			status = "disabled";
+		};
+
+		mhi_region1: dma_pool1@1 {
+			compatible = "shared-dma-pool";
+			no-map;
+			size = <0x0 0x01A00000>;
+			status = "disabled";
+                };
+
+		mhi_region2: dma_pool2@2 {
+			compatible = "shared-dma-pool";
+			no-map;
+			size = <0x0 0x01A00000>;
+			status = "disabled";
+		};
+
+		mhi_region3: dma_pool3@3 {
+			compatible = "shared-dma-pool";
+			no-map;
+			size = <0x0 0x01A00000>;
 			status = "disabled";
                 };
 

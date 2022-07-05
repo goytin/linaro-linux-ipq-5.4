@@ -38,10 +38,6 @@
 	};
 
 	firmware {
-		scm {
-			status = "disabled";
-		};
-
 		qfprom {
 			status = "disabled";
 		};
@@ -215,10 +211,6 @@
 	};
 
 	qti,tzlog {
-		status = "disabled";
-	};
-
-	qti,scm_restart_reason {
 		status = "disabled";
 	};
 

@@ -43,7 +43,7 @@ enum {
 
 static struct clk_alpha_pll gpll0 = {
 	.offset = 0x20000,
-	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_DEFAULT],
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.enable_reg = 0xb000,
 		.enable_mask = BIT(0),
@@ -53,14 +53,14 @@ static struct clk_alpha_pll gpll0 = {
 				.fw_name = "xo",
 			},
 			.num_parents = 1,
-			.ops = &clk_alpha_pll_ops,
+			.ops = &clk_alpha_pll_stromer_ops,
 		},
 	},
 };
 
 static struct clk_alpha_pll gpll2 = {
 	.offset = 0x21000,
-	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_DEFAULT],
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.enable_reg = 0xb000,
 		.enable_mask = BIT(1),
@@ -70,14 +70,14 @@ static struct clk_alpha_pll gpll2 = {
 				.fw_name = "xo",
 			},
 			.num_parents = 1,
-			.ops = &clk_alpha_pll_ops,
+			.ops = &clk_alpha_pll_stromer_ops,
 		},
 	},
 };
 
 static struct clk_alpha_pll gpll4 = {
 	.offset = 0x22000,
-	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_DEFAULT],
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.enable_reg = 0xb000,
 		.enable_mask = BIT(2),
@@ -87,14 +87,14 @@ static struct clk_alpha_pll gpll4 = {
 				.fw_name = "xo",
 			},
 			.num_parents = 1,
-			.ops = &clk_alpha_pll_ops,
+			.ops = &clk_alpha_pll_stromer_ops,
 		},
 	},
 };
 
 static struct clk_alpha_pll gpll6 = {
 	.offset = 0x1f000,
-	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_DEFAULT],
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.hw.init = &(const struct clk_init_data){
 			.name = "gpll6",
@@ -102,7 +102,7 @@ static struct clk_alpha_pll gpll6 = {
 				.fw_name = "xo",
 			},
 			.num_parents = 1,
-			.ops = &clk_alpha_pll_ops,
+			.ops = &clk_alpha_pll_stromer_ops,
 		},
 	},
 };

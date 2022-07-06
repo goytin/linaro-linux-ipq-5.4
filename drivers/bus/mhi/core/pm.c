@@ -506,7 +506,7 @@ static void mhi_pm_disable_transition(struct mhi_controller *mhi_cntrl)
 
 	mutex_lock(&mhi_cntrl->pm_mutex);
 
-	WARN_ON(atomic_read(&mhi_cntrl->dev_wake));
+	dev_info(dev,"mhi_cntrl dev_wake state %d\n",atomic_read(&mhi_cntrl->dev_wake));
 	WARN_ON(atomic_read(&mhi_cntrl->pending_pkts));
 
 	/* Reset the ev rings and cmd rings */

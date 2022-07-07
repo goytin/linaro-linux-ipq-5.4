@@ -983,6 +983,7 @@ static unsigned int msm_get_mctrl(struct uart_port *port)
 static void msm_reset(struct uart_port *port, bool reset_tx)
 {
 	struct msm_port *msm_port = UART_TO_MSM(port);
+	struct device *dev = msm_port->uart.dev;
 	unsigned int mr;
 
 	/* reset everything */
@@ -994,10 +995,15 @@ static void msm_reset(struct uart_port *port, bool reset_tx)
 	msm_write(port, UART_CR_CMD_RESET_ERR, UART_CR);
 	msm_write(port, UART_CR_CMD_RESET_BREAK_INT, UART_CR);
 	msm_write(port, UART_CR_CMD_RESET_CTS, UART_CR);
-	msm_write(port, UART_CR_CMD_RESET_RFR, UART_CR);
-	mr = msm_read(port, UART_MR1);
-	mr &= ~UART_MR1_RX_RDY_CTL;
-	msm_write(port, mr, UART_MR1);
+
+	if (of_find_property(dev->of_node, "qca,bt-rfr-fixup", NULL)) {
+		msm_write(port, UART_CR_CMD_SET_RFR, UART_CR);
+	} else {
+		msm_write(port, UART_CR_CMD_RESET_RFR, UART_CR);
+		mr = msm_read(port, UART_MR1);
+		mr &= ~UART_MR1_RX_RDY_CTL;
+		msm_write(port, mr, UART_MR1);
+	}
 
 	/* Disable DM modes */
 	if (msm_port->is_uartdm)

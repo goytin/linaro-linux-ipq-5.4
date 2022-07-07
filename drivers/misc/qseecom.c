@@ -235,6 +235,8 @@ static ssize_t show_aes_derive_key(struct device *dev,
 	req_ptr->hw_key_bindings.context_len = context_data_len;
 
 	rc = qti_scm_aes(dma_req_addr, req_size, QTI_CMD_AES_DERIVE_KEY);
+	if (rc == KEY_HANDLE_OUT_OF_SLOT)
+		pr_info("Key handle out of slot. Clear a key and try again!\n");
 	if (!rc) {
 		message = "AES Key derive successful\n\0";
 	} else {
@@ -249,6 +251,24 @@ static ssize_t show_aes_derive_key(struct device *dev,
 
 	dma_free_coherent(dev, dma_buf_size, req_ptr, dma_req_addr);
 	return message_len;
+}
+
+static ssize_t store_aes_clear_key(struct device *dev, struct device_attribute *attr, const char* buf, size_t count)
+{
+	int rc = 0;
+	uint32_t key_handle;
+
+	if (kstrtouint(buf, 10, &key_handle))
+		return -EINVAL;
+
+	rc = qti_scm_aes_clear_key_handle(key_handle, QTI_CMD_AES_CLEAR_KEY);
+
+	if (!rc)
+		pr_info("AES key = %u cleared successfully\n",key_handle);
+	else
+		pr_info("AES key clear failed\n");
+
+	return count;
 }
 
 static ssize_t
@@ -2282,6 +2302,10 @@ static int qtiapp_test(struct device *dev, void *input,
 		msgreq->data = (dma_addr_t)input;
 		msgreq->len = input_len;
 		break;
+	case QTI_APP_CLEAR_KEY:
+		msgreq->cmd_id = CLIENT_CMD122_CLEAR_KEY;
+		msgreq->data = *((dma_addr_t *)input);
+		break;
 	default:
 		pr_err("Invalid Option\n");
 		goto fn_exit;
@@ -2398,9 +2422,16 @@ static int qtiapp_test(struct device *dev, void *input,
 	} else if (option == QTI_APP_KEY_DERIVE_TEST ||
 			option == QTI_APP_AES_ENCRYPT_ID ||
 			option == QTI_APP_AES_DECRYPT_ID) {
+		if (msgrsp->status == KEY_HANDLE_OUT_OF_SLOT) {
+			pr_info("Key handle out of slot. Clear a key and try again!\n");
+		}
 		if (msgrsp->status) {
 			pr_info("QTIAPP DERIVE/ENC/DEC Failed with status = %d\n",
 				msgrsp->status);
+			ret = -EINVAL;
+		}
+	} else if (option == QTI_APP_CLEAR_KEY) {
+		if(msgrsp->status) {
 			ret = -EINVAL;
 		}
 	}
@@ -2494,6 +2525,25 @@ static ssize_t show_aes_derive_key_qtiapp(struct device *dev,
 
 	dma_free_coherent(dev, dma_buf_size, req_ptr, dma_req_addr);
 	return message_len;
+}
+
+static ssize_t store_aes_clear_key_qtiapp(struct device *dev, struct device_attribute *attr,
+					const char *buf, size_t count)
+{
+	uint32_t rc = 0;
+	uint32_t key_handle;
+
+	if (kstrtouint(buf, 10, &key_handle))
+		return -EINVAL;
+
+	rc = qtiapp_test(dev, &key_handle, NULL, 0, QTI_APP_CLEAR_KEY);
+
+	if (!rc)
+		pr_info("AES key =  %u cleared successfully\n",key_handle);
+	else
+		pr_info("AES key clear failed\n");
+
+	return rc ? rc : count;
 }
 
 static ssize_t

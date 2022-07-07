@@ -179,6 +179,16 @@ int qti_scm_aes(uint32_t req_addr, uint32_t req_size, u32 cmd_id)
 }
 EXPORT_SYMBOL(qti_scm_aes);
 
+int qti_scm_aes_clear_key_handle(uint32_t key_handle, u32 cmd_id)
+{
+	int ret = 0;
+
+	ret = __qti_scm_aes_clear_key_handle(__scm->dev, key_handle, cmd_id);
+
+	return ret;
+}
+EXPORT_SYMBOL(qti_scm_aes_clear_key_handle);
+
 int qti_scm_tls_hardening(uint32_t req_addr, uint32_t req_size,
 			  uint32_t resp_addr, uint32_t resp_size, u32 cmd_id)
 {

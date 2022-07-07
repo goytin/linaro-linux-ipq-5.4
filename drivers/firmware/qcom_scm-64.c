@@ -997,6 +997,22 @@ int __qti_scm_aes(struct device *dev, uint32_t req_addr,
 	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, QTI_SVC_CRYPTO, cmd_id,
 			    &desc, &res);
 
+	return res.a1;
+}
+
+int __qti_scm_aes_clear_key_handle(struct device *dev, uint32_t key_handle, u32 cmd_id)
+{
+	int ret = 0;
+	struct qcom_scm_desc desc = {0};
+	struct arm_smccc_res res;
+
+	desc.arginfo = SCM_ARGS(1);
+
+	desc.args[0] = key_handle;
+
+	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, QTI_SVC_CRYPTO, cmd_id,
+				&desc, &res);
+
 	return ret ? : res.a1;
 }
 

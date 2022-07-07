@@ -808,6 +808,22 @@ int __qti_scm_aes(struct device *dev, uint32_t req_addr,
 
 	ret = qti_scm_call2(dev, SCM_SIP_FNID(QTI_SVC_CRYPTO, cmd_id), &desc);
 	scm_ret = desc.ret[0];
+
+	return le32_to_cpu(scm_ret);
+}
+
+int __qti_scm_aes_clear_key_handle(struct device *dev, uint32_t key_handle, u32 cmd_id)
+{
+	int ret;
+	__le32 scm_ret;
+	struct scm_desc desc = {0};
+
+	desc.args[0] = key_handle;
+	desc.arginfo = SCM_ARGS(1);
+
+	ret = qti_scm_call2(dev, SCM_SIP_FNID(QTI_SVC_CRYPTO, cmd_id), &desc);
+	scm_ret = desc.ret[0];
+
 	if (!ret)
 		return le32_to_cpu(scm_ret);
 

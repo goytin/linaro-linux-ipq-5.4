@@ -1428,269 +1428,9 @@
 			qcom,low-frequency = <748800000>;
 			qcom,mid-frequency = <1497600000>;
 			qcom,max-frequency = <1689600000>;
-			qcom,bridge-enabled;
-			qcom,ipv4-enabled;
-			qcom,ipv4-reasm-enabled;
-			qcom,ipv6-enabled;
-			qcom,ipv6-reasm-enabled;
-			qcom,wlanredirect-enabled;
-			qcom,tun6rd-enabled;
-			qcom,l2tpv2-enabled;
-			qcom,gre-enabled;
-			qcom,gre-redir-enabled;
-			qcom,gre-redir-mark-enabled;
-			qcom,map-t-enabled;
-			qcom,portid-enabled;
-			qcom,ppe-enabled;
-			qcom,pppoe-enabled;
-			qcom,pptp-enabled;
-			qcom,tunipip6-enabled;
-			qcom,shaping-enabled;
-			qcom,wlan-dataplane-offload-enabled;
-			qcom,vlan-enabled;
-			qcom,igs-enabled;
-			qcom,vxlan-enabled;
-			qcom,match-enabled;
-			qcom,mirror-enabled;
+			qcom,capwap-enabled;
 			npu-supply = <&npu_vreg>;
 			mx-supply = <&ipq9574_s4>;
-		};
-
-		nss1: nss@40800000 {
-			compatible = "qcom,nss";
-			interrupts = <0 443 0x1>, <0 442 0x1>, <0 441 0x1>,
-				     <0 440 0x1>, <0 439 0x1>, <0 438 0x1>,
-				     <0 437 0x1>, <0 436 0x1>, <0 435 0x1>,
-				     <0 434 0x1>;
-			reg = <0x38F01000 0x100>, <0x3820C000 0xC000>,
-				<0xB11A000 0x1000>;
-			reg-names = "nphys", "vphys", "qgic-phys";
-			clocks = <&nsscc NSS_CC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AHB0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AXI0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_INT0_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_1_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_CLK>,
-				 <&nsscc NSS_CC_UBI32_CORE1_CLK>,
-				 <&nsscc NSS_CC_UBI32_AHB1_CLK>,
-				 <&nsscc NSS_CC_UBI32_AXI1_CLK>,
-				 <&nsscc NSS_CC_UBI32_INTR1_AHB_CLK>,
-				 <&nsscc NSS_CC_UBI32_NC_AXI1_CLK>,
-				 <&nsscc NSS_CC_UBI32_UTCM1_CLK>,
-				 <&gcc GCC_MEM_NOC_NSSNOC_CLK>,
-				 <&gcc GCC_NSS_TBU_CLK>,
-				 <&gcc GCC_NSS_TS_CLK>,
-				 <&gcc GCC_NSSCC_CLK>,
-				 <&gcc GCC_NSSCFG_CLK>,
-				 <&gcc GCC_NSSNOC_ATB_CLK>,
-				 <&gcc GCC_NSSNOC_MEM_NOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_MEMNOC_CLK>,
-				 <&gcc GCC_NSSNOC_NSSCC_CLK>,
-				 <&gcc GCC_NSSNOC_PCNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_QOSGEN_REF_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_CLK>,
-				 <&gcc GCC_NSSNOC_TIMEOUT_REF_CLK>,
-				 <&gcc GCC_NSSNOC_XO_DCD_CLK>;
-			clock-names = "nss-csr-clk", "nss-nssnoc-csr-clk",
-				      "nss-haq-ahb-clk", "nss-haq-axi-clk",
-				      "nss-nssnoc-haq-ahb-clk", "nss-nssnoc-haq-axi-clk",
-				      "nss-ce-ahb-clk", "nss-ce-axi-clk",
-				      "nss-nssnoc-ce-ahb-clk", "nss-nssnoc-ce-axi-clk",
-				      "nss-clc-axi-clk", "nss-nssnoc-clc-axi-clk",
-				      "nss-imem-qsb-clk", "nss-nssnoc-imem-qsb-clk",
-				      "nss-imem-ahb-clk", "nss-nssnoc-imem-ahb-clk",
-				      "nss-nssnoc-ahb0-clk", "nss-nssnoc-axi0-clk",
-				      "nss-nssnoc-int0-ahb-clk", "nss-nssnoc-nc-axi0-1-clk",
-				      "nss-nssnoc-nc-axi0-clk",
-				      "nss-core-clk", "nss-ahb-clk", "nss-axi-clk",
-				      "nss-intr-ahb-clk", "nss-nc-axi-clk", "nss-utcm-clk",
-				      "nss-mem-noc-nssnoc-clk", "nss-tbu-clk", "nss-ts-clk",
-				      "nss-nsscc-clk", "nss-nsscfg-clk", "nss-nsscnoc-atb-clk",
-				      "nss-nssnoc-mem-noc-1-clk", "nss-nssnoc-memnoc-clk", "nss-nssnoc-nsscc-clk",
-				      "nss-nssnoc-pcnoc-1-clk", "nss-nssnoc-qosgen-ref-clk", "nss-nssnoc-snoc-1-clk",
-				      "nss-nssnoc-snoc-clk", "nss-nssnoc-timeout-ref-clk", "nss-nssnoc-xo-dcd-clk";
-			qcom,id = <1>;
-			qcom,num-queue = <4>;
-			qcom,num-irq = <10>;
-			qcom,num-pri = <4>;
-			qcom,load-addr = <0x40800000>;
-			qcom,capwap-enabled;
-			qcom,dtls-enabled;
-			qcom,tls-enabled;
-			qcom,crypto-enabled;
-			qcom,ipsec-enabled;
-			qcom,qvpn-enabled;
-			qcom,pvxlan-enabled;
-			qcom,clmap-enabled;
-			qcom,rmnet_rx-enabled;
-		};
-
-		nss2: nss@41000000 {
-			compatible = "qcom,nss";
-			interrupts = <0 455 0x1>, <0 454 0x1>, <0 453 0x1>,
-				     <0 452 0x1>, <0 451 0x1>, <0 450 0x1>,
-				     <0 449 0x1>, <0 448 0x1>, <0 447 0x1>,
-				     <0 446 0x1>;
-			reg = <0x38F02000 0x100>, <0x38218000 0xC000>,
-				<0xB11A000 0x1000>;
-			reg-names = "nphys", "vphys", "qgic-phys";
-			clocks = <&nsscc NSS_CC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AHB0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AXI0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_INT0_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_1_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_CLK>,
-				 <&nsscc NSS_CC_UBI32_CORE2_CLK>,
-				 <&nsscc NSS_CC_UBI32_AHB2_CLK>,
-				 <&nsscc NSS_CC_UBI32_AXI2_CLK>,
-				 <&nsscc NSS_CC_UBI32_INTR2_AHB_CLK>,
-				 <&nsscc NSS_CC_UBI32_NC_AXI2_CLK>,
-				 <&nsscc NSS_CC_UBI32_UTCM2_CLK>,
-				 <&gcc GCC_MEM_NOC_NSSNOC_CLK>,
-				 <&gcc GCC_NSS_TBU_CLK>,
-				 <&gcc GCC_NSS_TS_CLK>,
-				 <&gcc GCC_NSSCC_CLK>,
-				 <&gcc GCC_NSSCFG_CLK>,
-				 <&gcc GCC_NSSNOC_ATB_CLK>,
-				 <&gcc GCC_NSSNOC_MEM_NOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_MEMNOC_CLK>,
-				 <&gcc GCC_NSSNOC_NSSCC_CLK>,
-				 <&gcc GCC_NSSNOC_PCNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_QOSGEN_REF_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_CLK>,
-				 <&gcc GCC_NSSNOC_TIMEOUT_REF_CLK>,
-				 <&gcc GCC_NSSNOC_XO_DCD_CLK>;
-			clock-names = "nss-csr-clk", "nss-nssnoc-csr-clk",
-				      "nss-haq-ahb-clk", "nss-haq-axi-clk",
-				      "nss-nssnoc-haq-ahb-clk", "nss-nssnoc-haq-axi-clk",
-				      "nss-ce-ahb-clk", "nss-ce-axi-clk",
-				      "nss-nssnoc-ce-ahb-clk", "nss-nssnoc-ce-axi-clk",
-				      "nss-clc-axi-clk", "nss-nssnoc-clc-axi-clk",
-				      "nss-imem-qsb-clk", "nss-nssnoc-imem-qsb-clk",
-				      "nss-imem-ahb-clk", "nss-nssnoc-imem-ahb-clk",
-				      "nss-nssnoc-ahb0-clk", "nss-nssnoc-axi0-clk",
-				      "nss-nssnoc-int0-ahb-clk", "nss-nssnoc-nc-axi0-1-clk",
-				      "nss-nssnoc-nc-axi0-clk",
-				      "nss-core-clk", "nss-ahb-clk", "nss-axi-clk",
-				      "nss-intr-ahb-clk", "nss-nc-axi-clk", "nss-utcm-clk",
-				      "nss-mem-noc-nssnoc-clk", "nss-tbu-clk", "nss-ts-clk",
-				      "nss-nsscc-clk", "nss-nsscfg-clk", "nss-nsscnoc-atb-clk",
-				      "nss-nssnoc-mem-noc-1-clk", "nss-nssnoc-memnoc-clk", "nss-nssnoc-nsscc-clk",
-				      "nss-nssnoc-pcnoc-1-clk", "nss-nssnoc-qosgen-ref-clk", "nss-nssnoc-snoc-1-clk",
-				      "nss-nssnoc-snoc-clk", "nss-nssnoc-timeout-ref-clk", "nss-nssnoc-xo-dcd-clk";
-			qcom,id = <2>;
-			qcom,num-queue = <4>;
-			qcom,num-irq = <10>;
-			qcom,num-pri = <4>;
-			qcom,load-addr = <0x41000000>;
-		};
-
-		nss3: nss@41800000 {
-			compatible = "qcom,nss";
-			interrupts = <0 467 0x1>, <0 466 0x1>, <0 465 0x1>,
-				     <0 464 0x1>, <0 463 0x1>, <0 462 0x1>,
-				     <0 461 0x1>, <0 460 0x1>, <0 459 0x1>,
-				     <0 458 0x1>;
-			reg = <0x38F03000 0x100>, <0x38224000 0xC000>,
-				<0xB11A000 0x1000>;
-			reg-names = "nphys", "vphys", "qgic-phys";
-			clocks = <&nsscc NSS_CC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_NSS_CSR_CLK>,
-				 <&nsscc NSS_CC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_HAQ_AXI_CLK>,
-				 <&nsscc NSS_CC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_APB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CE_AXI_CLK>,
-				 <&nsscc NSS_CC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_CLC_AXI_CLK>,
-				 <&nsscc NSS_CC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_QSB_CLK>,
-				 <&nsscc NSS_CC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_IMEM_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AHB0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_AXI0_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_INT0_AHB_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_1_CLK>,
-				 <&nsscc NSS_CC_NSSNOC_UBI32_NC_AXI0_CLK>,
-				 <&nsscc NSS_CC_UBI32_CORE3_CLK>,
-				 <&nsscc NSS_CC_UBI32_AHB3_CLK>,
-				 <&nsscc NSS_CC_UBI32_AXI3_CLK>,
-				 <&nsscc NSS_CC_UBI32_INTR3_AHB_CLK>,
-				 <&nsscc NSS_CC_UBI32_NC_AXI3_CLK>,
-				 <&nsscc NSS_CC_UBI32_UTCM3_CLK>,
-				 <&gcc GCC_MEM_NOC_NSSNOC_CLK>,
-				 <&gcc GCC_NSS_TBU_CLK>,
-				 <&gcc GCC_NSS_TS_CLK>,
-				 <&gcc GCC_NSSCC_CLK>,
-				 <&gcc GCC_NSSCFG_CLK>,
-				 <&gcc GCC_NSSNOC_ATB_CLK>,
-				 <&gcc GCC_NSSNOC_MEM_NOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_MEMNOC_CLK>,
-				 <&gcc GCC_NSSNOC_NSSCC_CLK>,
-				 <&gcc GCC_NSSNOC_PCNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_QOSGEN_REF_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_1_CLK>,
-				 <&gcc GCC_NSSNOC_SNOC_CLK>,
-				 <&gcc GCC_NSSNOC_TIMEOUT_REF_CLK>,
-				 <&gcc GCC_NSSNOC_XO_DCD_CLK>;
-			clock-names = "nss-csr-clk", "nss-nssnoc-csr-clk",
-				      "nss-haq-ahb-clk", "nss-haq-axi-clk",
-				      "nss-nssnoc-haq-ahb-clk", "nss-nssnoc-haq-axi-clk",
-				      "nss-ce-ahb-clk", "nss-ce-axi-clk",
-				      "nss-nssnoc-ce-ahb-clk", "nss-nssnoc-ce-axi-clk",
-				      "nss-clc-axi-clk", "nss-nssnoc-clc-axi-clk",
-				      "nss-imem-qsb-clk", "nss-nssnoc-imem-qsb-clk",
-				      "nss-imem-ahb-clk", "nss-nssnoc-imem-ahb-clk",
-				      "nss-nssnoc-ahb0-clk", "nss-nssnoc-axi0-clk",
-				      "nss-nssnoc-int0-ahb-clk", "nss-nssnoc-nc-axi0-1-clk",
-				      "nss-nssnoc-nc-axi0-clk",
-				      "nss-core-clk", "nss-ahb-clk", "nss-axi-clk",
-				      "nss-intr-ahb-clk", "nss-nc-axi-clk", "nss-utcm-clk",
-				      "nss-mem-noc-nssnoc-clk", "nss-tbu-clk", "nss-ts-clk",
-				      "nss-nsscc-clk", "nss-nsscfg-clk", "nss-nsscnoc-atb-clk",
-				      "nss-nssnoc-mem-noc-1-clk", "nss-nssnoc-memnoc-clk", "nss-nssnoc-nsscc-clk",
-				      "nss-nssnoc-pcnoc-1-clk", "nss-nssnoc-qosgen-ref-clk", "nss-nssnoc-snoc-1-clk",
-				      "nss-nssnoc-snoc-clk", "nss-nssnoc-timeout-ref-clk", "nss-nssnoc-xo-dcd-clk";
-			qcom,id = <3>;
-			qcom,num-queue = <4>;
-			qcom,num-irq = <10>;
-			qcom,num-pri = <4>;
-			qcom,load-addr = <0x41800000>;
 		};
 
 		nss_crypto: qcom,nss_crypto {
@@ -2755,7 +2495,7 @@
 			pageable-size = <0xC00000>;
 			tgt-mem-mode = <0x0>;
 #endif
-                        caldb-size = <0x800000>;
+			caldb-size = <0x800000>;
 			qca,extended-intc;
 			interrupts-extended =
 				<&qcn9224_in0 5 0>,
@@ -3026,7 +2766,7 @@
 			pageable-size = <0xC00000>;
 			tgt-mem-mode = <0x0>;
 #endif
-                        caldb-size = <0x800000>;
+			caldb-size = <0x800000>;
 			qca,extended-intc;
 			interrupts-extended =
 				<&qcn9224_in1 5 0>,
@@ -3296,7 +3036,7 @@
 			pageable-size = <0xC00000>;
 			tgt-mem-mode = <0x0>;
 #endif
-                        caldb-size = <0x800000>;
+			caldb-size = <0x800000>;
 			qca,extended-intc;
 			interrupts-extended =
 				<&qcn9224_in2 5 0>,
@@ -3566,7 +3306,7 @@
 			pageable-size = <0xC00000>;
 			tgt-mem-mode = <0x0>;
 #endif
-                        caldb-size = <0x800000>;
+			caldb-size = <0x800000>;
 			qca,extended-intc;
 			interrupts-extended =
 				<&qcn9224_in3 5 0>,

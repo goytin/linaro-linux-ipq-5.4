@@ -119,7 +119,7 @@
 
 			i2c_1_pins: i2c-1-pinmux {
 				pins = "gpio29", "gpio30";
-				function = "blsp1_i2c";
+				function = "blsp1_i2c0";
 				drive-strength = <8>;
 				bias-disable;
 			};

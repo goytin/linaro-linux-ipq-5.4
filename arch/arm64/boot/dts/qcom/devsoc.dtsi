@@ -912,6 +912,11 @@
 		compatible = "qcom,testmhi";
 		qcom,wlan-ramdump-dynamic = <0x400000>;
 	};
+
+	qti,gadget_diag@0 {
+		compatible = "qti,gadget-diag";
+		status = "disabled";
+	};
 };
 
 #include "devsoc-coresight.dtsi"

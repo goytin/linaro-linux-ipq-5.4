@@ -56,6 +56,11 @@
 #define CPU_IPQ9550 511
 #define CPU_IPQ9510 521
 
+#define CPU_DEVSOC32 592
+#define CPU_DEVSOC22 593
+#define CPU_DEVSOC12 594
+#define CPU_DEVSOC02 595
+
 static inline int read_ipq_soc_version_major(void)
 {
 	const int *prop;
@@ -270,6 +275,42 @@ static inline int cpu_is_ipq5019(void)
 #endif
 }
 
+static inline int cpu_is_devsoc32(void)
+{
+#ifdef CONFIG_ARCH_QCOM
+	return read_ipq_cpu_type() == CPU_DEVSOC32;
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_devsoc22(void)
+{
+#ifdef CONFIG_ARCH_QCOM
+	return read_ipq_cpu_type() == CPU_DEVSOC22;
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_devsoc12(void)
+{
+#ifdef CONFIG_ARCH_QCOM
+	return read_ipq_cpu_type() == CPU_DEVSOC12;
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_devsoc02(void)
+{
+#ifdef CONFIG_ARCH_QCOM
+	return read_ipq_cpu_type() == CPU_DEVSOC02;
+#else
+	return 0;
+#endif
+}
+
 static inline int cpu_is_ipq5016(void)
 {
 #ifdef CONFIG_ARCH_QCOM
@@ -421,6 +462,16 @@ static inline int cpu_is_ipq50xx(void)
 		cpu_is_ipq5016() || cpu_is_ipq5019() ||
 		cpu_is_ipq5028() || cpu_is_ipq5000() ||
 		cpu_is_ipq0509() || cpu_is_ipq0518();
+#else
+	return 0;
+#endif
+}
+
+static inline int cpu_is_devsoc(void)
+{
+#ifdef CONFIG_ARCH_QCOM
+	return  cpu_is_devsoc32() || cpu_is_devsoc22() ||
+		cpu_is_devsoc12() || cpu_is_devsoc02();
 #else
 	return 0;
 #endif

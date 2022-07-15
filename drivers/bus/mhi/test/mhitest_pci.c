@@ -240,6 +240,93 @@ int mhitest_dump_info(struct mhitest_platform *mplat, bool in_panic)
 	return 0;
 }
 
+int mhitest_dev_ramdump(struct mhitest_platform *mplat)
+{
+	struct mhitest_ramdump_info *rdinfo = &mplat->mhitest_rdinfo;
+	struct mhitest_dump_data *dump_data = &rdinfo->dump_data;
+	struct mhitest_dump_seg *dump_seg = rdinfo->dump_data_vaddr;
+	struct ramdump_segment *ramdump_segs, *s;
+	struct mhitest_dump_meta_info *meta_info;
+	int i, ret = 0, idx = 0;
+
+	if (!rdinfo->dump_data_valid ||
+	    dump_data->nentries == 0)
+		return 0;
+
+	/* First segment of the dump_data will have meta info in
+	 * cnss_dump_meta_info structure format.
+	 * Allocate extra segment for meta info and start filling the dump_seg
+	 * entries from ramdump_segs + NUM_META_INFO_SEGMENTS.
+	 */
+	ramdump_segs = kcalloc(dump_data->nentries +
+			       MHITEST_NUM_META_INFO_SEGMENTS,
+			       sizeof(*ramdump_segs),
+			       GFP_KERNEL);
+	if (!ramdump_segs)
+		return -ENOMEM;
+
+	meta_info = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	if (!meta_info) {
+		kfree(ramdump_segs);
+		return -ENOMEM;
+	}
+
+	meta_info->magic = MHITEST_RAMDUMP_MAGIC;
+	meta_info->version = MHITEST_RAMDUMP_VERSION_V2;
+	meta_info->chipset = mplat->device_id;
+
+	ramdump_segs->v_address = meta_info;
+	ramdump_segs->size = sizeof(*meta_info);
+
+	s = ramdump_segs + MHITEST_NUM_META_INFO_SEGMENTS;
+	for (i = 0; i < dump_data->nentries; i++) {
+		if (dump_seg->type >= FW_DUMP_TYPE_MAX) {
+			MHITEST_ERR("Unsupported dump type: %d\n",
+				    dump_seg->type);
+			continue;
+		}
+
+		if (dump_seg->type != meta_info->entry[idx].type)
+			idx++;
+
+		if (meta_info->entry[idx].entry_start == 0) {
+			meta_info->entry[idx].type = dump_seg->type;
+			meta_info->entry[idx].entry_start =
+						i + MHITEST_NUM_META_INFO_SEGMENTS;
+		}
+		meta_info->entry[idx].entry_num++;
+
+		s->address = dump_seg->address;
+		s->v_address = dump_seg->v_address;
+		s->size = dump_seg->size;
+		s++;
+		dump_seg++;
+	}
+
+	meta_info->total_entries = idx + 1;
+
+	MHITEST_LOG("Dumping meta_info: total_entries: %d",
+		    meta_info->total_entries);
+	for (i = 0; i < meta_info->total_entries; i++)
+		MHITEST_LOG("entry %d type %d entry_start %d entry_num %d",
+			    i, meta_info->entry[i].type,
+			    meta_info->entry[i].entry_start,
+			    meta_info->entry[i].entry_num);
+
+	ret = create_ramdump_device_file(rdinfo->ramdump_dev);
+	if (ret)
+		goto clear_dump_info;
+
+	ret = do_elf_ramdump(rdinfo->ramdump_dev, ramdump_segs,
+			     dump_data->nentries + MHITEST_NUM_META_INFO_SEGMENTS);
+
+clear_dump_info:
+	kfree(meta_info);
+	kfree(ramdump_segs);
+
+	return ret;
+}
+
 static int mhitest_get_msi_user(struct mhitest_platform *mplat, char *u_name,
 		int *num_vectors, u32 *user_base_data, u32 *base_vector)
 {

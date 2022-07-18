@@ -962,6 +962,11 @@
 		compatible = "qti,gadget-diag";
 		status = "disabled";
 	};
+
+	ctx_save: ctx-save {
+		compatible = "qti,ctxt-save-devsoc";
+	};
+
 };
 
 #include "devsoc-coresight.dtsi"

@@ -464,6 +464,10 @@
 		status = "disabled";
 	};
 
+	ctx-save {
+		status = "disabled";
+	};
+
 };
 
 &sdhc_1 {

@@ -326,14 +326,14 @@
 		pcie0_x1: pci@28000000 {
 			perst-gpio = <&tlmm 23 1>;
 			max-payload-size = <1>; // 1-256 TLP bytes for WKK
-			status = "disabled";
+			status = "ok";
 			pcie0_rp {
 				reg = <0 0 0 0 0>;
 			};
 		};
 
 		pcie0_phy: phy@84000 {
-			status = "disabled";
+			status = "ok";
 		};
 
 		pcie1_x1: pci@10000000 {
@@ -621,7 +621,12 @@
 	status = "ok";
 };
 
-/* Enable the reserved memory regions of QCN9224 on PCIe1, PCIe2, PCIe3 */
+/* Enable the reserved memory regions of QCN9224 on PCIe0, PCIe1, PCIe2, PCIe3 */
+
+&mhi_region0 {
+	status = "ok";
+};
+
 &qcn9224_pcie1 {
 	status = "ok";
 };

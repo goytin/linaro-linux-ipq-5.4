@@ -216,6 +216,18 @@ To derive the key with given inputs:
 cat /sys/sec_key/derive_aes_key > key_handle.txt
 cat key_handle.txt
 
+clear key API:
+
+Note:
+The user cannot derive more than 3 keys. Trying to derive a 4th key would result
+in an error saying "key handle out of slot". If the user wants to derive a new key
+after 3 successful attempts, then the user has to clear an already existing key
+by passing it's key handle to the clear_key sysfs entry. Once a derived key handle
+is cleared, the key cannot be used for further encryption/decryption of data.
+
+To clear a derived key:
+eg: echo 31 > /sys/sec_key/clear_key
+
 Giving the required aes256 parameters:
 echo 1 > ./sys/sec_key/aes_type
 echo 1 > ./sys/sec_key/aes_mode

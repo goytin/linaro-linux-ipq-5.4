@@ -42,6 +42,7 @@
 #include <linux/random.h>
 #include <linux/of_reserved_mem.h>
 
+#define QTI_CMD_AES_CLEAR_KEY		10
 #define QTI_CMD_AES_DERIVE_KEY		9
 #define CLIENT_CMD_CRYPTO_AES_DECRYPT	8
 #define CLIENT_CMD_CRYPTO_AES_ENCRYPT	7
@@ -62,6 +63,7 @@
 #define CLIENT_CMD18_RUN_FUSE_TEST	18
 #define CLIENT_CMD13_RUN_MISC_TEST	13
 #define CLIENT_CMD121_RUN_KEY_DERIVE_TEST	121
+#define CLIENT_CMD122_CLEAR_KEY		122
 
 #define MAX_INPUT_SIZE			4096
 #define QSEE_64				64
@@ -94,6 +96,8 @@
 #define INVALID_AES_KEY_HANDLE_VAL	117
 
 #define QSEE_LOG_BUF_SIZE		0x1000
+
+#define KEY_HANDLE_OUT_OF_SLOT		0x12C
 
 static int app_state;
 static int app_libs_state;
@@ -584,7 +588,8 @@ enum qti_app_cmd_ids {
 	QTI_APP_AES_DECRYPT_ID,
 	QTI_APP_RSA_ENC_DEC_ID,
 	QTI_APP_FUSE_BLOW_ID,
-	QTI_APP_KEY_DERIVE_TEST
+	QTI_APP_KEY_DERIVE_TEST,
+	QTI_APP_CLEAR_KEY
 };
 
 static ssize_t show_qsee_app_log_buf(struct device *dev,
@@ -599,6 +604,10 @@ static ssize_t show_aes_derive_key(struct device *dev,
 static ssize_t store_aes_derive_key(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count);
+
+static ssize_t store_aes_clear_key(struct device *dev,
+				struct device_attribute *attr,
+				const char* buf, size_t count);
 
 static ssize_t store_key(struct device *dev, struct device_attribute *attr,
 			const char *buf, size_t count);
@@ -757,6 +766,10 @@ static ssize_t store_aes_derive_key_qtiapp(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count);
 
+static ssize_t store_aes_clear_key_qtiapp(struct device *dev,
+					struct device_attribute *attr,
+					const char *buf, size_t count);
+
 static ssize_t store_aes_type_qtiapp(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count);
@@ -856,6 +869,7 @@ static DEVICE_ATTR(misc, 0644, NULL, store_misc_input);
 static DEVICE_ATTR(qsee_app_id, 0644, show_qsee_app_id, NULL);
 
 static DEVICE_ATTR(derive_key_aes, 0644, show_aes_derive_key_qtiapp, store_aes_derive_key_qtiapp);
+static DEVICE_ATTR(clear_key_qtiapp, 0644, NULL, store_aes_clear_key_qtiapp);
 static DEVICE_ATTR(encrypt_aes, 0644, show_aes_encrypted_data_qtiapp, store_aes_decrypted_data_qtiapp);
 static DEVICE_ATTR(decrypt_aes, 0644, show_aes_decrypted_data_qtiapp, store_aes_encrypted_data_qtiapp);
 static DEVICE_ATTR(ivdata_aes, 0644, NULL, store_iv_data_qtiapp);
@@ -884,6 +898,7 @@ static DEVICE_ATTR(blow, 0644, NULL, store_blow_fuse_write_qtiapp);
 
 static DEVICE_ATTR(generate, 0644, generate_key_blob, NULL);
 static DEVICE_ATTR(derive_aes_key, 0644, show_aes_derive_key, store_aes_derive_key);
+static DEVICE_ATTR(clear_key, 0644, NULL, store_aes_clear_key);
 static DEVICE_ATTR(import, 0644, import_key_blob, store_key);
 static DEVICE_ATTR(key_blob, 0644, NULL, store_key_blob);
 static DEVICE_ATTR(seal, 0644, show_sealed_data, store_unsealed_data);
@@ -917,6 +932,7 @@ static struct attribute *sec_key_attrs[] = {
 	&dev_attr_aes_type.attr,
 	&dev_attr_aes_mode.attr,
 	&dev_attr_derive_aes_key.attr,
+	&dev_attr_clear_key.attr,
 	&dev_attr_context_data.attr,
 	&dev_attr_source_data.attr,
 	&dev_attr_bindings_data.attr,
@@ -934,6 +950,7 @@ static struct attribute *rsa_sec_key_attrs[] = {
 
 static struct attribute *qtiapp_aes_attrs[] = {
 	&dev_attr_derive_key_aes.attr,
+	&dev_attr_clear_key_qtiapp.attr,
 	&dev_attr_encrypt_aes.attr,
 	&dev_attr_decrypt_aes.attr,
 	&dev_attr_ivdata_aes.attr,

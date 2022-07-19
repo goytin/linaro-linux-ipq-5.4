@@ -299,6 +299,8 @@ extern int __qti_scm_tls_hardening(struct device *dev, uint32_t req_addr,
 extern int __qti_scm_aes(struct device *dev, uint32_t req_addr,
 			 uint32_t req_size, u32 cmd_id);
 
+extern int __qti_scm_aes_clear_key_handle(struct device *dev, uint32_t key_handle, u32 cmd_id);
+
 #define QTI_SCM_SVC_RESETTYPE_CMD	0x18
 extern int  __qti_scm_set_resettype(struct device *dev, u32 reset_type);
 

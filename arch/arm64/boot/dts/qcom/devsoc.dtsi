@@ -12,7 +12,7 @@
 #include <dt-bindings/clock/qcom,nsscc-devsoc.h>
 #include <dt-bindings/reset/qcom,nsscc-devsoc.h>
 #include <dt-bindings/gpio/gpio.h>
-
+#include <dt-bindings/clock/qca,apss-devsoc.h>
 
 / {
 	#address-cells = <2>;
@@ -43,6 +43,13 @@
 			reg = <0x0>;
 			enable-method = "psci";
 			next-level-cache = <&L2_0>;
+			clocks = <&apcs_glb APCS_ALIAS0_CORE_CLK>;
+			operating-points = <
+				/* kHz   uV (fixed) */
+				1100000	850000
+				1500000	950000
+			>;
+			clock-latency = <200000>;
 		};
 
 		CPU1: cpu@1 {
@@ -51,6 +58,13 @@
 			enable-method = "psci";
 			reg = <0x1>;
 			next-level-cache = <&L2_0>;
+			clocks = <&apcs_glb APCS_ALIAS0_CORE_CLK>;
+			operating-points = <
+				/* kHz   uV (fixed) */
+				1100000	850000
+				1500000	950000
+			>;
+			clock-latency = <200000>;
 		};
 
 		CPU2: cpu@2 {
@@ -59,6 +73,13 @@
 			enable-method = "psci";
 			reg = <0x2>;
 			next-level-cache = <&L2_0>;
+			clocks = <&apcs_glb APCS_ALIAS0_CORE_CLK>;
+			operating-points = <
+				/* kHz   uV (fixed) */
+				1100000	850000
+				1500000	950000
+			>;
+			clock-latency = <200000>;
 		};
 
 		CPU3: cpu@3 {
@@ -67,6 +88,13 @@
 			enable-method = "psci";
 			reg = <0x3>;
 			next-level-cache = <&L2_0>;
+			clocks = <&apcs_glb APCS_ALIAS0_CORE_CLK>;
+			operating-points = <
+				/* kHz   uV (fixed) */
+				1100000	850000
+				1500000	950000
+			>;
+			clock-latency = <200000>;
 		};
 
 		L2_0: l2-cache {
@@ -883,6 +911,13 @@
 						"ce-pcnoc-ahb",
 						"ce-ahb";
 			};
+		};
+
+		apss_clk: qcom,apss_clk@b111000 {
+			compatible = "qcom,apss-devsoc";
+			reg = <0xb111000 0x6000>;
+			#clock-cells = <1>;
+			#reset-cells = <1>;
 		};
 	};
 

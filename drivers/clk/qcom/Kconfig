@@ -197,6 +197,14 @@ config IPQ_GCC_DEVSOC
 	 Say Y if you want to use peripheral devices such as UART, SPI,
 	 i2c, USB, SD/eMMC, etc.
 
+config IPQ_APSS_DEVSOC
+	tristate "DEVSOC APSS Clock Controller"
+	select IPQ_GCC_DEVSOC
+	depends on COMMON_CLK_QCOM
+	help
+	  Support for APSS clock controller on devsoc devices.
+	  Say Y if you want to use APSS clocks such as CPU.
+
 config IPQ_NSSCC_DEVSOC
 	tristate "DEVSOC NSS Clock Controller"
 	depends on IPQ_GCC_DEVSOC

@@ -898,8 +898,12 @@ static int ipq_lpass_pcm_driver_remove(struct platform_device *pdev)
 
 	ipq_pcm_deinit(pcm_params);
 
-	ipq_lpass_clear_dma_buffer(&pcm_pdev->dev, rx_dma_buffer);
-	ipq_lpass_clear_dma_buffer(&pcm_pdev->dev, tx_dma_buffer);
+	if(rx_dma_buffer != NULL) {
+		ipq_lpass_clear_dma_buffer(&pcm_pdev->dev, rx_dma_buffer);
+	}
+	if(tx_dma_buffer != NULL) {
+		ipq_lpass_clear_dma_buffer(&pcm_pdev->dev, tx_dma_buffer);
+	}
 
 	if (rx_dma_buffer)
 		kfree(rx_dma_buffer);

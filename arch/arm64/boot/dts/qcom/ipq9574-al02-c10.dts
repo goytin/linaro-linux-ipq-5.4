@@ -81,6 +81,7 @@
 						/delete-property/phy_address;
 						forced-speed = <1000>;
 						forced-duplex = <1>;
+						port_mac_sel = "QGMAC_PORT";
 					};
 					/delete-node/ port@1;
 					/delete-node/ port@2;

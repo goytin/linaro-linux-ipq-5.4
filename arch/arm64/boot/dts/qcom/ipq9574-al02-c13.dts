@@ -47,6 +47,10 @@
 	status = "ok";
 };
 
+/* Enable QCN9000 on PCI0 and remove interrupt-bmap field for QCN9000 on PCI0
+ * QCN9224 on PCI1 to reset the number of MSI interrupts to 16 for PCI0 and
+ * PCI1. PCI2 and PCI3 QCN9224s will use 32 MSI interrupts
+ */
 &wifi1 {
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
 	 * +=========+==============+=========+
@@ -74,6 +78,11 @@
 	hremote_node = <&qcn9000_pcie0>;
 	caldb-size = <0x800000>;
 	board_id = <0xaa>;
+	/delete-property/ interrupt-bmap;
 	status = "ok";
+};
+
+&wifi5 {
+	/delete-property/ interrupt-bmap;
 };
 #endif

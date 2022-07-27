@@ -37,7 +37,6 @@
 void smem_panic_handler(void)
 {
 	void *vptr;
-	void __iomem *imptr;
 	size_t size;
 	u32 remote_pid = 1;
 
@@ -46,13 +45,11 @@ void smem_panic_handler(void)
 	if (IS_ERR_OR_NULL(vptr) || size != 32) {
 		pr_err("%s Unable to get smem descriptor\n", __func__);
 	} else {
-		pr_info("smem desc phys addr(0x%lx) going to be ioremapped\n",
+		pr_info("smem desc phys addr(0x%lx)\n",
 						(uintptr_t)qcom_smem_virt_to_phys(vptr));
-		imptr = ioremap_wc(qcom_smem_virt_to_phys(vptr), size);
 		pr_info("%s tx tail:%d tx head:%d rx tail:%d rx head:%d\n",
-				__func__, readl(imptr+0), readl(imptr+4),
-				readl(imptr+8), readl(imptr+12));
-		iounmap(imptr);
+				__func__, readl(vptr+0), readl(vptr+4),
+				readl(vptr+8), readl(vptr+12));
 	}
 }
 EXPORT_SYMBOL(smem_panic_handler);

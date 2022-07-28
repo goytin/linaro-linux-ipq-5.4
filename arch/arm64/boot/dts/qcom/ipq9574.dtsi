@@ -2446,7 +2446,7 @@
 			qrtr_node_id = <0x30>;
 			qca,auto-restart;
 			status = "disabled";
-			interrupt-bmap = <0x100503>;
+			interrupt-bmap = <0x100512>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -2717,7 +2717,7 @@
 			qrtr_node_id = <0x31>;
 			qca,auto-restart;
 			status = "disabled";
-			interrupt-bmap = <0x100503>;
+			interrupt-bmap = <0x100512>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -2987,7 +2987,7 @@
 			qrtr_node_id = <0x32>;
 			qca,auto-restart;
 			status = "disabled";
-			interrupt-bmap = <0x100503>;
+			interrupt-bmap = <0x100512>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+
@@ -3257,7 +3257,7 @@
 			qrtr_node_id = <0x33>;
 			qca,auto-restart;
 			status = "disabled";
-			interrupt-bmap = <0x100503>;
+			interrupt-bmap = <0x100512>;
 #ifdef __IPQ_MEM_PROFILE_512_MB__
 			/* qcn9224 tgt-mem-mode=1 layout - 47MB
 			 * +=========+==============+=========+

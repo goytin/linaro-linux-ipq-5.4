@@ -944,6 +944,8 @@ uint32_t ipq_lpass_set_clk_rate(uint32_t intf, uint32_t clk)
 	break;
 	case 160000:   //0.160 MHz
 		M = 1;      //0x01;
+		N = 0xfd00;
+		D = 0xfcff;
 	break;
 	case 176400:   //0.1764 MHz
 		M = 1;      //0x1;

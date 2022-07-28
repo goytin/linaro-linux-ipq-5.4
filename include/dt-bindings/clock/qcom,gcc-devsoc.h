@@ -192,9 +192,13 @@
 #define GCC_MEM_NOC_APSS_AXI_CLK			182
 #define GCC_SNOC_QOSGEN_EXTREF_DIV_CLK_SRC		183
 #define GCC_MEM_NOC_QOSGEN_EXTREF_CLK			184
-#define GPLL0						185
-#define GPLL2						186
-#define GPLL4						187
-#define GPLL6						188
+#define GCC_PCIE3X2_PIPE_CLK_SRC			185
+#define GCC_PCIE3X1_0_PIPE_CLK_SRC			186
+#define GCC_PCIE3X1_1_PIPE_CLK_SRC			187
+#define GCC_USB0_PIPE_CLK_SRC				188
+#define GPLL0						189
+#define GPLL2						190
+#define GPLL4						191
+#define GPLL6						192
 
 #endif

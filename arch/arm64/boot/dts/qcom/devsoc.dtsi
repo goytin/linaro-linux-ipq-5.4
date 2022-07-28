@@ -31,6 +31,30 @@
 			clock-frequency = <24000000>;
 			#clock-cells = <0>;
 		};
+
+		usb3phy_0_cc_pipe_clk: usb3phy_0_cc_pipe_clk {
+			compatible = "fixed-clock";
+			clock-frequency = <250000000>;
+			#clock-cells = <0>;
+		};
+
+		pcie3x2_phy_pipe_clk: pcie3x2_phy_pipe_clk {
+			compatible = "fixed-clock";
+			clock-frequency = <250000000>;
+			#clock-cells = <0>;
+		};
+
+		pcie3x1_0_phy_pipe_clk: pcie3x1_0_phy_pipe_clk {
+			compatible = "fixed-clock";
+			clock-frequency = <250000000>;
+			#clock-cells = <0>;
+		};
+
+		pcie3x1_1_phy_pipe_clk: pcie3x1_1_phy_pipe_clk {
+			compatible = "fixed-clock";
+			clock-frequency = <250000000>;
+			#clock-cells = <0>;
+		};
 	};
 
 	cpus: cpus {
@@ -425,8 +449,18 @@
 		gcc: gcc@1800000 {
 			compatible = "qcom,gcc-devsoc";
 			reg = <0x1800000 0x80000>;
-			clocks = <&xo>, <&sleep_clk>;
-			clock-names = "xo", "sleep_clk";
+			clocks = <&xo>,
+				<&sleep_clk>,
+				<&usb3phy_0_cc_pipe_clk>,
+				<&pcie3x2_phy_pipe_clk>,
+				<&pcie3x1_0_phy_pipe_clk>,
+				<&pcie3x1_1_phy_pipe_clk>;
+			clock-names = "xo",
+					"sleep_clk",
+					"usb3phy_0_cc_pipe_clk",
+					"pcie3x2_phy_pipe_clk",
+					"pcie3x1_0_phy_pipe_clk",
+					"pcie3x1_1_phy_pipe_clk";
 			#clock-cells = <0x1>;
 			#reset-cells = <0x1>;
 		};

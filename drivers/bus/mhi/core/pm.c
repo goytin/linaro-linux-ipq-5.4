@@ -1209,6 +1209,19 @@ EXPORT_SYMBOL_GPL(mhi_power_down);
 
 int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
 {
+	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+	u32 val, i;
+	struct {
+		char *name;
+		u32 offset;
+	} error_reg[] = {
+		{ "ERROR_CODE", BHI_ERRCODE },
+		{ "ERROR_DBG1", BHI_ERRDBG1 },
+		{ "ERROR_DBG2", BHI_ERRDBG2 },
+		{ "ERROR_DBG3", BHI_ERRDBG3 },
+		{ NULL },
+	};
+
 	int ret = mhi_async_power_up(mhi_cntrl);
 
 	if (ret)
@@ -1220,8 +1233,17 @@ int mhi_sync_power_up(struct mhi_controller *mhi_cntrl)
 			   msecs_to_jiffies(mhi_cntrl->timeout_ms));
 
 	ret = (MHI_IN_MISSION_MODE(mhi_cntrl->ee)) ? 0 : -ETIMEDOUT;
-	if (ret)
+	if (ret) {
+		for (i = 0; error_reg[i].name; i++) {
+			ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->bhi,
+					   error_reg[i].offset, &val);
+			if (ret)
+				break;
+			dev_err(dev, "reg:%s value:0x%x\n",
+				error_reg[i].name, val);
+		}
 		mhi_power_down(mhi_cntrl, false);
+	}
 
 	return ret;
 }

@@ -27,6 +27,10 @@
 #define TSENS_THRESHOLD_MAX_CODE	0x3ff
 #define TSENS_THRESHOLD_MIN_CODE	0x0
 #define TSENS_SN_CTRL_EN		BIT(0)
+#define TSENS_SN_SW_RST			BIT(1)
+#define TSENS_SN_CODE_OR_TEMP		BIT(21)
+
+#define TSENS_MEASURE_PERIOD		0x8
 
 #define TSENS_TM_TRDY			0x00e4
 #define TSENS_TRDY_MASK			BIT(0)
@@ -74,10 +78,38 @@
 #define TSENS_TM_SN_STATUS_LOWER_STATUS		BIT(17)
 #define TSENS_TM_SN_LAST_TEMP_MASK		0xfff
 
+#define TSENS_SN_CONVERSION(n)			((n * 4) + 0x0060)
+
 #define MAX_SENSOR				16
 #define VALID_SENSOR_START_IDX			4
 #define MAX_TEMP				204 /* Celcius */
 #define MIN_TEMP				0   /* Celcius */
+
+#define BASE0_MASK				0x001FF800
+#define BASE0_SHIFT				11
+#define BASE1_MASK				0x7FE00000
+#define BASE1_SHIFT				20
+#define TSENS11_OFFSET				0x00F000
+#define TSENS11_SHIFT				12
+#define TSENS12_OFFSET				0x0F0000
+#define TSENS12_SHIFT				16
+#define TSENS13_OFFSET				0xF00000
+#define TSENS13_SHIFT				20
+#define TSENS14_OFFSET				0x078000
+#define TSENS14_SHIFT				15
+#define TSENS15_OFFSET				0x780000
+#define TSENS15_SHIFT				19
+#define TSENS_CAL_SHIFT				3
+#define TSENS_CAL_SHIFT_SHIFT			23
+#define TSENS_ONE_POINT_SLOPE			0xCD0
+#define TSENS_ONE_PT_CZERO_CONST		94
+#define TSENS_TWO_POINT_SLOPE			921600
+#define TSENS_SLOPE_SHIFT			10
+#define TSENS_CONVERSION_DEFAULT		0x1b3416a
+#define TSENS_SENSOR_MASK			0x7C000
+
+#define CAL_SEL_MASK 0x700
+#define CAL_SEL_SHIFT 8
 
 struct low_temp_notification {
 	int temp;
@@ -97,6 +129,7 @@ enum tsens_trip_type {
 	TSENS_TRIP_NUM,
 };
 
+static int init_tsens_ctrl(struct tsens_priv *tmdev);
 static int get_temp_ipq807x(struct tsens_priv *tmdev, int id, int *temp);
 static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
 					enum tsens_trip_type trip, int temp);
@@ -437,6 +470,9 @@ static int init_ipq807x(struct tsens_priv *tmdev)
 	if (!tmdev->tm_map)
 		return -ENODEV;
 
+	if (device_property_read_bool(tmdev->dev, "tsens-calibration"))
+		init_tsens_ctrl(tmdev);
+
 	/* Store all sensor address for future use */
 	for (i = 0; i < tmdev->num_sensors; i++) {
 		tmdev->sensor[i].status = TSENS_TM_SN_STATUS + (i * 4);
@@ -571,6 +607,100 @@ static int set_trip_activate_ipq807x(void *data, int trip,
 		return -EINVAL;
 
 	return set_trip_mode(s->priv, s->id, trip, mode);
+}
+
+static int calibrate(struct tsens_priv *tmdev)
+{
+	u32 base0 = 0, base1 = 0;
+	u32 tsens_offset[MAX_SENSOR];
+	u32 mode = 0, slope = 0, czero = 0, val = 0;
+	u32 *qfprom_cal_sel, *qfprom_cdata;
+	int i, sensor = 11;
+	int temp;
+
+
+	qfprom_cal_sel = (u32 *)qfprom_read(tmdev->dev, "cal_sel");
+	if (IS_ERR(qfprom_cal_sel))
+		return PTR_ERR(qfprom_cal_sel);
+
+	mode = (qfprom_cal_sel[0] & CAL_SEL_MASK) >> CAL_SEL_SHIFT;
+	dev_dbg(tmdev->dev, "calibration mode is %d\n", mode);
+
+	base0 = (qfprom_cal_sel[0] & BASE0_MASK) >> BASE0_SHIFT;
+	base1 = (qfprom_cal_sel[0] & BASE1_MASK) >> BASE1_SHIFT;
+
+	qfprom_cdata = (u32 *)qfprom_read(tmdev->dev, "calib_offset");
+	if (IS_ERR(qfprom_cdata))
+		return PTR_ERR(qfprom_cdata);
+
+	temp =  qfprom_cdata[0];
+	tsens_offset[sensor++] = (temp & TSENS11_OFFSET) >> TSENS11_SHIFT;
+	tsens_offset[sensor++] = (temp & TSENS12_OFFSET) >> TSENS12_SHIFT;
+	tsens_offset[sensor++] = (temp & TSENS13_OFFSET) >> TSENS13_SHIFT;
+	temp =  qfprom_cdata[2];
+	tsens_offset[sensor++] = (temp & TSENS14_OFFSET) >> TSENS14_SHIFT;
+	tsens_offset[sensor++] = (temp & TSENS15_OFFSET) >> TSENS15_SHIFT;
+
+	switch (mode) {
+	case TWO_PT_CALIB:
+		slope = (TSENS_TWO_POINT_SLOPE / (base1 - base0));
+
+		for (i = 11; i < MAX_SENSOR; i++) {
+			czero = (base0 + tsens_offset[i] -
+					((base1 - base0) / 3));
+			val = (TSENS_CAL_SHIFT << TSENS_CAL_SHIFT_SHIFT)
+				| (slope << TSENS_SLOPE_SHIFT) | czero;
+
+			regmap_write(tmdev->srot_map,
+				TSENS_SN_CONVERSION(i), val);
+		}
+		break;
+	case ONE_PT_CALIB2:
+		for (i = 11; i < MAX_SENSOR; i++) {
+			czero = base0 + tsens_offset[i] -
+					TSENS_ONE_PT_CZERO_CONST;
+			val = (TSENS_CAL_SHIFT << TSENS_CAL_SHIFT_SHIFT)
+				| (TSENS_ONE_POINT_SLOPE << TSENS_SLOPE_SHIFT)
+				| czero;
+
+			regmap_write(tmdev->srot_map,
+				TSENS_SN_CONVERSION(i), val);
+		}
+		break;
+	default:
+		for (i = 11; i < MAX_SENSOR; i++) {
+			regmap_write(tmdev->srot_map,
+					TSENS_SN_CONVERSION(i),
+					TSENS_CONVERSION_DEFAULT);
+		}
+		pr_info("Using default calibration\n");
+		break;
+	}
+
+	kfree(qfprom_cdata);
+	kfree(qfprom_cal_sel);
+	return 0;
+}
+
+static int init_tsens_ctrl(struct tsens_priv *tmdev)
+{
+	int ret, reg_val;
+
+	regmap_write(tmdev->srot_map, TSENS_CNTL_ADDR, TSENS_SN_SW_RST);
+	regmap_read(tmdev->srot_map, TSENS_CNTL_ADDR, &reg_val);
+	reg_val &= ~TSENS_SN_CTRL_EN;
+	regmap_write(tmdev->srot_map, TSENS_CNTL_ADDR, reg_val);
+	regmap_write(tmdev->srot_map, TSENS_MEASURE_PERIOD, 0x1);
+	reg_val |= TSENS_SENSOR_MASK;
+	regmap_write(tmdev->srot_map, TSENS_CNTL_ADDR, reg_val);
+	reg_val |= TSENS_SN_CODE_OR_TEMP;
+	regmap_write(tmdev->srot_map, TSENS_CNTL_ADDR, reg_val);
+	reg_val &= ~TSENS_SN_SW_RST;
+	reg_val |= TSENS_SN_CTRL_EN;
+	regmap_write(tmdev->srot_map, TSENS_CNTL_ADDR, reg_val);
+
+	ret = calibrate(tmdev);
+	return ret;
 }
 
 const struct tsens_ops ops_ipq807x = {

@@ -120,6 +120,22 @@
 		dma-ranges;
 		compatible = "simple-bus";
 
+		qcom,msm-eud@78000 {
+			compatible = "qcom,msm-eud";
+			reg = <0x78000 0x1000>,
+			      <0x79000 0x2000>,
+			      <0x7a000 0x1000>;
+			reg-names = "eud_base",
+				    "eud_mode_mgr",
+				    "eud_mode_mgr2";
+			interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "eud_irq";
+			qcom,eud-clock-vote-req = <1>;
+			clocks = <&gcc GCC_USB0_PHY_CFG_AHB_CLK>;
+			clock-names = "eud_ahb2phy_clk";
+			status = "disabled";
+		};
+
 		hs_m31phy_0: hs_m31phy@7b000 {
 			compatible = "qca,m31-usb-hsphy";
 			reg = <0x07b000 0x12C>,

@@ -71,8 +71,8 @@
 			num_devices = <0x1>;
 			ess-switch@3a000000 {
 				switch_mac_mode = <0x15>; /* mac mode for uniphy instance0*/
+				bm_tick_mode = <1>; /* bm tick mode */
 				tm_tick_mode = <1>; /* tm tick mode */
-
 				qcom,port_phyinfo {
 					port@0 {
 						phy_address = <1>;

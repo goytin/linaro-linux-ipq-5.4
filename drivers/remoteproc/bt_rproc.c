@@ -51,7 +51,7 @@ int m0_btss_load_address(struct rproc *rproc, const struct firmware *fw)
 
 int m0_btss_start(struct rproc *rproc)
 {
-	int ret;
+	int ret = 0;
 	struct bt_descriptor *btDesc = rproc->priv;
 
 	if (rproc->state == RPROC_OFFLINE) {
@@ -93,7 +93,7 @@ int m0_btss_start(struct rproc *rproc)
 
 int m0_btss_stop(struct rproc *rproc)
 {
-	int ret;
+	int ret = 0;
 	struct bt_descriptor *btDesc = rproc->priv;
 
 	if (!atomic_read(&rproc->power) && ((rproc->state == RPROC_RUNNING) |

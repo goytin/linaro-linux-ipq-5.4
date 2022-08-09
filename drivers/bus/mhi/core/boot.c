@@ -733,8 +733,13 @@ static int mhi_update_scratch_reg(struct mhi_controller *mhi_cntrl, u32 val)
 	u32 rd_val;
 
 	/* Program Window register to update boot args pointer */
+	mhi_read_reg(mhi_cntrl, mhi_cntrl->regs, PCIE_REMAP_BAR_CTRL_OFFSET,
+			&rd_val);
+
+	rd_val = rd_val & ~(0x3f);
+
 	mhi_write_reg(mhi_cntrl, mhi_cntrl->regs, PCIE_REMAP_BAR_CTRL_OFFSET,
-				PCIE_SCRATCH_0_WINDOW_VAL);
+				PCIE_SCRATCH_0_WINDOW_VAL | rd_val);
 
 	mhi_write_reg(mhi_cntrl, mhi_cntrl->regs + MAX_UNWINDOWED_ADDRESS,
 			PCIE_REG_FOR_BOOT_ARGS, val);

@@ -6,8 +6,9 @@
  */
 
 / {
+	MP_512;
 
-	/*		  Default Profile
+	/*		  512MB Profile
 	 * +=========+==============+========================+
 	 * |        |              |                         |
 	 * | Region | Start Offset |          Size           |
@@ -17,7 +18,7 @@
 	 * |        |              |                         |
 	 * |        |              |                         |
 	 * |        |              |                         |
-	 * | Linux  |  0x40000000  |           161MB         |
+	 * | Linux  |  0x40000000  |          161MB          |
 	 * |        |              |                         |
 	 * |        |              |                         |
 	 * |        |              |                         |
@@ -57,7 +58,7 @@
 
 	memory {
 		device_type = "memory";
-		reg = <0x0 0x40000000 0x0 0x40000000>;
+		reg = <0x0 0x40000000 0x0 0x20000000>;
 	};
 
 	reserved-memory {

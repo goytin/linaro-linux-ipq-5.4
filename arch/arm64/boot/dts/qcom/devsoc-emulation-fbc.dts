@@ -204,10 +204,6 @@
 		};
 	};
 
-	qti,tzlog {
-		status = "disabled";
-	};
-
 };
 
 &sdhc_1 {

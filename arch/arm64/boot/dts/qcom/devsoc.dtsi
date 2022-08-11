@@ -746,6 +746,7 @@
 				      "aux";
 
 			msi-parent = <&v2m0>;
+			max-payload-size = <1>;
 			status = "disabled";
 
 			pcie_x1_1_rp: pcie_x1_1_rp {
@@ -822,6 +823,7 @@
 				      "aux";
 
 			msi-parent = <&v2m0>;
+			max-payload-size = <1>;
 			status = "disabled";
 
 			pcie_x2_rp: pcie_x2_rp {
@@ -895,6 +897,7 @@
 				      "aux";
 
 			msi-parent = <&v2m0>;
+			max-payload-size = <1>;
 			status = "disabled";
 
 			pcie_x1_0_rp: pcie_x1_0_rp {

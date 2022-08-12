@@ -1064,6 +1064,19 @@
 			#clock-cells = <1>;
 			#reset-cells = <1>;
 		};
+
+		msm_imem: qcom,msm-imem@8600000 {
+			compatible = "qcom,msm-imem";
+			reg = <0x08600000 0x1000>;
+			ranges = <0x0 0x08600000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			tz-log-buf-addr@720 {
+				compatible = "qcom,msm-imem-tz-log-buf-addr";
+				reg = <0x720 4>;
+			};
+		};
 	};
 
 	pmu {

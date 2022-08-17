@@ -523,6 +523,7 @@
 		};
 
 		wifi0: wifi@c000000 {
+			led-gpio = <&tlmm 30 0>;
 			status = "ok";
 		};
 

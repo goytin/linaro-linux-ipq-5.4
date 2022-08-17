@@ -869,6 +869,9 @@ dtb-$(CONFIG_ARCH_QCOM) += \
 	devsoc-emulation.dtb \
 	devsoc-emulation-fbc.dtb \
 	devsoc-emulation-ssoc.dtb \
+	devsoc-01.1.dtb \
+	devsoc-01.2.dtb \
+	devsoc-01.4.dtb \
 	ipq6018-cp01-c1.dtb \
 	ipq6018-cp01-c3.dtb \
 	ipq6018-cp01-c4.dtb \

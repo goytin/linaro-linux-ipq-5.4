@@ -671,6 +671,14 @@
 			drive-strength = <8>;
 			bias-pull-down;
 		};
+		led0_2g {
+			pins = "gpio30";
+			function = "gpio";
+			drive-strength = <8>;
+			output-low;
+			bias-pull-down;
+		};
+
 	};
 
 	i2c_pins: i2c_pins {

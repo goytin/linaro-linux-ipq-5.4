@@ -170,7 +170,8 @@
 					bias-pull-up;
 				};
 			};
-			audio_pins: audio_pinmux {
+
+			audio_pins_pri: audio_pinmux_pri {
 				mux_1 {
 					pins = "gpio41";
 					function = "audio_pri";
@@ -198,29 +199,31 @@
 					drive-strength = <16>;
 					bias-pull-down;
 				};
+			};
 
-				mux_5 {
+			audio_pins_sec: audio_pinmux_sec {
+				mux_1 {
 					pins = "gpio47";
 					function = "audio_sec";
 					drive-strength = <16>;
 					bias-pull-down;
 				};
 
-				mux_6 {
+				mux_2 {
 					pins = "gpio46";
 					function = "audio_sec";
 					drive-strength = <16>;
 					bias-pull-down;
 				};
 
-				mux_7 {
+				mux_3 {
 					pins = "gpio45";
 					function = "audio_sec";
 					drive-strength = <16>;
 					bias-pull-down;
 				};
 
-				mux_8 {
+				mux_4 {
 					pins = "gpio44";
 					function = "audio_sec";
 					drive-strength = <16>;
@@ -293,8 +296,10 @@
 		};
 
 		pcm: pcm@0xA3C0000{
-			pinctrl-0 = <&audio_pins>;
-			pinctrl-names = "default";
+			pinctrl-0 = <&audio_pins_pri>;
+			pinctrl-1 = <&audio_pins_sec>;
+			pinctrl-names = "primary",
+					 "secondary";
 			status = "disabled";
 		};
 

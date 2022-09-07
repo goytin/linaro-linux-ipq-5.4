@@ -954,8 +954,6 @@
 			reg-names = "dcc-base", "dcc-ram-base";
 
 			dcc-ram-offset = <0x6000>;
-
-			qca,save-reg;
 		};
 
 		tcsr_mutex_regs: syscon@1905000 {

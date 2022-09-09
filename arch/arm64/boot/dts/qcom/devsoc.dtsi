@@ -481,7 +481,6 @@
 				<0x193d0f0 0x4>;
 			reg-names = "dcc-base", "dcc-ram-base", "tcsr-gcc-clk-mux-sel";
 			dcc-ram-offset = <0x0>;
-			qca,save-reg;
 			clocks = <&gcc GCC_DCC_CLK>,
 				<&gcc GCC_DCC_XO_CLK>,
 				<&gcc GCC_PCNOC_DCC_CLK>;

@@ -477,10 +477,14 @@
 		dcc_v2@797f000 {
 			compatible = "qcom,dcc-v2-devsoc";
 			reg = <0x40ff000 0x1000>,
-				<0x4080000 0x800>;
-			reg-names = "dcc-base", "dcc-ram-base";
+				<0x4080000 0x800>,
+				<0x193d0f0 0x4>;
+			reg-names = "dcc-base", "dcc-ram-base", "tcsr-gcc-clk-mux-sel";
 			dcc-ram-offset = <0x0>;
 			qca,save-reg;
+			clocks = <&gcc GCC_DCC_CLK>,
+				<&gcc GCC_DCC_XO_CLK>,
+				<&gcc GCC_PCNOC_DCC_CLK>;
 			status = "ok";
 		};
 

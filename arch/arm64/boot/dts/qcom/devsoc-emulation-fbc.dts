@@ -144,7 +144,6 @@
 
 		timer@b120000 {
 			clock-frequency = <240000>;
-			status = "disabled";
 		};
 
 		usb3@8A00000 {

@@ -196,7 +196,7 @@
 			qcom,no-qrng-config;
 		};
 
-		pcie_x1phy: phy@4b0000{
+		pcie0_phy: phy@4b0000{
 			compatible = "qca,uni-pcie-phy-gen3";
 			reg = <0x4b0000 0x800>;
 			phy-type = "gen3";
@@ -212,7 +212,43 @@
 			status = "disabled";
 		};
 
-		pcie_x2_x1_1_phy: phy@4b1000{
+		/* PHY for PCIE1 single lane mode */
+		pcie1_phy: phy@4b1000 {
+			compatible = "qca,uni-pcie-phy-gen3";
+			reg = <0x4b1000 0x800>;
+			phy-type = "gen3";
+			#phy-cells = <0>;
+			clocks = <&gcc GCC_PCIE3X2_PIPE_CLK>;
+			clock-names = "pipe_clk";
+
+			resets = <&gcc GCC_PCIE3X2_PHY_BCR>,
+				<&gcc GCC_PCIE3X2PHY_PHY_BCR>;
+			reset-names = "phy",
+					"phy_phy";
+			mode-fixed = <2>; /* TBD */
+			status = "disabled";
+		};
+
+		/* PHY for PCIE2 single lane mode */
+		pcie2_phy: phy@4b1800 {
+			compatible = "qca,uni-pcie-phy-gen3";
+			reg = <0x4b1800 0x800>;
+			phy-type = "gen3";
+			#phy-cells = <0>;
+			clocks = <&gcc GCC_PCIE3X1_1_PIPE_CLK>;
+			clock-names = "pipe_clk";
+
+			resets = <&gcc GCC_PCIE3X1_1_PHY_BCR>,
+				<&gcc GCC_PCIE3X1_1_PHY_PHY_BCR>;
+			reset-names = "phy",
+					"phy_phy";
+			mode-fixed = <2>; /* TBD */
+			status = "disabled";
+		};
+
+
+		/* PHY for PCIE1 dual lane mode */
+		pcie1_phy_x2: phy_x2@4b1000 {
 			compatible = "qca,uni-pcie-phy-gen3";
 			reg = <0x4b1000 0x1000>;
 			phy-type = "gen3";

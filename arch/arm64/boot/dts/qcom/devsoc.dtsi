@@ -209,6 +209,7 @@
 			reset-names = "phy",
 					"phy_phy";
 			mode-fixed = <2>; /* TBD */
+			no-phy-init;
 			status = "disabled";
 		};
 
@@ -226,6 +227,7 @@
 			reset-names = "phy",
 					"phy_phy";
 			mode-fixed = <2>; /* TBD */
+			no-phy-init;
 			status = "disabled";
 		};
 
@@ -243,6 +245,7 @@
 			reset-names = "phy",
 					"phy_phy";
 			mode-fixed = <2>; /* TBD */
+			no-phy-init;
 			status = "disabled";
 		};
 

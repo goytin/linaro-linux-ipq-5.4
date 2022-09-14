@@ -723,7 +723,7 @@
 		};
 
 		/* 1L controller with 2L/2x1L Flexible PHY 2nd lane */
-		pcie2_x1_1: pcie@10000000 {
+		pcie2: pcie@10000000 {
 			compatible = "qti,pcie-ipq9574";
 			reg =  <0x10000000 0xf1d
 				0x10000F20 0xa8
@@ -742,6 +742,9 @@
 				  0 0x00100000   /* downstream I/O */
 				  0x82000000 0 0x10300000 0x10300000
 				  0 0x7d00000>; /* non-prefetchable memory */
+
+			phys = <&pcie2_phy>;
+			phy-names = "pciephy";
 
 			#interrupt-cells = <1>;
 			interrupt-map-mask = <0 0 0 0x7>;
@@ -791,7 +794,7 @@
 			max-payload-size = <1>;
 			status = "disabled";
 
-			pcie_x1_1_rp: pcie_x1_1_rp {
+			pcie2_rp: pcie2_rp {
 				reg = <0 0 0 0 0>;
 			};
 		};
@@ -799,7 +802,7 @@
 		/* 2L controller with 2L/2x1L Flexible PHY.
 		 * Connected to the 1st lane of the Flexible PHY in 1L mode
 		 */
-		pcie1_x2: pcie@18000000 {
+		pcie1: pcie@18000000 {
 			compatible = "qti,pcie-ipq9574";
 			reg =  <0x18000000 0xf1d
 				0x18000F20 0xa8
@@ -814,6 +817,9 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			slv-addr-space-sz = <0x8000000>;
+
+			phys = <&pcie1_phy_x2>;
+			phy-names = "pciephy";
 
 			ranges = <0x81000000 0 0x18200000 0x18200000
 				  0 0x00100000   /* downstream I/O */
@@ -868,13 +874,13 @@
 			max-payload-size = <1>;
 			status = "disabled";
 
-			pcie_x2_rp: pcie_x2_rp {
+			pcie1_rp: pcie1_rp {
 				reg = <0 0 0 0 0>;
 			};
 		};
 
 		/* 1L controller with USB/PCIe combo PHY */
-		pcie0_x1_0: pcie@20000000 {
+		pcie0: pcie@20000000 {
 			compatible = "qti,pcie-ipq9574";
 			reg =  <0x20000000 0xf1d
 				0x20000F20 0xa8
@@ -888,6 +894,9 @@
 			num-lanes = <1>;
 			#address-cells = <3>;
 			#size-cells = <2>;
+
+			phys = <&pcie0_phy>;
+			phy-names = "pciephy";
 
 			ranges = <0x81000000 0 0x20200000 0x20200000
 				  0 0x00100000   /* downstream I/O */
@@ -942,7 +951,7 @@
 			max-payload-size = <1>;
 			status = "disabled";
 
-			pcie_x1_0_rp: pcie_x1_0_rp {
+			pcie0_rp: pcie0_rp {
 				reg = <0 0 0 0 0>;
 			};
 		};

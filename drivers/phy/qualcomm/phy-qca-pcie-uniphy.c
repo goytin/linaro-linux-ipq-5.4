@@ -61,6 +61,7 @@ struct qca_uni_pcie_phy {
 	u32 mode;
 	u32 is_x2;
 	void __iomem *reg_base;
+	u32 no_phy_init;
 };
 
 #define	phy_to_dw_phy(x)	container_of((x), struct qca_uni_pcie_phy, phy)
@@ -92,6 +93,9 @@ static void qca_uni_pcie_phy_init(struct qca_uni_pcie_phy *phy)
 {
 	int loop = 0;
 	void __iomem *reg = phy->reg_base;
+
+	if (phy->no_phy_init)
+		return;
 
 	while (loop < 2) {
 		reg += (loop * 0x800);
@@ -153,6 +157,8 @@ static int qca_uni_pcie_get_resources(struct platform_device *pdev,
 	ret = of_property_read_u32(phy->dev->of_node, "x2", &phy->is_x2);
 	if (ret)
 		phy->is_x2 = 0;
+
+	phy->no_phy_init = of_property_read_bool(phy->dev->of_node, "no-phy-init");
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	phy->reg_base = devm_ioremap_resource(phy->dev, res);

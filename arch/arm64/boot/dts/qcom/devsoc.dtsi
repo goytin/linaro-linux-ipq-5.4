@@ -237,6 +237,10 @@
 			reg = <0x4b1800 0x800>;
 			phy-type = "gen3";
 			#phy-cells = <0>;
+
+			qti,multiplexed-phy;
+			qti,phy-mux-regs = <&tcsr_q6_block 0x2544>;
+
 			clocks = <&gcc GCC_PCIE3X1_1_PIPE_CLK>;
 			clock-names = "pipe_clk";
 

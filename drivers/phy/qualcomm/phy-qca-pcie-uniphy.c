@@ -24,6 +24,8 @@
 #include <linux/reset.h>
 #include <linux/of_device.h>
 #include <linux/delay.h>
+#include <linux/mfd/syscon.h>
+#include <linux/regmap.h>
 
 #define PIPE_CLK_DELAY_MIN_US			5000
 #define PIPE_CLK_DELAY_MAX_US			5100
@@ -62,6 +64,8 @@ struct qca_uni_pcie_phy {
 	u32 is_x2;
 	void __iomem *reg_base;
 	u32 no_phy_init;
+        struct regmap *phy_mux_map;
+        u32 phy_mux_reg;
 };
 
 #define	phy_to_dw_phy(x)	container_of((x), struct qca_uni_pcie_phy, phy)
@@ -147,6 +151,38 @@ static int qca_uni_pcie_phy_power_on(struct phy *x)
 	return 0;
 }
 
+static int phy_mux_sel(struct qca_uni_pcie_phy *phy)
+{
+	struct of_phandle_args args;
+	int ret;
+
+	ret = of_parse_phandle_with_fixed_args(phy->dev->of_node,
+			"qti,phy-mux-regs", 1, 0, &args);
+	if (ret) {
+		dev_err(phy->dev, "failed to parse qti,phy-mux-regs\n");
+		return ret;
+	}
+
+	phy->phy_mux_map = syscon_node_to_regmap(args.np);
+	of_node_put(args.np);
+	if (IS_ERR(phy->phy_mux_map)) {
+		pr_err("phy mux regs map failed: %ld\n",
+						PTR_ERR(phy->phy_mux_map));
+		return PTR_ERR(phy->phy_mux_map);
+	}
+
+	phy->phy_mux_reg = args.args[0];
+	/* two single lane mux selection */
+	ret = regmap_write(phy->phy_mux_map, phy->phy_mux_reg, 0x1);
+	if (ret) {
+		dev_err(phy->dev,
+			"Not able to configure phy mux selection: %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 static int qca_uni_pcie_get_resources(struct platform_device *pdev,
 		struct qca_uni_pcie_phy *phy)
 {
@@ -204,6 +240,9 @@ static int qca_uni_pcie_get_resources(struct platform_device *pdev,
 		dev_err(phy->dev, "%s, cannot get mode\n", __func__);
 		return ret;
 	}
+
+	if (device_property_read_bool(phy->dev, "qti,multiplexed-phy"))
+		phy_mux_sel(phy);
 
 	return 0;
 }

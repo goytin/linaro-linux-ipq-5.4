@@ -1638,7 +1638,7 @@ static int q6_powerdown(struct q6_wcss *wcss)
 	int ret;
 	u32 val;
 	int i;
-	int loop;
+	int loop = 0;
 	const struct wcss_data *desc;
 
 	desc = of_device_get_match_data(wcss->dev);

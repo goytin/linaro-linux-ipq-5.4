@@ -99,9 +99,6 @@
 
 #define DEFAULT_TRANSACTION_TIMEOUT			0x3F
 
-#define TCSR_CLK_MUX_SEL	BIT(0)
-#define TCSR_DCC_CLK_SRC_SEL	BIT(20)
-
 enum dcc_func_type {
 	DCC_FUNC_TYPE_CAPTURE,
 	DCC_FUNC_TYPE_CRC,
@@ -180,7 +177,6 @@ struct dcc_drvdata {
 	uint8_t			loopoff;
 	struct clk_bulk_data	*clks;
 	int num_clks;
-	void __iomem		*tcsr_mux;
 };
 
 static uint32_t dcc_offset_conv(struct dcc_drvdata *drvdata, uint32_t off)
@@ -1799,7 +1795,6 @@ static int dcc_probe(struct platform_device *pdev)
 	struct dcc_drvdata *drvdata;
 	struct resource *res;
 	struct md_region md_entry;
-	int val;
 
 	drvdata = devm_kzalloc(dev, sizeof(*drvdata), GFP_KERNEL);
 	if (!drvdata)
@@ -1807,16 +1802,6 @@ static int dcc_probe(struct platform_device *pdev)
 
 	drvdata->dev = &pdev->dev;
 	platform_set_drvdata(pdev, drvdata);
-
-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "tcsr-gcc-clk-mux-sel");
-	if (res) {
-		drvdata->tcsr_mux = devm_ioremap(dev, res->start, resource_size(res));
-		if (drvdata->tcsr_mux) {
-			val = readl(drvdata->tcsr_mux);
-			val |= TCSR_CLK_MUX_SEL | TCSR_DCC_CLK_SRC_SEL;
-			writel(val, drvdata->tcsr_mux);
-		}
-	}
 
 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dcc-base");
 	if (!res)

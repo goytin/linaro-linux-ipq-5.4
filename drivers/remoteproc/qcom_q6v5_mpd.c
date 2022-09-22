@@ -3216,6 +3216,7 @@ static const struct wcss_data wcss_ahb_devsoc_res_init = {
 	.init_clock = devsoc_init_wcss_clock,
 	.wcss_clk_enable = enable_devsoc_wcss_clocks,
 	.wcss_clk_disable = disable_devsoc_wcss_clocks,
+	.init_irq = init_irq,
 	.q6_firmware_name = "devsoc/q6_fw.mdt",
 	.aon_reset_required = true,
 	.wcss_reset_required = true,

@@ -96,6 +96,7 @@ static const struct clk_parent_data nss_cc_parent_data_2[] = {
 };
 
 static const struct freq_tbl ftbl_nss_cc_ce_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
 	F(200000000, P_CMN_PLL_NSS_CLK_200M, 1, 0, 0),
 	{ }
 };
@@ -156,6 +157,13 @@ static struct clk_rcg2 nss_cc_eip_bfdcd_clk_src = {
 };
 
 static const struct freq_tbl ftbl_nss_cc_port1_rx_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(25000000, P_UNIPHY0_NSS_RX_CLK, 12.5, 0, 0),
+	F(25000000, P_UNIPHY0_NSS_RX_CLK, 5, 0, 0),
+	F(78125000, P_UNIPHY0_NSS_RX_CLK, 4, 0, 0),
+	F(125000000, P_UNIPHY0_NSS_RX_CLK, 2.5, 0, 0),
+	F(125000000, P_UNIPHY0_NSS_RX_CLK, 1, 0, 0),
+	F(156250000, P_UNIPHY0_NSS_RX_CLK, 2, 0, 0),
 	F(312500000, P_UNIPHY0_NSS_RX_CLK, 1, 0, 0),
 	{ }
 };
@@ -176,6 +184,13 @@ static struct clk_rcg2 nss_cc_port1_rx_clk_src = {
 };
 
 static const struct freq_tbl ftbl_nss_cc_port1_tx_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(25000000, P_UNIPHY0_NSS_TX_CLK, 12.5, 0, 0),
+	F(25000000, P_UNIPHY0_NSS_TX_CLK, 5, 0, 0),
+	F(78125000, P_UNIPHY0_NSS_TX_CLK, 4, 0, 0),
+	F(125000000, P_UNIPHY0_NSS_TX_CLK, 2.5, 0, 0),
+	F(125000000, P_UNIPHY0_NSS_TX_CLK, 1, 0, 0),
+	F(156250000, P_UNIPHY0_NSS_TX_CLK, 2, 0, 0),
 	F(312500000, P_UNIPHY0_NSS_TX_CLK, 1, 0, 0),
 	{ }
 };
@@ -196,6 +211,13 @@ static struct clk_rcg2 nss_cc_port1_tx_clk_src = {
 };
 
 static const struct freq_tbl ftbl_nss_cc_port2_rx_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(25000000, P_UNIPHY1_NSS_RX_CLK, 12.5, 0, 0),
+	F(25000000, P_UNIPHY1_NSS_RX_CLK, 5, 0, 0),
+	F(78125000, P_UNIPHY1_NSS_RX_CLK, 4, 0, 0),
+	F(125000000, P_UNIPHY1_NSS_RX_CLK, 2.5, 0, 0),
+	F(125000000, P_UNIPHY1_NSS_RX_CLK, 1, 0, 0),
+	F(156250000, P_UNIPHY1_NSS_RX_CLK, 2, 0, 0),
 	F(312500000, P_UNIPHY1_NSS_RX_CLK, 1, 0, 0),
 	{ }
 };
@@ -216,6 +238,13 @@ static struct clk_rcg2 nss_cc_port2_rx_clk_src = {
 };
 
 static const struct freq_tbl ftbl_nss_cc_port2_tx_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(25000000, P_UNIPHY1_NSS_TX_CLK, 12.5, 0, 0),
+	F(25000000, P_UNIPHY1_NSS_TX_CLK, 5, 0, 0),
+	F(78125000, P_UNIPHY1_NSS_TX_CLK, 4, 0, 0),
+	F(125000000, P_UNIPHY1_NSS_TX_CLK, 2.5, 0, 0),
+	F(125000000, P_UNIPHY1_NSS_TX_CLK, 1, 0, 0),
+	F(156250000, P_UNIPHY1_NSS_TX_CLK, 2, 0, 0),
 	F(312500000, P_UNIPHY1_NSS_TX_CLK, 1, 0, 0),
 	{ }
 };

@@ -939,11 +939,6 @@ static int q6v7_wcss_reset(struct q6_wcss *wcss, struct rproc *rproc)
 	/*clear boot trigger*/
 	writel(0x0, wcss->tcsr_q6_base);
 
-	/*Q6 AHB upper & lower address*/
-	writel(0x00cdc000, wcss->reg_base + Q6SS_AHB_UPPER);
-
-	writel(0x00ca0000, wcss->reg_base + Q6SS_AHB_LOWER);
-
 	ret = regmap_update_bits(wcss->halt_map,
 			wcss->halt_nc + TCSR_GLOBAL_CFG1,
 			0x1F, 0x18);
@@ -1643,7 +1638,7 @@ static int q6_powerdown(struct q6_wcss *wcss)
 	int ret;
 	u32 val;
 	int i;
-	int loop;
+	int loop = 0;
 	const struct wcss_data *desc;
 
 	desc = of_device_get_match_data(wcss->dev);

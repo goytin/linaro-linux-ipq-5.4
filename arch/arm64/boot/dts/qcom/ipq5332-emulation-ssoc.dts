@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
 /*
- * Dev SoC Emulation board device tree source
+ * IPQ5332 Emulation board device tree source
  *
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
@@ -8,14 +8,14 @@
 
 /dts-v1/;
 
-#include "devsoc.dtsi"
-#include "devsoc-default-memory.dtsi"
+#include "ipq5332.dtsi"
+#include "ipq5332-default-memory.dtsi"
 
 / {
 	#address-cells = <0x2>;
 	#size-cells = <0x2>;
-	model = "Qualcomm Technologies, Inc. DevSoC-EMULATION";
-	compatible = "qcom,devsoc-ap-emulation", "qcom,devsoc";
+	model = "Qualcomm Technologies, Inc. IPQ5332-EMULATION";
+	compatible = "qcom,ipq5332-ap-emulation", "qcom,ipq5332";
 	interrupt-parent = <&intc>;
 
 	clocks {
@@ -127,9 +127,9 @@
 
 		q6v5_wcss: remoteproc@d100000 {
 			qcom,emulation;
-			firmware = "devsoc/q6_fw.mdt";
+			firmware = "ipq5332/q6_fw.mdt";
 			q6_wcss_pd1: remoteproc_pd1 {
-				firmware = "devsoc/q6_fw.mdt";
+				firmware = "ipq5332/q6_fw.mdt";
 				qcom,fw_shared;
 			};
 		};

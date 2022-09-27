@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
 /*
- * Dev SoC device tree source
+ * IPQ5332 device tree source
  *
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
-#include <dt-bindings/clock/qcom,gcc-devsoc.h>
-#include <dt-bindings/reset/qcom,gcc-devsoc.h>
-#include <dt-bindings/clock/qcom,nsscc-devsoc.h>
-#include <dt-bindings/reset/qcom,nsscc-devsoc.h>
+#include <dt-bindings/clock/qcom,gcc-ipq5332.h>
+#include <dt-bindings/reset/qcom,gcc-ipq5332.h>
+#include <dt-bindings/clock/qcom,nsscc-ipq5332.h>
+#include <dt-bindings/reset/qcom,nsscc-ipq5332.h>
 #include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/clock/qca,apss-devsoc.h>
+#include <dt-bindings/clock/qca,apss-ipq5332.h>
 
 / {
 	#address-cells = <2>;
@@ -536,7 +536,7 @@
 		};
 
 		tlmm: pinctrl@1000000 {
-			compatible = "qcom,devsoc-pinctrl";
+			compatible = "qcom,ipq5332-pinctrl";
 			reg = <0x01000000 0x300000>;
 			interrupts = <GIC_SPI 249 IRQ_TYPE_LEVEL_HIGH>;
 			gpio-controller;
@@ -547,7 +547,7 @@
 		};
 
 		gcc: gcc@1800000 {
-			compatible = "qcom,gcc-devsoc";
+			compatible = "qcom,gcc-ipq5332";
 			reg = <0x1800000 0x80000>;
 			clocks = <&xo>,
 				<&sleep_clk>,
@@ -566,7 +566,7 @@
 		};
 
 		nsscc: nsscc@39b00000{
-			compatible = "qcom,nsscc-devsoc";
+			compatible = "qcom,nsscc-ipq5332";
 			reg = <0x39b00000 0x80000>;
 			clocks = <&xo>,
 				<&cmn_pll_nss_clk_200m>,
@@ -581,7 +581,7 @@
 		};
 
 		dcc_v2@797f000 {
-			compatible = "qcom,dcc-v2-devsoc";
+			compatible = "qcom,dcc-v2-ipq5332";
 			reg = <0x40ff000 0x1000>,
 				<0x4080000 0x800>;
 			reg-names = "dcc-base", "dcc-ram-base";
@@ -685,7 +685,7 @@
 		};
 
 		nand: nand@79b0000 {
-			compatible = "qcom,devsoc-nand";
+			compatible = "qcom,ipq5332-nand";
 			reg = <0x79b0000 0x10000>;
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -1039,7 +1039,7 @@
 		};
 
 		apcs_glb: mailbox@b111000 {
-			compatible = "qcom,devsoc-apcs-apps-global";
+			compatible = "qcom,ipq5332-apcs-apps-global";
 			reg = <0x0b111000 0x6000>;
 			#clock-cells = <1>;
 			#mbox-cells = <1>;
@@ -1207,11 +1207,11 @@
 		};
 
 		q6v5_wcss: remoteproc@d100000 {
-			compatible = "qcom,devsoc-q6-mpd";
+			compatible = "qcom,ipq5332-q6-mpd";
 			#address-cells = <1>;
 			#size-cells = <1>;
 			ranges;
-			firmware = "devsoc/q6_fw0.mdt";
+			firmware = "ipq5332/q6_fw0.mdt";
 			reg = <0x0d100000 0x4040>,
 				<0x193d21c 0x8>,
 				<0x193d204 0x4>,
@@ -1285,12 +1285,12 @@
 			};
 
 			q6_wcss_pd1: remoteproc_pd1 {
-				compatible = "qcom,devsoc-wcss-ahb-mpd";
+				compatible = "qcom,ipq5332-wcss-ahb-mpd";
 				reg = <0x004ab000 0x20>,
 					<0xD190488 0x4>;
 				reg-names = "rmb",
 						"l2vic_int";
-				firmware = "devsoc/q6_fw1.mdt";
+				firmware = "ipq5332/q6_fw1.mdt";
 				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
 				interrupts-extended = <&wcss_smp2p_in 8 0>,
 							<&wcss_smp2p_in 9 0>,
@@ -1341,7 +1341,7 @@
 		};
 
 		apss_clk: qcom,apss_clk@b111000 {
-			compatible = "qcom,apss-devsoc";
+			compatible = "qcom,apss-ipq5332";
 			reg = <0xb111000 0x6000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
@@ -1404,7 +1404,7 @@
 	};
 
 	ctx_save: ctx-save {
-		compatible = "qti,ctxt-save-devsoc";
+		compatible = "qti,ctxt-save-ipq5332";
 	};
 
 	qseecom: qseecom {
@@ -1414,4 +1414,4 @@
 	};
 };
 
-#include "devsoc-coresight.dtsi"
+#include "ipq5332-coresight.dtsi"

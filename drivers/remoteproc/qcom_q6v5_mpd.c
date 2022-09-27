@@ -153,7 +153,7 @@
 #define SLV_BDG_RESET_REQ	0x8
 #define SLV_BDG_RESET_ACK	0xc
 
-static const struct wcss_data q6_devsoc_res_init;
+static const struct wcss_data q6_ipq5332_res_init;
 static int debug_wcss;
 /**
  * enum state - state of a wcss (private)
@@ -626,7 +626,7 @@ static int ipq9574_q6_clk_enable(struct q6_wcss *wcss)
 	return 0;
 }
 
-void disable_devsoc_wcss_clocks(struct q6_wcss *wcss)
+void disable_ipq5332_wcss_clocks(struct q6_wcss *wcss)
 {
 	int loop;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
@@ -726,7 +726,7 @@ void disable_devsoc_wcss_clocks(struct q6_wcss *wcss)
 	}
 }
 
-void disable_devsoc_clocks(struct q6_wcss *wcss)
+void disable_ipq5332_clocks(struct q6_wcss *wcss)
 {
 	int loop;
 
@@ -801,7 +801,7 @@ void disable_devsoc_clocks(struct q6_wcss *wcss)
 	}
 }
 
-int enable_devsoc_wcss_clocks(struct q6_wcss *wcss)
+int enable_ipq5332_wcss_clocks(struct q6_wcss *wcss)
 {
 	int loop;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
@@ -903,7 +903,7 @@ int enable_devsoc_wcss_clocks(struct q6_wcss *wcss)
 	return 0;
 }
 
-int enable_devsoc_clocks(struct q6_wcss *wcss)
+int enable_ipq5332_clocks(struct q6_wcss *wcss)
 {
 	int ret, loop = 0;
 
@@ -1013,7 +1013,7 @@ int enable_devsoc_clocks(struct q6_wcss *wcss)
 	return 0;
 }
 
-static int devsoc_q6_clk_enable(struct q6_wcss *wcss)
+static int ipq5332_q6_clk_enable(struct q6_wcss *wcss)
 {
 	int ret;
 	u32 val;
@@ -1023,7 +1023,7 @@ static int devsoc_q6_clk_enable(struct q6_wcss *wcss)
 	struct q6_wcss *upd_wcss;
 
 	if (wcss->is_emulation) {
-		ret = enable_devsoc_clocks(wcss);
+		ret = enable_ipq5332_clocks(wcss);
 		if (ret)
 			return ret;
 	}
@@ -1403,7 +1403,7 @@ static int q6_wcss_start(struct rproc *rproc)
 	if (ret)
 		goto wcss_q6_reset;
 
-	if (desc == &q6_devsoc_res_init) {
+	if (desc == &q6_ipq5332_res_init) {
 		while (loop < 100) {
 			mdelay(1);
 			loop++;
@@ -1510,7 +1510,7 @@ static int q6_wcss_spawn_pd(struct rproc *rproc)
 	return ret;
 }
 
-static int wcss_devsoc_ahb_pd_start(struct rproc *rproc)
+static int wcss_ipq5332_ahb_pd_start(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv;
 	int ret;
@@ -1554,7 +1554,7 @@ static int wcss_devsoc_ahb_pd_start(struct rproc *rproc)
 	/* WCSS CLK Enable */
 	ret = desc->wcss_clk_enable(wcss);
 	if (ret) {
-		pr_info("Failed to enable devsoc wcss clocks\n");
+		pr_info("Failed to enable ipq5332 wcss clocks\n");
 		return ret;
 	}
 
@@ -1629,7 +1629,7 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 		/* WCSS CLK Enable */
 		ret = desc->wcss_clk_enable(wcss);
 		if (ret) {
-			pr_info("Failed to enable devsoc wcss clocks\n");
+			pr_info("Failed to enable ipq5332 wcss clocks\n");
 			return ret;
 		}
 
@@ -1958,7 +1958,7 @@ static int q6_powerdown(struct q6_wcss *wcss)
 
 		if (wcss->is_emulation) {
 			/*Disable clocks*/
-			disable_devsoc_clocks(wcss);
+			disable_ipq5332_clocks(wcss);
 		}
 		return 0;
 	}
@@ -2117,7 +2117,7 @@ static int wcss_pcie_pd_stop(struct rproc *rproc)
 	return ret;
 }
 
-static int wcss_devsoc_ahb_pd_stop(struct rproc *rproc)
+static int wcss_ipq5332_ahb_pd_stop(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv, *rpd_wcss;
 	int ret = 0;
@@ -2489,9 +2489,9 @@ static const struct rproc_ops q6_wcss_ipq5018_ops = {
 	.report_panic = q6_wcss_panic,
 };
 
-static const struct rproc_ops wcss_ahb_devsoc_ops = {
-	.start = wcss_devsoc_ahb_pd_start,
-	.stop = wcss_devsoc_ahb_pd_stop,
+static const struct rproc_ops wcss_ahb_ipq5332_ops = {
+	.start = wcss_ipq5332_ahb_pd_start,
+	.stop = wcss_ipq5332_ahb_pd_stop,
 	.load = wcss_ahb_pcie_pd_load,
 	.get_boot_addr = rproc_elf_get_boot_addr,
 	.parse_fw = q6_wcss_register_dump_segments,
@@ -2760,7 +2760,7 @@ static int ipq5018_init_wcss_clock(struct q6_wcss *wcss)
 	return 0;
 }
 
-static int devsoc_init_wcss_clock(struct q6_wcss *wcss)
+static int ipq5332_init_wcss_clock(struct q6_wcss *wcss)
 {
 	int ret;
 
@@ -2857,7 +2857,7 @@ static int devsoc_init_wcss_clock(struct q6_wcss *wcss)
 	return 0;
 }
 
-static int devsoc_init_q6_clock(struct q6_wcss *wcss)
+static int ipq5332_init_q6_clock(struct q6_wcss *wcss)
 {
 	int ret;
 
@@ -3325,11 +3325,11 @@ static int q6_wcss_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static const struct wcss_data q6_devsoc_res_init = {
-	.init_clock = devsoc_init_q6_clock,
+static const struct wcss_data q6_ipq5332_res_init = {
+	.init_clock = ipq5332_init_q6_clock,
 	.init_irq = qcom_q6v5_init,
-	.q6_clk_enable = devsoc_q6_clk_enable,
-	.q6_firmware_name = "devsoc/q6_fw0.mdt",
+	.q6_clk_enable = ipq5332_q6_clk_enable,
+	.q6_firmware_name = "ipq5332/q6_fw0.mdt",
 	.crash_reason_smem = WCSS_CRASH_REASON,
 	.remote_id = WCSS_SMEM_HOST,
 	.aon_reset_required = true,
@@ -3359,16 +3359,16 @@ static const struct wcss_data q6_ipq5018_res_init = {
 	.glink_subdev_required = true,
 };
 
-static const struct wcss_data wcss_ahb_devsoc_res_init = {
-	.init_clock = devsoc_init_wcss_clock,
-	.wcss_clk_enable = enable_devsoc_wcss_clocks,
-	.wcss_clk_disable = disable_devsoc_wcss_clocks,
+static const struct wcss_data wcss_ahb_ipq5332_res_init = {
+	.init_clock = ipq5332_init_wcss_clock,
+	.wcss_clk_enable = enable_ipq5332_wcss_clocks,
+	.wcss_clk_disable = disable_ipq5332_wcss_clocks,
 	.init_irq = init_irq,
-	.q6_firmware_name = "devsoc/q6_fw1.mdt",
+	.q6_firmware_name = "ipq5332/q6_fw1.mdt",
 	.aon_reset_required = true,
 	.wcss_reset_required = true,
 	.ce_reset_required = true,
-	.ops = &wcss_ahb_devsoc_ops,
+	.ops = &wcss_ahb_ipq5332_ops,
 	.need_mem_protection = false,
 	.need_auto_boot = false,
 	.q6ver = Q6V7,
@@ -3472,12 +3472,12 @@ static const struct wcss_data wcss_pcie_ipq9574_res_init = {
 
 static const struct of_device_id q6_wcss_of_match[] = {
 	{ .compatible = "qcom,ipq5018-q6-mpd", .data = &q6_ipq5018_res_init },
-	{ .compatible = "qcom,devsoc-q6-mpd", .data = &q6_devsoc_res_init },
+	{ .compatible = "qcom,ipq5332-q6-mpd", .data = &q6_ipq5332_res_init },
 	{ .compatible = "qcom,ipq9574-q6-mpd", .data = &q6_ipq9574_res_init },
 	{ .compatible = "qcom,ipq5018-wcss-ahb-mpd",
 		.data = &wcss_ahb_ipq5018_res_init },
-	{ .compatible = "qcom,devsoc-wcss-ahb-mpd",
-		.data = &wcss_ahb_devsoc_res_init },
+	{ .compatible = "qcom,ipq5332-wcss-ahb-mpd",
+		.data = &wcss_ahb_ipq5332_res_init },
 	{ .compatible = "qcom,ipq9574-wcss-ahb-mpd",
 		.data = &wcss_ahb_ipq9574_res_init },
 	{ .compatible = "qcom,ipq5018-wcss-pcie-mpd",

@@ -14,8 +14,8 @@
 #include <linux/regmap.h>
 
 #include <linux/reset-controller.h>
-#include <dt-bindings/clock/qcom,gcc-devsoc.h>
-#include <dt-bindings/reset/qcom,gcc-devsoc.h>
+#include <dt-bindings/clock/qcom,gcc-ipq5332.h>
+#include <dt-bindings/reset/qcom,gcc-ipq5332.h>
 
 #include "common.h"
 #include "clk-regmap.h"
@@ -3984,7 +3984,7 @@ static const struct clk_ops clk_dummy_ops = {
 	},							\
 })
 
-static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
+static struct clk_regmap *gcc_ipq5332_dummy_clocks[] = {
 	[GCC_ADSS_PWM_CLK] = DEFINE_DUMMY_CLK(gcc_adss_pwm_clk),
 	[GCC_ADSS_PWM_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_adss_pwm_clk_src),
 	[GCC_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_ahb_clk),
@@ -4183,7 +4183,7 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GPLL4] = DEFINE_DUMMY_CLK(gpll4),
 };
 
-static struct clk_regmap *gcc_devsoc_clocks[] = {
+static struct clk_regmap *gcc_ipq5332_clocks[] = {
 	[GCC_ADSS_PWM_CLK] = &gcc_adss_pwm_clk.clkr,
 	[GCC_ADSS_PWM_CLK_SRC] = &gcc_adss_pwm_clk_src.clkr,
 	[GCC_AHB_CLK] = &gcc_ahb_clk.clkr,
@@ -4382,7 +4382,7 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GPLL4] = &gpll4.clkr,
 };
 
-static const struct qcom_reset_map gcc_devsoc_resets[] = {
+static const struct qcom_reset_map gcc_ipq5332_resets[] = {
 	[GCC_ADSS_BCR] = { 0x1c000 },
 	[GCC_ADSS_PWM_CLK_ARES] = { 0x1c00c, 2 },
 	[GCC_AHB_CLK_ARES] = { 0x34024, 2 },
@@ -4558,7 +4558,7 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_UNIPHY1_XPCS_ARES] = { 0x16060 },
 };
 
-static const struct regmap_config gcc_devsoc_regmap_config = {
+static const struct regmap_config gcc_ipq5332_regmap_config = {
 	.reg_bits = 32,
 	.reg_stride = 4,
 	.val_bits = 32,
@@ -4566,7 +4566,7 @@ static const struct regmap_config gcc_devsoc_regmap_config = {
 	.fast_io = true,
 };
 
-static struct clk_hw *gcc_devsoc_hws[] = {
+static struct clk_hw *gcc_ipq5332_hws[] = {
 	&gpll0_div2.hw,
 	&gcc_xo_div4_clk_src.hw,
 	&gcc_system_noc_bfdcd_div2_clk_src.hw,
@@ -4578,40 +4578,40 @@ static struct clk_hw *gcc_devsoc_hws[] = {
 	&gcc_eud_at_div_clk_src.hw,
 };
 
-static const struct qcom_cc_desc gcc_devsoc_desc = {
-	.config = &gcc_devsoc_regmap_config,
-	.clks = gcc_devsoc_clocks,
-	.num_clks = ARRAY_SIZE(gcc_devsoc_clocks),
-	.resets = gcc_devsoc_resets,
-	.num_resets = ARRAY_SIZE(gcc_devsoc_resets),
-	.clk_hws = gcc_devsoc_hws,
-	.num_clk_hws = ARRAY_SIZE(gcc_devsoc_hws),
+static const struct qcom_cc_desc gcc_ipq5332_desc = {
+	.config = &gcc_ipq5332_regmap_config,
+	.clks = gcc_ipq5332_clocks,
+	.num_clks = ARRAY_SIZE(gcc_ipq5332_clocks),
+	.resets = gcc_ipq5332_resets,
+	.num_resets = ARRAY_SIZE(gcc_ipq5332_resets),
+	.clk_hws = gcc_ipq5332_hws,
+	.num_clk_hws = ARRAY_SIZE(gcc_ipq5332_hws),
 };
 
-static const struct qcom_cc_desc gcc_devsoc_dummy_desc = {
-	.config = &gcc_devsoc_regmap_config,
-	.clks = gcc_devsoc_dummy_clocks,
-	.num_clks = ARRAY_SIZE(gcc_devsoc_dummy_clocks),
-	.resets = gcc_devsoc_resets,
-	.num_resets = ARRAY_SIZE(gcc_devsoc_resets),
+static const struct qcom_cc_desc gcc_ipq5332_dummy_desc = {
+	.config = &gcc_ipq5332_regmap_config,
+	.clks = gcc_ipq5332_dummy_clocks,
+	.num_clks = ARRAY_SIZE(gcc_ipq5332_dummy_clocks),
+	.resets = gcc_ipq5332_resets,
+	.num_resets = ARRAY_SIZE(gcc_ipq5332_resets),
 };
 
 
-static const struct of_device_id gcc_devsoc_match_table[] = {
-	{ .compatible = "qcom,gcc-devsoc" },
+static const struct of_device_id gcc_ipq5332_match_table[] = {
+	{ .compatible = "qcom,gcc-ipq5332" },
 	{ }
 };
-MODULE_DEVICE_TABLE(of, gcc_devsoc_match_table);
+MODULE_DEVICE_TABLE(of, gcc_ipq5332_match_table);
 
-static int gcc_devsoc_probe(struct platform_device *pdev)
+static int gcc_ipq5332_probe(struct platform_device *pdev)
 {
-	struct qcom_cc_desc desc = gcc_devsoc_desc;
+	struct qcom_cc_desc desc = gcc_ipq5332_desc;
 	struct device_node *np = (&pdev->dev)->of_node;
 	struct regmap *regmap;
 	int ret;
 
 	if (of_property_read_bool(np, "gcc-use-dummy"))
-		desc = gcc_devsoc_dummy_desc;
+		desc = gcc_ipq5332_dummy_desc;
 
 	regmap = qcom_cc_map(pdev, &desc);
 	if (IS_ERR(regmap))
@@ -4628,26 +4628,26 @@ static int gcc_devsoc_probe(struct platform_device *pdev)
 	return ret;
 }
 
-static struct platform_driver gcc_devsoc_driver = {
-	.probe = gcc_devsoc_probe,
+static struct platform_driver gcc_ipq5332_driver = {
+	.probe = gcc_ipq5332_probe,
 	.driver = {
-		.name = "gcc-devsoc",
-		.of_match_table = gcc_devsoc_match_table,
+		.name = "gcc-ipq5332",
+		.of_match_table = gcc_ipq5332_match_table,
 	},
 };
 
-static int __init gcc_devsoc_init(void)
+static int __init gcc_ipq5332_init(void)
 {
-	return platform_driver_register(&gcc_devsoc_driver);
+	return platform_driver_register(&gcc_ipq5332_driver);
 }
-core_initcall(gcc_devsoc_init);
+core_initcall(gcc_ipq5332_init);
 
-static void __exit gcc_devsoc_exit(void)
+static void __exit gcc_ipq5332_exit(void)
 {
-	platform_driver_unregister(&gcc_devsoc_driver);
+	platform_driver_unregister(&gcc_ipq5332_driver);
 }
-module_exit(gcc_devsoc_exit);
+module_exit(gcc_ipq5332_exit);
 
-MODULE_DESCRIPTION("Qualcomm Technologies, Inc. GCC IPQ5018 Driver");
+MODULE_DESCRIPTION("Qualcomm Technologies, Inc. GCC IPQ5332 Driver");
 MODULE_LICENSE("Dual BSD/GPLv2");
-MODULE_ALIAS("platform:gcc-devsoc");
+MODULE_ALIAS("platform:gcc-ipq5332");

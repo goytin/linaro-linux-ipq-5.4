@@ -195,7 +195,7 @@
 	};
 
 	tsens: thermal-sensor@4a9000 {
-		compatible = "qcom,devsoc-tsens";
+		compatible = "qcom,ipq5332-tsens";
 		reg = <0x4a9000 0x1000>, /* TM */
 		      <0x4a8000 0x1000>; /* SROT */
 		nvmem-cells = <&tsens_calib_sel>, <&tsens_calib_offset>;

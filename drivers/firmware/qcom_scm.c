@@ -731,6 +731,32 @@ int qti_read_dload_reg()
 }
 EXPORT_SYMBOL(qti_read_dload_reg);
 
+int qti_scm_get_device_attestation_ephimeral_key(u32 svc_id, u32 cmd_id,
+			void *key_buf, u32 key_buf_len, u32 *key_len)
+{
+	int ret;
+	ret = __qti_scm_get_device_attestation_ephimeral_key(__scm->dev,
+			svc_id, cmd_id, key_buf, key_buf_len, key_len);
+	return ret;
+
+}
+EXPORT_SYMBOL(qti_scm_get_device_attestation_ephimeral_key);
+
+int qti_scm_get_device_attestation_response(u32 svc_id, u32 cmd_id, void *req_buf,
+			u32 req_buf_len, void *extclaim_buf, u32 extclaim_buf_len,
+			void *resp_buf, u32 resp_buf_len, u32 *attest_resp_len)
+{
+	int ret;
+
+	ret = __qti_scm_get_device_attestation_response(__scm->dev, svc_id, cmd_id,
+			req_buf, req_buf_len, extclaim_buf, extclaim_buf_len, resp_buf,
+			resp_buf_len, attest_resp_len);
+
+	return ret;
+
+}
+EXPORT_SYMBOL(qti_scm_get_device_attestation_response);
+
 int qti_scm_wcss_boot(u32 svc_id, u32 cmd_id, void *cmd_buf)
 {
 	int ret;

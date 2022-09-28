@@ -1313,6 +1313,11 @@
 		compatible = "qti,ctxt-save-devsoc";
 	};
 
+	qseecom: qseecom {
+		compatible = "ipq9574-qseecom";
+		memory-region = <&tzapp>;
+		status = "ok";
+	};
 };
 
 #include "devsoc-coresight.dtsi"

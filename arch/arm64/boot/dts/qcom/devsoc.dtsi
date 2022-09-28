@@ -982,51 +982,63 @@
 			qcom,rproc = <&q6v5_wcss>;
 			qcom,bdf-addr = <0x4BA00000 0x4BA00000 0x4BA00000
 					 0x0 0x0>;
-			interrupts = <0 559 1>,
-				<0 560 1>,
-				<0 561 1>,
-				<0 422 1>,
-				<0 423 1>,
-				<0 424 1>,
-				<0 425 1>,
-				<0 426 1>,
-				<0 427 1>,
-				<0 428 1>,
-				<0 429 1>,
-				<0 430 1>,
-				<0 431 1>,
-				<0 432 1>,
-				<0 433 1>,
-				<0 491 1>,
-				<0 495 1>,
-				<0 493 1>,
-				<0 544 1>,
-				<0 457 1>,
-				<0 504 1>,
-				<0 497 1>,
-				<0 454 1>,
-				<0 453 1>,
-				<0 452 1>,
-				<0 451 1>,
-				<0 488 1>,
-				<0 488 1>,
-				<0 484 1>,
-				<0 554 1>,
-				<0 554 1>,
-				<0 549 1>,
-				<0 507 1>,
-				<0 500 1>,
-				<0 499 1>,
-				<0 498 1>,
-				<0 467 1>,
-				<0 466 1>,
-				<0 458 1>,
-				<0 450 1>,
-				<0 543 1>,
-				<0 486 1>,
-				<0 486 1>,
-				<0 482 1>,
-				<0 419 1>;
+			interrupts = <0 559 1>, /* misc-pulse1 */
+				<0 560 1>, /* misc-latch */
+				<0 561 1>, /* sw-exception */
+				<0 422 1>, /* ce0 */
+				<0 423 1>, /* ce1 */
+				<0 424 1>, /* ce2 */
+				<0 425 1>, /* ce3 */
+				<0 426 1>, /* ce4 */
+				<0 427 1>, /* ce5 */
+				<0 428 1>, /* ce6 */
+				<0 429 1>, /* ce7 */
+				<0 430 1>, /* ce8 */
+				<0 431 1>, /* ce9 */
+				<0 432 1>, /* ce10 */
+				<0 433 1>, /* ce11 */
+				<0 491 1>, /* host2wbm-desc-feed */
+				<0 495 1>, /* host2reo-re-injection */
+				<0 493 1>, /* host2reo-command */
+				<0 544 1>, /* host2rxdma-monitor-ring1 */
+				<0 457 1>, /* reo2ost-exception */
+				<0 466 1>, /* wbm2host-rx-release */
+				<0 497 1>, /* reo2host-status */
+				<0 454 1>, /* reo2host-destination-ring4 */
+				<0 453 1>, /* reo2host-destination-ring3 */
+				<0 452 1>, /* reo2host-destination-ring2 */
+				<0 451 1>, /* reo2host-destination-ring1 */
+				<0 488 1>, /* rxdma2host-monitor-destination-mac3 */
+				<0 488 1>, /* rxdma2host-monitor-destination-mac2 */
+				<0 484 1>, /* rxdma2host-monitor-destination-mac1 */
+				<0 554 1>, /* host2rxdma-host-buf-ring-mac3 */
+				<0 554 1>, /* host2rxdma-host-buf-ring-mac2 */
+				<0 549 1>, /* host2rxdma-host-buf-ring-mac1 */
+				<0 507 1>, /* host2tcl-input-ring4 */
+				<0 500 1>, /* host2tcl-input-ring3 */
+				<0 499 1>, /* host2tcl-input-ring2 */
+				<0 498 1>, /* host2tcl-input-ring1 */
+				<0 450 1>, /* wbm2host-tx-completions-ring4 */
+				<0 449 1>, /* wbm2host-tx-completions-ring3 */
+				<0 448 1>, /* wbm2host-tx-completions-ring2 */
+				<0 447 1>, /* wbm2host-tx-completions-ring1 */
+				<0 543 1>, /* host2tx-monitor-ring1 */
+				<0 486 1>, /* txmon2host-monitor-destination-mac3 */
+				<0 486 1>, /* txmon2host-monitor-destination-mac2 */
+				<0 482 1>, /* txmon2host-monitor-destination-mac1 */
+				<0 419 1>, /* umac_reset */
+				/* Unused Interrupts */
+				<0 558 1>, /* host2rxdma-monitor-ring3 */
+				<0 558 1>, /* host2rxdma-monitor-ring2 */
+				<0 558 1>, /* ppdu-end-interrupts-mac3 */
+				<0 558 1>, /* ppdu-end-interrupts-mac2 */
+				<0 558 1>, /* ppdu-end-interrupts-mac1 */
+				<0 558 1>, /* rxdma2host-monitor-status-ring-mac3 */
+				<0 558 1>, /* rxdma2host-monitor-status-ring-mac2 */
+				<0 558 1>, /* rxdma2host-monitor-status-ring-mac1 */
+				<0 558 1>, /* rxdma2host-destination-ring-mac3 */
+				<0 558 1>, /* rxdma2host-destination-ring-mac2 */
+				<0 558 1>; /* rxdma2host-destination-ring-mac1 */
 
 			interrupt-names = "misc-pulse1",
 				"misc-latch",
@@ -1072,7 +1084,19 @@
 				"txmon2host-monitor-destination-mac3",
 				"txmon2host-monitor-destination-mac2",
 				"txmon2host-monitor-destination-mac1",
-				"umac_reset";
+				"umac_reset",
+				/* Unused Interrupts */
+				"host2rxdma-monitor-ring3",
+				"host2rxdma-monitor-ring2",
+				"ppdu-end-interrupts-mac3",
+				"ppdu-end-interrupts-mac2",
+				"ppdu-end-interrupts-mac1",
+				"rxdma2host-monitor-status-ring-mac3",
+				"rxdma2host-monitor-status-ring-mac2",
+				"rxdma2host-monitor-status-ring-mac1",
+				"rxdma2host-destination-ring-mac3",
+				"rxdma2host-destination-ring-mac2",
+				"rxdma2host-destination-ring-mac1";
 			status = "disabled";
 		};
 

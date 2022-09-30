@@ -40,19 +40,18 @@ enum {
 	P_GPLL2_OUT_MAIN,
 	P_GPLL4_OUT_AUX,
 	P_GPLL4_OUT_MAIN,
-	P_GPLL6_OUT_AUX,
 	P_SLEEP_CLK,
 	P_XO,
 };
 
-static struct clk_alpha_pll gpll0 = {
+static struct clk_alpha_pll gpll0_main = {
 	.offset = 0x20000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.enable_reg = 0xb000,
 		.enable_mask = BIT(0),
 		.hw.init = &(const struct clk_init_data){
-			.name = "gpll0",
+			.name = "gpll0_main",
 			.parent_data = &(const struct clk_parent_data){
 				.fw_name = "xo",
 			},
@@ -62,7 +61,34 @@ static struct clk_alpha_pll gpll0 = {
 	},
 };
 
-static struct clk_alpha_pll gpll2 = {
+static struct clk_fixed_factor gpll0_div2 = {
+	.mult = 1,
+	.div = 2,
+	.hw.init = &(struct clk_init_data){
+		.name = "gpll0_div2",
+		.parent_hws = (const struct clk_hw *[]){
+				&gpll0_main.clkr.hw },
+		.num_parents = 1,
+		.ops = &clk_fixed_factor_ops,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
+static struct clk_alpha_pll_postdiv gpll0 = {
+	.offset = 0x20000,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
+	.width = 4,
+	.clkr.hw.init = &(struct clk_init_data){
+		.name = "gpll0",
+		.parent_hws = (const struct clk_hw *[]){
+				&gpll0_main.clkr.hw },
+		.num_parents = 1,
+		.ops = &clk_alpha_pll_postdiv_ro_ops,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
+static struct clk_alpha_pll gpll2_main = {
 	.offset = 0x21000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
@@ -79,14 +105,28 @@ static struct clk_alpha_pll gpll2 = {
 	},
 };
 
-static struct clk_alpha_pll gpll4 = {
+static struct clk_alpha_pll_postdiv gpll2 = {
+	.offset = 0x20000,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
+	.width = 4,
+	.clkr.hw.init = &(struct clk_init_data){
+		.name = "gpll2_main",
+		.parent_hws = (const struct clk_hw *[]){
+				&gpll2_main.clkr.hw },
+		.num_parents = 1,
+		.ops = &clk_alpha_pll_postdiv_ro_ops,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
+static struct clk_alpha_pll gpll4_main = {
 	.offset = 0x22000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.clkr = {
 		.enable_reg = 0xb000,
 		.enable_mask = BIT(2),
 		.hw.init = &(const struct clk_init_data){
-			.name = "gpll4",
+			.name = "gpll4_main",
 			.parent_data = &(const struct clk_parent_data){
 				.fw_name = "xo",
 			},
@@ -96,18 +136,17 @@ static struct clk_alpha_pll gpll4 = {
 	},
 };
 
-static struct clk_alpha_pll gpll6 = {
-	.offset = 0x1f000,
+static struct clk_alpha_pll_postdiv gpll4 = {
+	.offset = 0x20000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
-	.clkr = {
-		.hw.init = &(const struct clk_init_data){
-			.name = "gpll6",
-			.parent_data = &(const struct clk_parent_data){
-				.fw_name = "xo",
-			},
-			.num_parents = 1,
-			.ops = &clk_alpha_pll_stromer_ops,
-		},
+	.width = 4,
+	.clkr.hw.init = &(struct clk_init_data){
+		.name = "gpll4",
+		.parent_hws = (const struct clk_hw *[]){
+				&gpll4_main.clkr.hw },
+		.num_parents = 1,
+		.ops = &clk_alpha_pll_postdiv_ro_ops,
+		.flags = CLK_SET_RATE_PARENT,
 	},
 };
 
@@ -121,7 +160,7 @@ static const struct parent_map gcc_parent_map_0[] = {
 static const struct clk_parent_data gcc_parent_data_0[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll0.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -162,7 +201,6 @@ static const struct clk_parent_data gcc_parent_data_3[] = {
 static const struct parent_map gcc_parent_map_4[] = {
 	{ P_XO, 0 },
 	{ P_GPLL0_OUT_MAIN, 1 },
-	{ P_GPLL6_OUT_AUX, 2 },
 	{ P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 4 },
 	{ P_SLEEP_CLK, 6 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
@@ -171,8 +209,7 @@ static const struct parent_map gcc_parent_map_4[] = {
 static const struct clk_parent_data gcc_parent_data_4[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll0.clkr.hw },
-	{ .hw = &gpll6.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "sleep_clk" },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
@@ -181,7 +218,6 @@ static const struct parent_map gcc_parent_map_5[] = {
 	{ P_XO, 0 },
 	{ P_GPLL4_OUT_MAIN, 1 },
 	{ P_GPLL0_OUT_AUX, 2 },
-	{ P_GPLL6_OUT_AUX, 3 },
 	{ P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 4 },
 	{ P_CORE_BI_PLL_TEST_SE, 7 },
 };
@@ -190,8 +226,7 @@ static const struct clk_parent_data gcc_parent_data_5[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll4.clkr.hw },
 	{ .hw = &gpll0.clkr.hw },
-	{ .hw = &gpll6.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -210,7 +245,7 @@ static const struct clk_parent_data gcc_parent_data_6[] = {
 	{ .hw = &gpll0.clkr.hw },
 	{ .hw = &gpll2.clkr.hw },
 	{ .hw = &gpll4.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .hw = &gpll0.clkr.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
@@ -271,7 +306,7 @@ static const struct clk_parent_data gcc_parent_data_10[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll4.clkr.hw },
 	{ .hw = &gpll0.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -301,7 +336,7 @@ static const struct clk_parent_data gcc_parent_data_12[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll0.clkr.hw },
 	{ .hw = &gpll2.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -327,7 +362,7 @@ static const struct clk_parent_data gcc_parent_data_14[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll0.clkr.hw },
 	{ .hw = &gpll4.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -357,7 +392,7 @@ static const struct clk_parent_data gcc_parent_data_16[] = {
 	{ .fw_name = "xo" },
 	{ .hw = &gpll4.clkr.hw },
 	{ .hw = &gpll0.clkr.hw },
-	{ .hw = &gpll0.clkr.hw },
+	{ .hw = &gpll0_div2.hw },
 	{ .fw_name = "core_bi_pll_test_se" },
 };
 
@@ -482,8 +517,8 @@ static const struct freq_tbl ftbl_gcc_blsp1_qup1_spi_apps_clk_src[] = {
 	F(9600000, P_XO, 2.5, 0, 0),
 	F(16000000, P_GPLL0_OUT_MAIN, 10, 1, 5),
 	F(24000000, P_XO, 1, 0, 0),
-	F(25000000, P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 16, 0, 0),
-	F(50000000, P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 8, 0, 0),
+	F(25000000, P_GPLL0_OUT_MAIN, 16, 1, 2),
+	F(50000000, P_GPLL0_OUT_MAIN, 16, 0, 0),
 	{ }
 };
 
@@ -535,7 +570,7 @@ static const struct freq_tbl ftbl_gcc_blsp1_uart1_apps_clk_src[] = {
 	F(14745600, P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 1, 576, 15625),
 	F(24000000, P_XO, 1, 0, 0),
 	F(25000000, P_GPLL0_OUT_MAIN, 16, 1, 2),
-	F(32000000, P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 12.5, 0, 0),
+	F(32000000, P_GPLL0_OUT_MAIN, 1, 1, 25),
 	F(40000000, P_GPLL0_OUT_MAIN, 1, 1, 20),
 	F(46400000, P_GPLL0_OUT_MAIN, 1, 29, 500),
 	F(48000000, P_GPLL0_OUT_MAIN, 1, 3, 50),
@@ -960,7 +995,7 @@ static const struct freq_tbl ftbl_gcc_sdcc1_apps_clk_src[] = {
 	F(24000000, P_XO, 1, 0, 0),
 	F(48000000, P_GPLL2_OUT_MAIN, 12, 1, 2),
 	F(96000000, P_GPLL2_OUT_MAIN, 12, 0, 0),
-	F(100000000, P_GCC_GPLL0_OUT_MAIN_DIV_CLK_SRC, 4, 0, 0),
+	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
 	F(177777778, P_GPLL0_OUT_MAIN, 4.5, 0, 0),
 	F(192000000, P_GPLL2_OUT_MAIN, 6, 0, 0),
 	F(200000000, P_GPLL0_OUT_MAIN, 4, 0, 0),
@@ -4011,10 +4046,12 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_PCIE3X1_0_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(pcie3x1_0_pipe_clk_src),
 	[GCC_PCIE3X1_1_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(pcie3x1_1_pipe_clk_src),
 	[GCC_USB0_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(usb0_pipe_clk_src),
+	[GPLL0_MAIN] = &gpll0_main.clkr,
 	[GPLL0] = DEFINE_DUMMY_CLK(gpll0),
+	[GPLL2_MAIN] = &gpll2_main.clkr,
 	[GPLL2] = DEFINE_DUMMY_CLK(gpll2),
+	[GPLL4_MAIN] = &gpll4_main.clkr,
 	[GPLL4] = DEFINE_DUMMY_CLK(gpll4),
-	[GPLL6] = DEFINE_DUMMY_CLK(gpll6),
 };
 
 static struct clk_regmap *gcc_devsoc_clocks[] = {
@@ -4208,10 +4245,12 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GCC_PCIE3X1_0_PIPE_CLK_SRC] = &pcie3x1_0_pipe_clk_src.clkr,
 	[GCC_PCIE3X1_1_PIPE_CLK_SRC] = &pcie3x1_1_pipe_clk_src.clkr,
 	[GCC_USB0_PIPE_CLK_SRC] = &usb0_pipe_clk_src.clkr,
+	[GPLL0_MAIN] = &gpll0_main.clkr,
 	[GPLL0] = &gpll0.clkr,
+	[GPLL2_MAIN] = &gpll2_main.clkr,
 	[GPLL2] = &gpll2.clkr,
+	[GPLL4_MAIN] = &gpll4_main.clkr,
 	[GPLL4] = &gpll4.clkr,
-	[GPLL6] = &gpll6.clkr,
 };
 
 static const struct qcom_reset_map gcc_devsoc_resets[] = {

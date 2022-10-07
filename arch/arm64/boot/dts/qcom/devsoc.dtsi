@@ -55,6 +55,24 @@
 			clock-frequency = <250000000>;
 			#clock-cells = <0>;
 		};
+
+		cmn_pll_nss_clk_200m: cmn_pll_nss_clk_200m {
+			compatible = "fixed-clock";
+			clock-frequency = <200000000>;
+			#clock-cells = <0>;
+		};
+
+		cmn_pll_nss_clk_300m: cmn_pll_nss_clk_300m {
+			compatible = "fixed-clock";
+			clock-frequency = <300000000>;
+			#clock-cells = <0>;
+		};
+
+		gcc_gpll0_out_aux_clk: gcc_gpll0_out_aux_clk {
+			compatible = "fixed-clock";
+			clock-frequency = <800000000>;
+			#clock-cells = <0>;
+		};
 	};
 
 	cpus: cpus {
@@ -514,8 +532,14 @@
 		nsscc: nsscc@39b00000{
 			compatible = "qcom,nsscc-devsoc";
 			reg = <0x39b00000 0x80000>;
-			clocks = <&xo>;
-			clock-names = "xo";
+			clocks = <&xo>,
+				<&cmn_pll_nss_clk_200m>,
+				<&cmn_pll_nss_clk_300m>,
+				<&gcc_gpll0_out_aux_clk>;
+			clock-names = "xo",
+					"cmn_pll_nss_clk_200m",
+					"cmn_pll_nss_clk_300m",
+					"gcc_gpll0_out_aux_clk";
 			#clock-cells = <0x1>;
 			#reset-cells = <0x1>;
 		};

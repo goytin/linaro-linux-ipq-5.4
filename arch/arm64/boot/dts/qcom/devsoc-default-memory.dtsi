@@ -87,7 +87,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		tzapp@49B00000 {
+		tzapp: tzapp@49B00000 {
 			no-map;
 			reg = <0x0 0x49B00000 0x0 0x00600000>;
 		};

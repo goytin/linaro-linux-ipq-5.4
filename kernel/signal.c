@@ -1288,6 +1288,9 @@ int do_send_sig_info(int sig, struct kernel_siginfo *info, struct task_struct *p
 	int ret = -ESRCH;
 
 	if (lock_task_sighand(p, &flags)) {
+		if ((sig == SIGKILL || sig == SIGTERM || sig==SIGINT))
+			printk(KERN_INFO "The process with ID:%d and name:%s sending signal %d to the process with ID:%d and name: %s\n", task_pid_nr(current),
+				current->comm, sig, p->pid, p->comm);
 		ret = send_signal(sig, info, p, type);
 		unlock_task_sighand(p, &flags);
 	}

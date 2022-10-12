@@ -4525,6 +4525,8 @@ static const struct qcom_reset_map gcc_devsoc_resets[] = {
 	[GCC_PCIE3X1_1_AXI_M_STICKY_ARES] = { 0x2a058, 3 },
 	[GCC_IM_SLEEP_CLK_ARES] = { 0x34020, 2 },
 	[GCC_NSSNOC_PCNOC_1_CLK_ARES] = { 0x17080, 2 },
+	[GCC_UNIPHY0_XPCS_ARES] = { 0x16050 },
+	[GCC_UNIPHY1_XPCS_ARES] = { 0x16060 },
 };
 
 static const struct regmap_config gcc_devsoc_regmap_config = {

@@ -106,7 +106,7 @@ static struct clk_alpha_pll gpll2_main = {
 };
 
 static struct clk_alpha_pll_postdiv gpll2 = {
-	.offset = 0x20000,
+	.offset = 0x21000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.width = 4,
 	.clkr.hw.init = &(struct clk_init_data){
@@ -137,7 +137,7 @@ static struct clk_alpha_pll gpll4_main = {
 };
 
 static struct clk_alpha_pll_postdiv gpll4 = {
-	.offset = 0x20000,
+	.offset = 0x22000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_GCC_PLL_TYPE_STROMER_PLUS],
 	.width = 4,
 	.clkr.hw.init = &(struct clk_init_data){
@@ -4146,11 +4146,11 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_PCIE3X1_0_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(pcie3x1_0_pipe_clk_src),
 	[GCC_PCIE3X1_1_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(pcie3x1_1_pipe_clk_src),
 	[GCC_USB0_PIPE_CLK_SRC] = DEFINE_DUMMY_CLK(usb0_pipe_clk_src),
-	[GPLL0_MAIN] = &gpll0_main.clkr,
+	[GPLL0_MAIN] = DEFINE_DUMMY_CLK(gpll0_main),
 	[GPLL0] = DEFINE_DUMMY_CLK(gpll0),
-	[GPLL2_MAIN] = &gpll2_main.clkr,
+	[GPLL2_MAIN] = DEFINE_DUMMY_CLK(gpll2_main),
 	[GPLL2] = DEFINE_DUMMY_CLK(gpll2),
-	[GPLL4_MAIN] = &gpll4_main.clkr,
+	[GPLL4_MAIN] = DEFINE_DUMMY_CLK(gpll4_main),
 	[GPLL4] = DEFINE_DUMMY_CLK(gpll4),
 };
 

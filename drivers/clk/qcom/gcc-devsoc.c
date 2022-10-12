@@ -397,6 +397,7 @@ static const struct clk_parent_data gcc_parent_data_16[] = {
 };
 
 static const struct freq_tbl ftbl_gcc_adss_pwm_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
 	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
 	{ }
 };
@@ -625,6 +626,7 @@ static struct clk_rcg2 gcc_blsp1_uart3_apps_clk_src = {
 };
 
 static const struct freq_tbl ftbl_gcc_gp1_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
 	F(200000000, P_GPLL0_OUT_MAIN, 4, 0, 0),
 	{ }
 };
@@ -1032,7 +1034,10 @@ static struct clk_fixed_factor gcc_qdss_tsctr_div16_clk_src = {
 };
 
 static const struct freq_tbl ftbl_gcc_qpic_io_macro_clk_src[] = {
-	F(400000000, P_GPLL0_OUT_MAIN, 2, 0, 0),
+	F(24000000, P_XO, 1, 0, 0),
+	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
+	F(200000000, P_GPLL0_OUT_MAIN, 4, 0, 0),
+	F(320000000, P_GPLL0_OUT_MAIN, 2.5, 0, 0),
 	{ }
 };
 
@@ -1056,7 +1061,6 @@ static const struct freq_tbl ftbl_gcc_sdcc1_apps_clk_src[] = {
 	F(24000000, P_XO, 1, 0, 0),
 	F(48000000, P_GPLL2_OUT_MAIN, 12, 1, 2),
 	F(96000000, P_GPLL2_OUT_MAIN, 12, 0, 0),
-	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
 	F(177777778, P_GPLL0_OUT_MAIN, 4.5, 0, 0),
 	F(192000000, P_GPLL2_OUT_MAIN, 6, 0, 0),
 	F(200000000, P_GPLL0_OUT_MAIN, 4, 0, 0),

@@ -1046,12 +1046,14 @@ enum cfg80211_ap_settings_flags {
  * Used to configure AP MLO Interface
  *
  * @num_mlo_links: number of MLO links.
+ * @reconfig: whether reconfiguration or not
  * @mlo_link_ids: Array of link ids.
  * @mlo_mac_addrs: Array of MLO MAC address.
  */
 #define MAX_NUM_MLO_LINKS 16
 struct cfg80211_mlo_info {
 	u8 num_mlo_links;
+	bool reconfig;
 	u32 mlo_link_ids[MAX_NUM_MLO_LINKS];
 	struct mac_address mlo_mac_addrs[MAX_NUM_MLO_LINKS];
 };

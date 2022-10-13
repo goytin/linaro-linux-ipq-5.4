@@ -2507,6 +2507,7 @@ enum nl80211_commands {
  * @NL80211_ATTR_MLD_REFERENCE: MLD Reference.
  * @NL80211_ATTR_MLD_LINK_IDS: nested attribute to hold MLD link-ids.
  * @NL80211_ATTR_MLD_LINK_MACS: nested attribute to hold MLD mac addrs.
+ * @NL80211_ATTR_RECONFIG: whether the operation is reconfiguration or not
  *
  * @NL80211_ATTR_SAE_PWE: Indicates the mechanism(s) allowed for SAE PWE
  *	derivation in WPA3-Personal networks which are using SAE authentication.
@@ -3000,6 +3001,7 @@ enum nl80211_attrs {
 	NL80211_ATTR_MLD_REFERENCE,
 	NL80211_ATTR_MLD_LINK_IDS,
 	NL80211_ATTR_MLD_LINK_MACS,
+	NL80211_ATTR_RECONFIG,
 	/* add attributes here, update the policy in nl80211.c */
 
 	__NL80211_ATTR_AFTER_LAST,

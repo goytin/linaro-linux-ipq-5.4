@@ -639,6 +639,7 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
 	[NL80211_ATTR_MLD_REFERENCE] = { .type = NLA_U32 },
 	[NL80211_ATTR_MLD_LINK_MACS] = { .type = NLA_NESTED },
 	[NL80211_ATTR_MLD_LINK_IDS] = { .type = NLA_NESTED },
+	[NL80211_ATTR_RECONFIG] = { .type = NLA_FLAG },
 	[NL80211_ATTR_MLO_LINK_ID] =
 		NLA_POLICY_RANGE(NLA_U8, 0, NL80211_MLD_MAX_NUM_LINKS),
 
@@ -4771,6 +4772,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 		nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
 	params.dtim_period =
 		nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
+
+	params.mlo_info.reconfig =
+		nla_get_flag(info->attrs[NL80211_ATTR_RECONFIG]);
 
 	err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr->iftype,
 					   params.beacon_interval);

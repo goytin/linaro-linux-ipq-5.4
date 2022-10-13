@@ -479,12 +479,19 @@ static struct clk_rcg2 gcc_apc0_voltage_droop_detector_clk_src = {
 	},
 };
 
+static const struct freq_tbl ftbl_gcc_apss_ahb_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(50000000, P_GPLL0_OUT_MAIN, 16, 0, 0),
+	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
+	{ }
+};
+
 static struct clk_rcg2 gcc_apss_ahb_clk_src = {
 	.cmd_rcgr = 0x2400c,
 	.mnd_width = 0,
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_0,
-	.freq_tbl = ftbl_gcc_adss_pwm_clk_src,
+	.freq_tbl = ftbl_gcc_apss_ahb_clk_src,
 	.clkr.hw.init = &(const struct clk_init_data){
 		.name = "gcc_apss_ahb_clk_src",
 		.parent_data = gcc_parent_data_0,
@@ -494,6 +501,7 @@ static struct clk_rcg2 gcc_apss_ahb_clk_src = {
 };
 
 static const struct freq_tbl ftbl_gcc_apss_axi_clk_src[] = {
+	F(480000000, P_GPLL4_OUT_MAIN, 2.5, 0, 0),
 	F(533333333, P_GPLL0_OUT_MAIN, 1.5, 0, 0),
 	{ }
 };
@@ -872,12 +880,20 @@ static struct clk_regmap_mux pcie3x1_1_pipe_clk_src = {
 	},
 };
 
+static const struct freq_tbl ftbl_gcc_pcnoc_bfdcd_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(50000000, P_GPLL0_OUT_MAIN, 16, 0, 0),
+	F(100000000, P_GPLL0_OUT_MAIN, 8, 0, 0),
+	{ }
+};
+
 static struct clk_rcg2 gcc_pcnoc_bfdcd_clk_src = {
 	.cmd_rcgr = 0x31004,
 	.mnd_width = 0,
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_0,
-	.freq_tbl = ftbl_gcc_adss_pwm_clk_src,
+	.freq_tbl = ftbl_gcc_pcnoc_bfdcd_clk_src,
+	.flags = CLK_RCG2_HW_CONTROLLED,
 	.clkr.hw.init = &(const struct clk_init_data){
 		.name = "gcc_pcnoc_bfdcd_clk_src",
 		.parent_data = gcc_parent_data_0,
@@ -892,7 +908,7 @@ static struct clk_rcg2 gcc_q6_axim_clk_src = {
 	.mnd_width = 0,
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_9,
-	.freq_tbl = NULL,
+	.freq_tbl = ftbl_gcc_apss_axi_clk_src,
 	.clkr.hw.init = &(const struct clk_init_data){
 		.name = "gcc_q6_axim_clk_src",
 		.parent_data = gcc_parent_data_9,
@@ -935,7 +951,7 @@ static struct clk_rcg2 gcc_qdss_stm_clk_src = {
 };
 
 static const struct freq_tbl ftbl_gcc_qdss_traceclkin_clk_src[] = {
-	F(300000000, P_GPLL4_OUT_MAIN, 4, 0, 0),
+	F(240000000, P_GPLL4_OUT_MAIN, 4, 0, 0),
 	{ }
 };
 
@@ -1100,12 +1116,21 @@ static struct clk_rcg2 gcc_sleep_clk_src = {
 	},
 };
 
+static const struct freq_tbl ftbl_gcc_system_noc_bfdcd_clk_src[] = {
+	F(24000000, P_XO, 1, 0, 0),
+	F(133333333, P_GPLL0_OUT_MAIN, 6, 0, 0),
+	F(200000000, P_GPLL0_OUT_MAIN, 4, 0, 0),
+	F(266666667, P_GPLL4_OUT_MAIN, 4.5, 0, 0),
+	{ }
+};
+
 static struct clk_rcg2 gcc_system_noc_bfdcd_clk_src = {
 	.cmd_rcgr = 0x2e004,
 	.mnd_width = 0,
 	.hid_width = 5,
 	.parent_map = gcc_parent_map_14,
-	.freq_tbl = ftbl_gcc_pcie3x2_axi_m_clk_src,
+	.freq_tbl = ftbl_gcc_system_noc_bfdcd_clk_src,
+	.flags = CLK_RCG2_HW_CONTROLLED,
 	.clkr.hw.init = &(const struct clk_init_data){
 		.name = "gcc_system_noc_bfdcd_clk_src",
 		.parent_data = gcc_parent_data_14,

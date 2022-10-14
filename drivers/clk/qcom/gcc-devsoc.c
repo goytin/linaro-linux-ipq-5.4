@@ -1797,14 +1797,14 @@ static struct clk_branch gcc_lpass_sway_clk = {
 	},
 };
 
-static struct clk_branch gcc_mdio_master_ahb_clk = {
+static struct clk_branch gcc_mdio_ahb_clk = {
 	.halt_reg = 0x12004,
 	.halt_check = BRANCH_HALT,
 	.clkr = {
 		.enable_reg = 0x12004,
 		.enable_mask = BIT(0),
 		.hw.init = &(const struct clk_init_data){
-			.name = "gcc_mdio_master_ahb_clk",
+			.name = "gcc_mdio_ahb_clk",
 			.parent_hws = (const struct clk_hw*[]){
 				&gcc_pcnoc_bfdcd_clk_src.clkr.hw,
 			},
@@ -4002,7 +4002,7 @@ static struct clk_regmap *gcc_devsoc_dummy_clocks[] = {
 	[GCC_LPASS_CORE_AXIM_CLK] = DEFINE_DUMMY_CLK(gcc_lpass_core_axim_clk),
 	[GCC_LPASS_SWAY_CLK] = DEFINE_DUMMY_CLK(gcc_lpass_sway_clk),
 	[GCC_LPASS_SWAY_CLK_SRC] = DEFINE_DUMMY_CLK(gcc_lpass_sway_clk_src),
-	[GCC_MDIO_MASTER_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_mdio_master_ahb_clk),
+	[GCC_MDIO_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_mdio_ahb_clk),
 	[GCC_MDIO_SLAVE_AHB_CLK] = DEFINE_DUMMY_CLK(gcc_mdio_slave_ahb_clk),
 	[GCC_MEM_NOC_Q6_AXI_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_q6_axi_clk),
 	[GCC_MEM_NOC_SNOC_AXI_CLK] = DEFINE_DUMMY_CLK(gcc_mem_noc_snoc_axi_clk),
@@ -4201,7 +4201,7 @@ static struct clk_regmap *gcc_devsoc_clocks[] = {
 	[GCC_LPASS_CORE_AXIM_CLK] = &gcc_lpass_core_axim_clk.clkr,
 	[GCC_LPASS_SWAY_CLK] = &gcc_lpass_sway_clk.clkr,
 	[GCC_LPASS_SWAY_CLK_SRC] = &gcc_lpass_sway_clk_src.clkr,
-	[GCC_MDIO_MASTER_AHB_CLK] = &gcc_mdio_master_ahb_clk.clkr,
+	[GCC_MDIO_AHB_CLK] = &gcc_mdio_ahb_clk.clkr,
 	[GCC_MDIO_SLAVE_AHB_CLK] = &gcc_mdio_slave_ahb_clk.clkr,
 	[GCC_MEM_NOC_Q6_AXI_CLK] = &gcc_mem_noc_q6_axi_clk.clkr,
 	[GCC_MEM_NOC_SNOC_AXI_CLK] = &gcc_mem_noc_snoc_axi_clk.clkr,

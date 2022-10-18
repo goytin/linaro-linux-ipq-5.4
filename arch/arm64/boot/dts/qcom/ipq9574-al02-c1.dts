@@ -659,6 +659,7 @@
 			qcom,txcmpl_point_offload_ring = <0>;		/* Txcmpl point offlaod ring */
 			qcom,rxfill_point_offload_ring = <0>;		/* Rxfill point offlaod ring */
 			qcom,rxdesc_point_offload_ring = <0>;		/* Rxdesc point offlaod ring */
+			qcom,rx-queue-start = <0>;		/* Rx queue start */
 			qcom,rx-ring-queue-map = <0 8 16 24>,	/* Priority 0 queues per-core Rx ring map */
 					<1 9 17 25>,		/* Priority 1 queues per-core Rx ring map */
 					<2 10 18 26>,		/* Priority 2 queues per-core Rx ring map */

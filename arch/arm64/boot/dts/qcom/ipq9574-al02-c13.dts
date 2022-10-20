@@ -19,13 +19,15 @@
 	soc {
 		pcie0_x1: pci@28000000 {
 			perst-gpio = <&tlmm 23 1>;
-			max-payload-size = <1>; // 1-256 TLP bytes for WKK
 			status = "ok";
+
 			pcie0_rp {
-				qcom,mhi@0 {
+				wifi@0 {
 					reg = <0 0 0 0 0>;
 					qrtr_node_id = <0x20>;
+#if defined(__CNSS2__)
 					memory-region = <0>,<&mhi_region0>;
+#endif
 				};
 			};
 		};

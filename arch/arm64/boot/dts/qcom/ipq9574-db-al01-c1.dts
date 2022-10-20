@@ -279,7 +279,7 @@
 			pcie2_rp {
 				reg = <0 0 0 0 0>;
 
-				qcom,mhi@2 {
+				wifi@2 {
 					reg = <0 0 0 0 0>;
 					qrtr_instance_id = <0x20>;
 #if defined(__CNSS2__)
@@ -299,7 +299,7 @@
 			pcie3_rp {
 				reg = <0 0 0 0 0>;
 
-				qcom,mhi@3 {
+				wifi@3 {
 					reg = <0 0 0 0 0>;
 					qrtr_instance_id = <0x21>;
 #if defined(__CNSS2__)

@@ -142,6 +142,22 @@
         };
 };
 
+&pcie2_x2 {
+	status = "disabled";
+};
+
+&pcie2_phy {
+	status = "disabled";
+};
+
+&pcie3_x2 {
+	status = "disabled";
+};
+
+&pcie3_phy {
+	status = "disabled";
+};
+
 &qcn9224_pcie2 {
         status = "disabled";
 };

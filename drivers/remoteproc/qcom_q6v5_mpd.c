@@ -1446,13 +1446,13 @@ wait_for_reset:
 	if (debug_wcss && desc->q6ver != Q6V6)
 		writel(0x0, wcss->reg_base + Q6SS_DBG_CFG);
 
-	if (wcss->wcmn_base) {
-		/* Read the version registers to make sure WCSS is out of reset
-		 * Q6SS_WLAN_QDSP6SS_VERSION = 0x30010000
-		 * WCMN_WCSS_WCMN_R0_WCSS_CORE_HW_VERSION = 0x10000000
+	if (wcss->reg_base) {
+		/*
+		 * Read the version registers to
+		 * make sure WCSS is out of reset
 		 */
 		val = readl(wcss->reg_base);
-		if (val != 0x30010000) {
+		if (!val) {
 			dev_err(wcss->dev, "Invalid QDSP6SS Version : 0x%x\n", val);
 			return -EINVAL;
 		}
@@ -1601,6 +1601,8 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 	int ret;
 	u32 val;
 	const struct wcss_data *desc;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
 
 	desc = of_device_get_match_data(wcss->dev);
 	if (!desc)
@@ -1694,9 +1696,9 @@ spawn_pd:
 			return ret;
 	}
 
-	if (wcss->wcmn_base) {
-		val = readl(wcss->wcmn_base);
-		if (val != 0x10000000) {
+	if (rpd_wcss->wcmn_base) {
+		val = readl(rpd_wcss->wcmn_base);
+		if (!val) {
 			dev_err(wcss->dev, "Invalid WCSS Version : 0x%x\n", val);
 			return -EINVAL;
 		}
@@ -2570,6 +2572,13 @@ static int q6_init_mmio(struct q6_wcss *wcss,
 	if (IS_ERR(wcss->reg_base))
 		return PTR_ERR(wcss->reg_base);
 
+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "wcmn");
+	if (res) {
+		wcss->wcmn_base = ioremap(res->start, resource_size(res));
+		if (IS_ERR(wcss->wcmn_base))
+			return PTR_ERR(wcss->wcmn_base);
+	}
+
 	if (desc->q6ver == Q6V6 || desc->q6ver == Q6V7) {
 		res = platform_get_resource_byname(pdev,
 				IORESOURCE_MEM, "tcsr-msip");
@@ -2639,16 +2648,6 @@ static int q6_wcss_init_mmio(struct q6_wcss *wcss,
 				devm_ioremap_resource(&pdev->dev, res);
 			if (IS_ERR(wcss->rmb_base))
 				return PTR_ERR(wcss->rmb_base);
-		}
-
-		res = platform_get_resource_byname(pdev,
-						   IORESOURCE_MEM,
-						   "wcmn");
-		if (res) {
-			wcss->wcmn_base =
-				devm_ioremap_resource(&pdev->dev, res);
-			if (IS_ERR(wcss->wcmn_base))
-				return PTR_ERR(wcss->wcmn_base);
 		}
 
 		res = platform_get_resource_byname(pdev,
@@ -3318,7 +3317,10 @@ free_rproc:
 static int q6_wcss_remove(struct platform_device *pdev)
 {
 	struct rproc *rproc = platform_get_drvdata(pdev);
+	struct q6_wcss *wcss = rproc->priv;
 
+	if (wcss->wcmn_base)
+		iounmap(wcss->wcmn_base);
 	rproc_del(rproc);
 	rproc_free(rproc);
 

@@ -92,6 +92,9 @@
 /* Q6SS config/status registers */
 #define TCSR_GLOBAL_CFG0	0x0
 #define TCSR_GLOBAL_CFG1	0x4
+#define TCSR_APU_REG0		0x1000
+#define TCSR_APU_REG1		0x1004
+#define TCSR_APU_REG0_VAL	0x11200
 #define SSCAON_CONFIG		0x8
 #define SSCAON_STATUS		0xc
 #define Q6SS_BHS_STATUS		0x78
@@ -185,6 +188,7 @@ struct q6_wcss {
 	void __iomem *reg_base;
 	void __iomem *rmb_base;
 	void __iomem *wcmn_base;
+	void __iomem *l2vic_base;
 	void __iomem *tcsr_msip_base;
 	void __iomem *tcsr_q6_base;
 	void __iomem *ce_ahb_base;
@@ -1506,14 +1510,97 @@ static int q6_wcss_spawn_pd(struct rproc *rproc)
 	return ret;
 }
 
+static int wcss_devsoc_ahb_pd_start(struct rproc *rproc)
+{
+	struct q6_wcss *wcss = rproc->priv;
+	int ret;
+	const struct wcss_data *desc;
+	u8 pd_asid;
+	u32 val;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
+
+	desc = of_device_get_match_data(wcss->dev);
+	if (!desc)
+		return -EINVAL;
+
+	if (wcss->need_mem_protection) {
+		ret = qti_scm_int_radio_powerup(MPD_WCNSS_PAS_ID);
+		if (ret) {
+			dev_err(wcss->dev, "failed to power up ahb pd\n");
+			return ret;
+		}
+		goto spawn_pd;
+	}
+
+	/* AON Reset */
+	ret = reset_control_deassert(wcss->wcss_aon_reset);
+	if (ret) {
+		dev_err(wcss->dev, "wcss_aon_reset failed\n");
+		return ret;
+	}
+
+	if (of_property_read_bool(wcss->dev->of_node, "qcom,offloaded_to_q6")) {
+		pd_asid = qcom_get_pd_asid(wcss->dev->of_node);
+		val = TCSR_APU_REG0_VAL | pd_asid;
+		regmap_write(wcss->halt_map, wcss->halt_nc + TCSR_APU_REG0,
+									val);
+		regmap_write(wcss->halt_map, wcss->halt_nc + TCSR_APU_REG1,
+							rproc->bootaddr);
+		writel(0x00000010, wcss->l2vic_base);
+		goto spawn_pd;
+	}
+
+	/* WCSS CLK Enable */
+	ret = desc->wcss_clk_enable(wcss);
+	if (ret) {
+		pr_info("Failed to enable devsoc wcss clocks\n");
+		return ret;
+	}
+
+	/* msip */
+	writel(0x1, rpd_wcss->tcsr_msip_base);
+
+	/* wait for msip status */
+	ret = readl_poll_timeout(rpd_wcss->tcsr_msip_base + 0x4,
+				 val, (val & 0x1) == 0x1, 1,
+				 MSIP_TIMEOUT_US * 10000);
+	if (ret) {
+		dev_err(wcss->dev,
+				"can't get MSIP STATUS rc:%d val:0x%X)\n",
+								ret, val);
+		return ret;
+	}
+
+	if (desc->ce_reset_required) {
+		/*Deassert ce reset*/
+		ret = reset_control_deassert(wcss->ce_reset);
+		if (ret) {
+			dev_err(wcss->dev, "ce_reset failed\n");
+			return ret;
+		}
+	}
+	goto state;
+
+spawn_pd:
+	if (wcss->q6.spawn_bit) {
+		ret = q6_wcss_spawn_pd(rproc);
+		if (ret)
+			return ret;
+	}
+
+state:
+	wcss->state = WCSS_NORMAL;
+
+	return ret;
+}
+
 static int wcss_ahb_pd_start(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv;
 	int ret;
 	u32 val;
 	const struct wcss_data *desc;
-	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
-	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
 
 	desc = of_device_get_match_data(wcss->dev);
 	if (!desc)
@@ -1546,21 +1633,6 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 			return ret;
 		}
 
-		if (rpd_wcss->tcsr_msip_base) {
-			/* msip */
-			writel(0x1, rpd_wcss->tcsr_msip_base);
-
-			/* wait for msip status */
-			ret = readl_poll_timeout(rpd_wcss->tcsr_msip_base + 0x4,
-						 val, (val & 0x1) == 0x1, 1,
-						 MSIP_TIMEOUT_US * 10000);
-			if (ret) {
-				dev_err(wcss->dev,
-					"can't get MSIP STATUS rc:%d val:0x%X)\n", ret, val);
-				return ret;
-			}
-			goto ce_reset;
-		}
 	} else {
 		/*Enable AHB_S clock*/
 		ret = clk_prepare_enable(wcss->gcc_abhs_cbcr);
@@ -1606,7 +1678,6 @@ static int wcss_ahb_pd_start(struct rproc *rproc)
 		return ret;
 	}
 
-ce_reset:
 	if (desc->ce_reset_required) {
 		/*Deassert ce reset*/
 		ret = reset_control_deassert(wcss->ce_reset);
@@ -2046,14 +2117,75 @@ static int wcss_pcie_pd_stop(struct rproc *rproc)
 	return ret;
 }
 
-static int wcss_ahb_pd_stop(struct rproc *rproc)
+static int wcss_devsoc_ahb_pd_stop(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv, *rpd_wcss;
+	int ret = 0;
+	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	const struct wcss_data *desc;
+	bool q6_offload;
+
+	rpd_wcss = rpd_rproc->priv;
+	desc = of_device_get_match_data(wcss->dev);
+	if (!desc)
+		return -EINVAL;
+
+	q6_offload = of_property_read_bool(wcss->dev->of_node,
+						"qcom,offloaded_to_q6");
+	if (rproc->state != RPROC_CRASHED && wcss->q6.stop_bit && q6_offload) {
+		ret = qcom_q6v5_request_stop(&wcss->q6);
+		if (ret) {
+			dev_err(&rproc->dev, "ahb pd not stopped\n");
+			return ret;
+		}
+	}
+
+	if (wcss->need_mem_protection) {
+		ret = qti_scm_int_radio_powerdown(MPD_WCNSS_PAS_ID);
+		if (ret) {
+			dev_err(wcss->dev, "failed to power down ahb pd\n");
+			return ret;
+		}
+		goto shut_dn_rpd;
+	}
+
+	if (q6_offload)
+		goto shut_dn_rpd;
+
+	/* WCSS powerdown */
+	ret = q6_wcss_powerdown(wcss);
+	if (ret) {
+		dev_err(wcss->dev, "failed to power down ahb pd wcss %d\n",
+					ret);
+		return ret;
+	}
+
+	if (desc->ce_reset_required) {
+		/*Assert ce reset*/
+		reset_control_assert(wcss->ce_reset);
+		mdelay(2);
+	}
+
+	desc->wcss_clk_disable(wcss);
+	writel(0x0, rpd_wcss->tcsr_msip_base);
+
+	/* Deassert WCSS reset */
+	reset_control_deassert(wcss->wcss_reset);
+
+shut_dn_rpd:
+	if (rproc->state != RPROC_CRASHED)
+		rproc_shutdown(rpd_rproc);
+	wcss->state = WCSS_SHUTDOWN;
+	return ret;
+}
+
+static int wcss_ahb_pd_stop(struct rproc *rproc)
+{
+	struct q6_wcss *wcss = rproc->priv;
 	int ret;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
 	const struct wcss_data *desc;
 
-	rpd_wcss = rpd_rproc->priv;
 	desc = of_device_get_match_data(wcss->dev);
 	if (!desc)
 		return -EINVAL;
@@ -2101,11 +2233,8 @@ static int wcss_ahb_pd_stop(struct rproc *rproc)
 
 		/*Disable AXI_M clock*/
 		clk_disable_unprepare(wcss->gcc_axim_cbcr);
-	} else if (desc->q6ver == Q6V7) {
+	} else if (desc->q6ver == Q6V7)
 		desc->wcss_clk_disable(wcss);
-		if (rpd_wcss->tcsr_msip_base)
-			writel(0x0, rpd_wcss->tcsr_msip_base);
-	}
 
 	/* Deassert WCSS reset */
 	reset_control_deassert(wcss->wcss_reset);
@@ -2360,6 +2489,14 @@ static const struct rproc_ops q6_wcss_ipq5018_ops = {
 	.report_panic = q6_wcss_panic,
 };
 
+static const struct rproc_ops wcss_ahb_devsoc_ops = {
+	.start = wcss_devsoc_ahb_pd_start,
+	.stop = wcss_devsoc_ahb_pd_stop,
+	.load = wcss_ahb_pcie_pd_load,
+	.get_boot_addr = rproc_elf_get_boot_addr,
+	.parse_fw = q6_wcss_register_dump_segments,
+};
+
 static int q6_wcss_init_reset(struct q6_wcss *wcss,
 				const struct wcss_data *desc)
 {
@@ -2512,6 +2649,16 @@ static int q6_wcss_init_mmio(struct q6_wcss *wcss,
 				devm_ioremap_resource(&pdev->dev, res);
 			if (IS_ERR(wcss->wcmn_base))
 				return PTR_ERR(wcss->wcmn_base);
+		}
+
+		res = platform_get_resource_byname(pdev,
+						   IORESOURCE_MEM,
+						   "l2vic_int");
+		if (res) {
+			wcss->l2vic_base =
+				devm_ioremap_resource(&pdev->dev, res);
+			if (IS_ERR(wcss->l2vic_base))
+				return PTR_ERR(wcss->l2vic_base);
 		}
 	}
 
@@ -3182,7 +3329,7 @@ static const struct wcss_data q6_devsoc_res_init = {
 	.init_clock = devsoc_init_q6_clock,
 	.init_irq = qcom_q6v5_init,
 	.q6_clk_enable = devsoc_q6_clk_enable,
-	.q6_firmware_name = "devsoc/q6_fw.mdt",
+	.q6_firmware_name = "devsoc/q6_fw0.mdt",
 	.crash_reason_smem = WCSS_CRASH_REASON,
 	.remote_id = WCSS_SMEM_HOST,
 	.aon_reset_required = true,
@@ -3217,11 +3364,11 @@ static const struct wcss_data wcss_ahb_devsoc_res_init = {
 	.wcss_clk_enable = enable_devsoc_wcss_clocks,
 	.wcss_clk_disable = disable_devsoc_wcss_clocks,
 	.init_irq = init_irq,
-	.q6_firmware_name = "devsoc/q6_fw.mdt",
+	.q6_firmware_name = "devsoc/q6_fw1.mdt",
 	.aon_reset_required = true,
 	.wcss_reset_required = true,
 	.ce_reset_required = true,
-	.ops = &wcss_ahb_ipq5018_ops,
+	.ops = &wcss_ahb_devsoc_ops,
 	.need_mem_protection = false,
 	.need_auto_boot = false,
 	.q6ver = Q6V7,

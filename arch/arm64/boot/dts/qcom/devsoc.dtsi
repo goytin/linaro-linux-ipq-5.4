@@ -1266,8 +1266,10 @@
 
 			q6_wcss_pd1: remoteproc_pd1 {
 				compatible = "qcom,devsoc-wcss-ahb-mpd";
-				reg = <0x004ab000 0x20>;
-				reg-names = "rmb";
+				reg = <0x004ab000 0x20>,
+					<0xD190488 0x4>;
+				reg-names = "rmb",
+						"l2vic_int";
 				firmware = "devsoc/q6_fw1.mdt";
 				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
 				interrupts-extended = <&wcss_smp2p_in 8 0>,

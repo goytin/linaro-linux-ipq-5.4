@@ -111,7 +111,7 @@ void *qcom_mdt_read_metadata(const struct firmware *fw, size_t *data_len)
 	ehdr_size = phdrs[0].p_filesz;
 	hash_size = phdrs[1].p_filesz;
 
-	data = kmalloc(ehdr_size + hash_size, GFP_KERNEL);
+	data = kmalloc(fw->size, GFP_KERNEL);
 	if (!data)
 		return ERR_PTR(-ENOMEM);
 
@@ -122,9 +122,9 @@ void *qcom_mdt_read_metadata(const struct firmware *fw, size_t *data_len)
 		hash_offset = phdrs[1].p_offset;
 
 	memcpy(data, fw->data, ehdr_size);
-	memcpy(data + ehdr_size, fw->data + hash_offset, hash_size);
+	memcpy(data + hash_offset, fw->data + hash_offset, hash_size);
 
-	*data_len = ehdr_size + hash_size;
+	*data_len = fw->size;
 
 	return data;
 }

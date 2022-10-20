@@ -127,6 +127,11 @@
 
 		q6v5_wcss: remoteproc@d100000 {
 			qcom,emulation;
+			firmware = "devsoc/q6_fw.mdt";
+			q6_wcss_pd1: remoteproc_pd1 {
+				firmware = "devsoc/q6_fw.mdt";
+				qcom,fw_shared;
+			};
 		};
 	};
 

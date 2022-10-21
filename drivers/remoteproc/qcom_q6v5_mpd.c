@@ -3205,12 +3205,14 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	int ret;
 	char *subdev_name;
 	const char *fw_name;
+	bool nosec;
 
 	desc = of_device_get_match_data(&pdev->dev);
 	if (!desc)
 		return -EINVAL;
 
-	if (desc->need_mem_protection && !qcom_scm_is_available())
+	nosec = of_property_read_bool(pdev->dev.of_node, "qcom,nosecure");
+	if (desc->need_mem_protection && !qcom_scm_is_available() && !nosec)
 		return -EPROBE_DEFER;
 
 	of_property_read_string(pdev->dev.of_node, "firmware", &fw_name);
@@ -3231,6 +3233,9 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	wcss->is_fw_shared = desc->is_fw_shared;
 	wcss->mdt_load_sec = desc->mdt_load_sec;
 	wcss->mdt_load_nosec = desc->mdt_load_nosec;
+
+	if (nosec)
+		wcss->need_mem_protection = false;
 
 	if (of_property_read_bool(pdev->dev.of_node, "qcom,fw_shared")) {
 		wcss->is_fw_shared = true;

@@ -294,6 +294,25 @@ bool __qcom_scm_pas_supported(struct device *dev, u32 peripheral)
 	return ret ? false : !!res.a1;
 }
 
+int __qcom_scm_pas_init_image_v2(struct device *dev, u32 peripheral,
+			      dma_addr_t metadata_phys, size_t size)
+{
+	int ret;
+	struct qcom_scm_desc desc = {0};
+	struct arm_smccc_res res;
+
+	desc.args[0] = peripheral;
+	desc.args[1] = metadata_phys;
+	desc.args[2] = size;
+	desc.arginfo = QCOM_SCM_ARGS(3, QCOM_SCM_VAL, QCOM_SCM_RW,
+							QCOM_SCM_VAL);
+
+	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, QCOM_SCM_SVC_PIL,
+			    QCOM_SCM_PAS_INIT_IMAGE_V2_CMD, &desc, &res);
+
+	return ret ? : res.a1;
+}
+
 int __qcom_scm_pas_init_image(struct device *dev, u32 peripheral,
 			      dma_addr_t metadata_phys)
 {

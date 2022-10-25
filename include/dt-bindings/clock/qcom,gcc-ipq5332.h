@@ -4,8 +4,8 @@
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
-#ifndef _DT_BINDINGS_CLK_QCOM_GCC_DEVSOC_H
-#define _DT_BINDINGS_CLK_QCOM_GCC_DEVSOC_H
+#ifndef _DT_BINDINGS_CLK_QCOM_GCC_IPQ5332_H
+#define _DT_BINDINGS_CLK_QCOM_GCC_IPQ5332_H
 
 #define GCC_ADSS_PWM_CLK				0
 #define GCC_ADSS_PWM_CLK_SRC				1

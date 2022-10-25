@@ -27,7 +27,7 @@
 #include <soc/qcom/socinfo.h>
 
 #include <linux/reset-controller.h>
-#include <dt-bindings/clock/qca,apss-devsoc.h>
+#include <dt-bindings/clock/qca,apss-ipq5332.h>
 
 #include "common.h"
 #include "clk-regmap.h"
@@ -142,7 +142,7 @@ static struct clk_branch apcs_alias0_core_clk = {
 	},
 };
 
-static struct clk_regmap *apss_devsoc_clks[] = {
+static struct clk_regmap *apss_ipq5332_clks[] = {
 	[APSS_PLL_EARLY] = &apss_pll_early.clkr,
 	[APSS_PLL] = &apss_pll.clkr,
 	[APCS_ALIAS0_CLK_SRC] = &apcs_alias0_clk_src.clkr,
@@ -168,7 +168,7 @@ static const struct alpha_pll_config apss_pll_config = {
 	.test_ctl_hi_val = 0x00400003,
 };
 
-static const struct regmap_config apss_devsoc_regmap_config = {
+static const struct regmap_config apss_ipq5332_regmap_config = {
 	.reg_bits       = 32,
 	.reg_stride     = 4,
 	.val_bits       = 32,
@@ -176,13 +176,13 @@ static const struct regmap_config apss_devsoc_regmap_config = {
 	.fast_io        = true,
 };
 
-static const struct qcom_cc_desc apss_devsoc_desc = {
-	.config = &apss_devsoc_regmap_config,
-	.clks = apss_devsoc_clks,
-	.num_clks = ARRAY_SIZE(apss_devsoc_clks),
+static const struct qcom_cc_desc apss_ipq5332_desc = {
+	.config = &apss_ipq5332_regmap_config,
+	.clks = apss_ipq5332_clks,
+	.num_clks = ARRAY_SIZE(apss_ipq5332_clks),
 };
 
-static int apss_devsoc_probe(struct platform_device *pdev)
+static int apss_ipq5332_probe(struct platform_device *pdev)
 {
 	int ret;
 	struct regmap *regmap;
@@ -193,31 +193,31 @@ static int apss_devsoc_probe(struct platform_device *pdev)
 
 	clk_alpha_pll_configure(&apss_pll_early, regmap, &apss_pll_config);
 
-	ret = qcom_cc_really_probe(pdev, &apss_devsoc_desc, regmap);
-	dev_dbg(&pdev->dev, "Registered devsoc apss clock provider\n");
+	ret = qcom_cc_really_probe(pdev, &apss_ipq5332_desc, regmap);
+	dev_dbg(&pdev->dev, "Registered ipq5332 apss clock provider\n");
 
 	return ret;
 }
 
-static struct platform_driver apss_devsoc_driver = {
-	.probe = apss_devsoc_probe,
+static struct platform_driver apss_ipq5332_driver = {
+	.probe = apss_ipq5332_probe,
 	.driver = {
-		.name   = "qcom,apss-devsoc",
+		.name   = "qcom,apss-ipq5332",
 	},
 };
 
-static int __init apss_devsoc_init(void)
+static int __init apss_ipq5332_init(void)
 {
-	return platform_driver_register(&apss_devsoc_driver);
+	return platform_driver_register(&apss_ipq5332_driver);
 }
-core_initcall(apss_devsoc_init);
+core_initcall(apss_ipq5332_init);
 
-static void __exit apss_devsoc_exit(void)
+static void __exit apss_ipq5332_exit(void)
 {
-	platform_driver_unregister(&apss_devsoc_driver);
+	platform_driver_unregister(&apss_ipq5332_driver);
 }
-module_exit(apss_devsoc_exit);
+module_exit(apss_ipq5332_exit);
 
-MODULE_DESCRIPTION("QTI APSS DEVSOC Driver");
+MODULE_DESCRIPTION("QTI APSS IPQ5332 Driver");
 MODULE_LICENSE("Dual BSD/GPLv2");
-MODULE_ALIAS("platform:apss-devsoc");
+MODULE_ALIAS("platform:apss-ipq5332");

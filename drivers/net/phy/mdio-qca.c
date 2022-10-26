@@ -44,8 +44,6 @@
 #define QCA_MDIO_RETRY	1000
 #define QCA_MDIO_DELAY	10
 
-#define QCA_MAX_PHY_RESET	3
-
 #define QCA_MDIO_CLK_RATE		100000000
 #define UNIPHY_AHB_CLK_RATE		100000000
 #define UNIPHY_SYS_CLK_RATE	24000000
@@ -240,20 +238,28 @@ phy_reset_out:
 	return ret;
 }
 
-static int qca_phy_reset(struct platform_device *pdev)
+int qca_phy_reset(struct platform_device *pdev)
 {
 	struct device_node *mdio_node = pdev->dev.of_node;
 	int phy_reset_gpio_number;
-	int ret, i;
+	int ret, i, gpio_num;
 
-	for (i = 0; i < QCA_MAX_PHY_RESET; i++) {
+	gpio_num = of_gpio_named_count(mdio_node, "phy-reset-gpio");
+	if (gpio_num == 0 || gpio_num == -ENOENT)
+		return 0;
+	else if (gpio_num < 0)
+		return gpio_num;
+
+	for (i = 0; i < gpio_num; i++) {
 		ret = of_get_named_gpio(mdio_node, "phy-reset-gpio", i);
 		if (ret < 0) {
-			dev_info(&pdev->dev, "Could not find phy-reset-gpio\n");
+			dev_err(&pdev->dev, "Could not find phy-reset-gpio\n");
 			return 0;
 		}
 
 		phy_reset_gpio_number = ret;
+
+		dev_info(&pdev->dev, "Reset PHY by GPIO %d\n", phy_reset_gpio_number);
 		ret = qca_phy_gpio_set(pdev, phy_reset_gpio_number);
 		if (ret)
 			return ret;
@@ -296,7 +302,7 @@ static inline void split_addr(u32 regaddr, u16 *r1, u16 *r2, u16 *page, u16 *swi
 	*switch_phy_id = regaddr & 0xff;
 }
 
-u32 qca_mii_read(struct mii_bus *bus, u32 reg)
+u32 qca_mii_read(struct mii_bus *mii_bus, u32 reg)
 {
 	u16 r1, r2, page, switch_phy_id;
 	int lo, hi;
@@ -304,17 +310,17 @@ u32 qca_mii_read(struct mii_bus *bus, u32 reg)
 	split_addr(reg, &r1, &r2, &page, &switch_phy_id);
 
 	mutex_lock(&switch_mdio_lock);
-	qca_mdio_write(bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
+	mii_bus->write(mii_bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
 			switch_phy_id & 0x1f, page);
 	udelay(100);
-	lo = qca_mdio_read(bus, MII_LOW_ADDR_PREFIX | r2, r1);
-	hi = qca_mdio_read(bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1));
+	lo = mii_bus->read(mii_bus, MII_LOW_ADDR_PREFIX | r2, r1);
+	hi = mii_bus->read(mii_bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1));
 	mutex_unlock(&switch_mdio_lock);
 
 	return (hi << 16) | lo;
 }
 
-void qca_mii_write(struct mii_bus *bus, u32 reg, u32 val)
+void qca_mii_write(struct mii_bus *mii_bus, u32 reg, u32 val)
 {
 	u16 r1, r2, page, switch_phy_id;
 	u16 lo, hi;
@@ -324,11 +330,11 @@ void qca_mii_write(struct mii_bus *bus, u32 reg, u32 val)
 	hi = val >> 16;
 
 	mutex_lock(&switch_mdio_lock);
-	qca_mdio_write(bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
+	mii_bus->write(mii_bus, MII_HIGH_ADDR_PREFIX | (switch_phy_id >> 5),
 			switch_phy_id & 0x1f, page);
 	udelay(100);
-	qca_mdio_write(bus, MII_LOW_ADDR_PREFIX | r2, r1, lo);
-	qca_mdio_write(bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1), hi);
+	mii_bus->write(mii_bus, MII_LOW_ADDR_PREFIX | r2, r1, lo);
+	mii_bus->write(mii_bus, MII_LOW_ADDR_PREFIX | r2, r1 | BIT(1), hi);
 	mutex_unlock(&switch_mdio_lock);
 }
 
@@ -367,18 +373,18 @@ static inline void qca_mht_clk_reset(struct mii_bus *mii_bus, u32 reg)
 static u16
 qca_phy_debug_read(struct mii_bus *mii_bus, u32 phy_addr, u32 reg_id)
 {
-	qca_mdio_write(mii_bus, phy_addr, PHY_DEBUG_PORT_ADDR, reg_id);
+	mii_bus->write(mii_bus, phy_addr, PHY_DEBUG_PORT_ADDR, reg_id);
 
-	return qca_mdio_read(mii_bus, phy_addr, PHY_DEBUG_PORT_DATA);
+	return mii_bus->read(mii_bus, phy_addr, PHY_DEBUG_PORT_DATA);
 }
 
 static void
 qca_phy_debug_write(struct mii_bus *mii_bus, u32 phy_addr, u32 reg_id, u16 reg_val)
 {
 
-	qca_mdio_write(mii_bus, phy_addr, PHY_DEBUG_PORT_ADDR, reg_id);
+	mii_bus->write(mii_bus, phy_addr, PHY_DEBUG_PORT_ADDR, reg_id);
 
-	qca_mdio_write(mii_bus, phy_addr, PHY_DEBUG_PORT_DATA, reg_val);
+	mii_bus->write(mii_bus, phy_addr, PHY_DEBUG_PORT_DATA, reg_val);
 }
 
 static void
@@ -429,8 +435,8 @@ qca_mht_ethphy_ana_fixup(struct mii_bus *mii_bus, u8 ethphy)
 	phy_addr = qca_mii_read(mii_bus, EPHY_CFG) >> (ethphy * PHY_ADDR_LENGTH)
 		& GENMASK(4, 0);
 	/*increase 100BT tx amplitude*/
-	reg_val = qca_mdio_read(mii_bus, phy_addr, PHY_MMD1_CTRL2ANA_OPTION2_REG);
-	qca_mdio_write(mii_bus, phy_addr, PHY_MMD1_CTRL2ANA_OPTION2_REG,
+	reg_val = mii_bus->read(mii_bus, phy_addr, PHY_MMD1_CTRL2ANA_OPTION2_REG);
+	mii_bus->write(mii_bus, phy_addr, PHY_MMD1_CTRL2ANA_OPTION2_REG,
 		reg_val | 0x7f);
 	/*increase 10BT signal detect threshold*/
 	reg_val = qca_phy_debug_read(mii_bus, phy_addr, PHY_10BT_SG_THRESH_REG);
@@ -635,6 +641,19 @@ static int qca_mdio_clock_set_and_enable(struct device *dev,
 	return clk_prepare_enable(clk);
 }
 
+void qca_mht_preinit(struct mii_bus *mii_bus, struct device_node *np)
+{
+	if (!mii_bus || !np)
+		return;
+
+	qca_phy_addr_fixup(mii_bus, np);
+
+	if (of_property_read_bool(np, "mdio_clk_fixup"))
+		qca_mht_clock_init(mii_bus);
+
+	return;
+}
+
 static int qca_mdio_probe(struct platform_device *pdev)
 {
 	struct qca_mdio_data *am;
@@ -721,10 +740,7 @@ static int qca_mdio_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, am);
 
-	qca_phy_addr_fixup(am->mii_bus, pdev->dev.of_node);
-
-	if (of_property_read_bool(pdev->dev.of_node, "mdio_clk_fixup"))
-		qca_mht_clock_init(am->mii_bus);
+	qca_mht_preinit(am->mii_bus, pdev->dev.of_node);
 
 	ret = of_mdiobus_register(am->mii_bus, pdev->dev.of_node);
 	if (ret)

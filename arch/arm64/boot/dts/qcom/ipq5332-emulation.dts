@@ -14,7 +14,7 @@
 / {
 	#address-cells = <0x2>;
 	#size-cells = <0x2>;
-	model = "Qualcomm Technologies, Inc. IPQ5332-EMULATION";
+	model = "Qualcomm Technologies, Inc. IPQ5332/EMULATION";
 	compatible = "qcom,ipq5332-ap-emulation", "qcom,ipq5332";
 	interrupt-parent = <&intc>;
 

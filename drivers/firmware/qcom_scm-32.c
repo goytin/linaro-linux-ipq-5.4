@@ -920,6 +920,41 @@ bool __qcom_scm_pas_supported(struct device *dev, u32 peripheral)
 	return ret ? false : !!out;
 }
 
+int __qcom_scm_pas_init_image_v2(struct device *dev, u32 peripheral,
+			      dma_addr_t metadata_phys, size_t size)
+{
+	__le32 scm_ret;
+	int ret = 0;
+	struct {
+		__le32 proc;
+		__le32 image_addr;
+		__le32 size;
+	} request;
+	struct scm_desc desc = {0};
+
+	if (!is_scm_armv8()) {
+		request.proc = cpu_to_le32(peripheral);
+		request.image_addr = cpu_to_le32(metadata_phys);
+		request.size = cpu_to_le32(size);
+
+		ret = qcom_scm_call(dev, QCOM_SCM_SVC_PIL,
+				QCOM_SCM_PAS_INIT_IMAGE_V2_CMD,
+				&request, sizeof(request),
+				&scm_ret, sizeof(scm_ret));
+	} else {
+		desc.args[0] = peripheral;
+		desc.args[1] = metadata_phys;
+		desc.args[2] = size;
+		desc.arginfo = SCM_ARGS(3, QCOM_SCM_VAL, QCOM_SCM_RW,
+							QCOM_SCM_VAL);
+		ret = qti_scm_call2(dev, SCM_SIP_FNID(QCOM_SCM_SVC_PIL,
+					QCOM_SCM_PAS_INIT_IMAGE_V2_CMD), &desc);
+		scm_ret = desc.ret[0];
+	}
+
+	return ret ? : le32_to_cpu(scm_ret);
+}
+
 int __qcom_scm_pas_init_image(struct device *dev, u32 peripheral,
 			      dma_addr_t metadata_phys)
 {

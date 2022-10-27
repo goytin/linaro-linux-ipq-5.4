@@ -341,7 +341,13 @@ int qcom_scm_pas_init_image(u32 peripheral, const void *metadata, size_t size)
 	if (ret)
 		goto free_metadata;
 
-	ret = __qcom_scm_pas_init_image(__scm->dev, peripheral, mdata_phys);
+	if (__qcom_scm_is_call_available(__scm->dev, QCOM_SCM_SVC_PIL,
+					QCOM_SCM_PAS_INIT_IMAGE_V2_CMD))
+		ret = __qcom_scm_pas_init_image_v2(__scm->dev, peripheral,
+							mdata_phys, size);
+	else
+		ret = __qcom_scm_pas_init_image(__scm->dev, peripheral,
+								mdata_phys);
 
 	qcom_scm_clk_disable();
 

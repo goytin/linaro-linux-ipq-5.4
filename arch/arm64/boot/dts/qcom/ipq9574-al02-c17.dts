@@ -412,10 +412,8 @@
 	status = "ok";
 	q6_wcss_pd1: remoteproc_pd1@4ab000 {
 		compatible = "qcom,ipq9574-wcss-ahb-mpd";
-		reg = <0xCB50000 0x8>,
-		      <0x4ab000 0x20>;
-		reg-names = "wcmn",
-			    "rmb";
+		reg = <0x4ab000 0x20>;
+		reg-names = "rmb";
 		firmware = "IPQ9574/q6_fw.mdt";
 		m3_firmware = "IPQ9574/m3_fw.mdt";
 		interrupts-extended = <&wcss_smp2p_in 8 0>,

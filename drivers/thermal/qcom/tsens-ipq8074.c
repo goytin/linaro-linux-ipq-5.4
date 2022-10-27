@@ -82,8 +82,8 @@
 
 #define MAX_SENSOR				16
 #define VALID_SENSOR_START_IDX			4
-#define MAX_TEMP				204 /* Celcius */
-#define MIN_TEMP				0   /* Celcius */
+#define MAX_TEMP				204000 /* milliCelcius */
+#define MIN_TEMP				0   /* milliCelcius */
 
 #define BASE0_MASK				0x001FF800
 #define BASE0_SHIFT				11
@@ -184,7 +184,7 @@ bool is_sensor_used_internally(int sensor)
 }
 
 /*
- * Returns Trip temp in degree Celcius
+ * Returns Trip temp in millidegree Celcius
  * Note: IPQ807x does not support -ve trip temperatures
  */
 static int get_trip_temp(struct tsens_priv *tmdev, int sensor,
@@ -202,15 +202,15 @@ static int get_trip_temp(struct tsens_priv *tmdev, int sensor,
 	case TSENS_TRIP_STAGE3:
 		regmap_read(tmdev->tm_map,
 			TSENS_TM_SN_CRITICAL_THRESHOLD(sensor), &reg_th);
-		return (TSENS_TM_SN_CRITICAL_THRESHOLD_VALUE(reg_th))/10;
+		return (TSENS_TM_SN_CRITICAL_THRESHOLD_VALUE(reg_th))*100;
 	case TSENS_TRIP_STAGE2:
 		regmap_read(tmdev->tm_map,
 			TSENS_TM_UPPER_LOWER_THRESHOLD(sensor), &reg_th);
-		return (TSENS_TM_UPPER_THRESHOLD_VALUE(reg_th))/10;
+		return (TSENS_TM_UPPER_THRESHOLD_VALUE(reg_th))*100;
 	case TSENS_TRIP_STAGE1:
 		regmap_read(tmdev->tm_map,
 			TSENS_TM_UPPER_LOWER_THRESHOLD(sensor), &reg_th);
-		return (TSENS_TM_LOWER_THRESHOLD_VALUE(reg_th))/10;
+		return (TSENS_TM_LOWER_THRESHOLD_VALUE(reg_th))*100;
 	default:
 		return -EINVAL;
 	}
@@ -219,7 +219,7 @@ static int get_trip_temp(struct tsens_priv *tmdev, int sensor,
 }
 
 /*
- * Set Trip temp in degree Celcius
+ * Set Trip temp in millidegree Celcius
  * Note: IPQ807x does not support -ve trip temperatures
  */
 static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
@@ -236,8 +236,8 @@ static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
 	if ((temp < MIN_TEMP) && (temp > MAX_TEMP))
 		return -EINVAL;
 
-	/* Convert temp to the required format */
-	temp = temp * 10;
+	/* convert temp from millicelsius to decicelsius */
+	temp = temp/100;
 
 	reg_th_offset = TSENS_TM_UPPER_LOWER_THRESHOLD(sensor);
 	reg_cri_th_offset = TSENS_TM_SN_CRITICAL_THRESHOLD(sensor);
@@ -444,7 +444,7 @@ static void tsens_scheduler_fn(struct work_struct *work)
 				regmap_write(tmdev->tm_map, reg_addr, 0);
 
 			if (!get_temp_ipq807x(tmdev, i, &temp))
-				pr_debug("Trigger (%d degrees) for sensor %d\n",
+				pr_debug("Trigger (%d millidegrees) for sensor %d\n",
 					temp, i);
 		}
 	}
@@ -574,7 +574,8 @@ static int get_temp_ipq807x(struct tsens_priv *tmdev, int id, int *temp)
 			/* Sign extension for negative value */
 			last_temp |= (~(TSENS_TM_CODE_BIT_MASK));
 
-		*temp = last_temp/10;
+		/* convert temp from decicelsius to millicelsius */
+		*temp = last_temp*100;
 
 		return 0;
 	} while (time_before(jiffies, timeout));

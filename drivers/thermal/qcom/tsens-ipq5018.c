@@ -129,7 +129,7 @@ int degc_to_code(int temp, int sensor)
 }
 
 /*
- * Set Trip temp in degree Celcius
+ * Set Trip temp in millidegree Celcius
  */
 static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
 					enum tsens_trip_type trip, int temp)
@@ -141,6 +141,9 @@ static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
 
 	if ((sensor < 0) || (sensor > (MAX_SENSOR - 1)))
 		return -EINVAL;
+
+	/* convert temp from millicelsius to celsius */
+	temp = temp/1000;
 
 	if ((temp < MIN_TEMP) || (temp > MAX_TEMP))
 		return -EINVAL;
@@ -178,6 +181,8 @@ static int set_trip_temp(struct tsens_priv *tmdev, int sensor,
 		if (ret){
 			return ret;
 		} else {
+			/* convert millicelsius to celsius */
+			curr_temp = curr_temp/1000;
 			curr_temp = degc_to_code(curr_temp, sensor);
 			if (temp >= curr_temp) {
 				pr_debug("Skipping setting lower threshold"
@@ -277,7 +282,7 @@ static void tsens_scheduler_fn(struct work_struct *work)
 			regmap_write(tmdev->tm_map, reg_addr, reg_thr);
 
 			if (!get_temp_ipq5018(tmdev, i, &temp))
-				pr_debug("Trigger (%d degrees) for sensor %d\n",
+				pr_debug("Trigger (%d millidegrees) for sensor %d\n",
 					temp, i);
 		}
 	}
@@ -493,8 +498,8 @@ static int get_temp_ipq5018(struct tsens_priv *tmdev, int id, int *temp)
 	else if (last_temp2 == last_temp3)
 		last_temp = last_temp3;
 done:
-	/* Convert temperature from ADC code to Celsius */
-	*temp = code_to_degc(last_temp, s);
+	/* Convert temperature from ADC code to milliCelsius */
+	*temp = code_to_degc(last_temp, s) * 1000;
 
 	return 0;
 }

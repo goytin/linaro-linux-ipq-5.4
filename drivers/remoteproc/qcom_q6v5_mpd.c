@@ -162,6 +162,7 @@
 
 static const struct wcss_data q6_ipq5332_res_init;
 static int debug_wcss;
+static int userpd_bootaddr;
 /**
  * enum state - state of a wcss (private)
  * @WCSS_NORMAL: subsystem is operating normally
@@ -1553,6 +1554,8 @@ static int wcss_ipq5332_ahb_pd_start(struct rproc *rproc)
 		val = TCSR_APU_REG0_VAL | pd_asid;
 		regmap_write(wcss->halt_map, wcss->halt_nc + TCSR_APU_REG0,
 									val);
+		if (wcss->is_emulation)
+			rproc->bootaddr = userpd_bootaddr;
 		regmap_write(wcss->halt_map, wcss->halt_nc + TCSR_APU_REG1,
 							rproc->bootaddr);
 		writel(0x00000010, wcss->l2vic_base);
@@ -3533,6 +3536,7 @@ static struct platform_driver q6_wcss_driver = {
 };
 module_platform_driver(q6_wcss_driver);
 module_param(debug_wcss, int, 0644);
+module_param(userpd_bootaddr, int, 0644);
 
 MODULE_DESCRIPTION("Hexagon WCSS Multipd Peripheral Image Loader");
 MODULE_LICENSE("GPL v2");

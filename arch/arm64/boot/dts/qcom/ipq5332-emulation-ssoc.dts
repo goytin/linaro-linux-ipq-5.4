@@ -128,8 +128,12 @@
 		q6v5_wcss: remoteproc@d100000 {
 			qcom,emulation;
 			qcom,nosecure;
+			bootaddr = <0x4A900000>;
 			q6_wcss_pd1: remoteproc_pd1 {
+				qcom,emulation;
 				qcom,nosecure;
+				bootaddr = <0x4A900000>;
+				qcom,fw_shared;
 			};
 		};
 	};

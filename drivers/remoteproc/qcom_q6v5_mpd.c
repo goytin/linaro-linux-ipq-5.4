@@ -3229,7 +3229,6 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	struct rproc *rproc;
 	int ret;
 	char *subdev_name;
-	const char *fw_name;
 	bool nosec;
 
 	desc = of_device_get_match_data(&pdev->dev);
@@ -3240,10 +3239,8 @@ static int q6_wcss_probe(struct platform_device *pdev)
 	if (desc->need_mem_protection && !qcom_scm_is_available() && !nosec)
 		return -EPROBE_DEFER;
 
-	of_property_read_string(pdev->dev.of_node, "firmware", &fw_name);
-
 	rproc = rproc_alloc(&pdev->dev, pdev->name, desc->ops,
-			    fw_name, sizeof(*wcss));
+			    desc->q6_firmware_name, sizeof(*wcss));
 	if (!rproc) {
 		dev_err(&pdev->dev, "failed to allocate rproc\n");
 		return -ENOMEM;
@@ -3362,7 +3359,7 @@ static const struct wcss_data q6_ipq5332_res_init = {
 	.init_clock = ipq5332_init_q6_clock,
 	.init_irq = qcom_q6v5_init,
 	.q6_clk_enable = ipq5332_q6_clk_enable,
-	.q6_firmware_name = "ipq5332/q6_fw0.mdt",
+	.q6_firmware_name = "IPQ5332/q6_fw0.mdt",
 	.crash_reason_smem = WCSS_CRASH_REASON,
 	.remote_id = WCSS_SMEM_HOST,
 	.aon_reset_required = true,
@@ -3399,7 +3396,7 @@ static const struct wcss_data wcss_ahb_ipq5332_res_init = {
 	.wcss_clk_enable = enable_ipq5332_wcss_clocks,
 	.wcss_clk_disable = disable_ipq5332_wcss_clocks,
 	.init_irq = init_irq,
-	.q6_firmware_name = "ipq5332/q6_fw1.mdt",
+	.q6_firmware_name = "IPQ5332/q6_fw1.mdt",
 	.aon_reset_required = true,
 	.wcss_reset_required = true,
 	.ce_reset_required = true,

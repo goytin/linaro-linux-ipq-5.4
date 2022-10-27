@@ -127,11 +127,8 @@
 
 		q6v5_wcss: remoteproc@d100000 {
 			qcom,emulation;
-			firmware = "ipq5332/q6_fw.mdt";
 			qcom,nosecure;
 			q6_wcss_pd1: remoteproc_pd1 {
-				firmware = "ipq5332/q6_fw.mdt";
-				qcom,fw_shared;
 				qcom,nosecure;
 			};
 		};

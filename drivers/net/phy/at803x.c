@@ -134,6 +134,10 @@
 #define QCA808X_MASTER_SLAVE_SEED_CFG		GENMASK(12, 2)
 #define QCA808X_MASTER_SLAVE_SEED_RANGE		0x32
 
+/* QCA808X 1G chip type */
+#define QCA808X_PHY_MMD7_CHIP_TYPE		0x901d
+#define QCA808X_PHY_CHIP_TYPE_1G		BIT(0)
+
 MODULE_DESCRIPTION("Qualcomm Atheros AR803x and QCA808X PHY driver");
 MODULE_AUTHOR("Matus Ujhelyi");
 MODULE_LICENSE("GPL");
@@ -355,12 +359,21 @@ static int at803x_get_features(struct phy_device *phydev)
 		return err;
 
 	if (phydev->drv->phy_id == QCA8081_PHY_ID) {
-		err = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_NG_EXTABLE);
+		err = phy_read_mmd(phydev, MDIO_MMD_AN, QCA808X_PHY_MMD7_CHIP_TYPE);
 		if (err < 0)
 			return err;
 
-		linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported,
-				err & MDIO_PMA_NG_EXTABLE_2_5GBT);
+		/* QCA808X does not support 2.5G capability if the chip type is 1G from
+		 * the register MMD7 QCA808X_PHY_MMD7_CHIP_TYPE.
+		 */
+		if (!(QCA808X_PHY_CHIP_TYPE_1G & err)) {
+			err = phy_read_mmd(phydev, MDIO_MMD_PMAPMD, MDIO_PMA_NG_EXTABLE);
+			if (err < 0)
+				return err;
+
+			linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported,
+					err & MDIO_PMA_NG_EXTABLE_2_5GBT);
+		}
 	}
 
 	if (phydev->drv->phy_id != ATH8031_PHY_ID)
@@ -738,20 +751,22 @@ static int qca808x_config_init(struct phy_device *phydev)
 	if (ret)
 		return ret;
 
-	/* Config the fast retrain for the link 2500M */
-	ret = qca808x_phy_fast_retrain_config(phydev);
-	if (ret)
-		return ret;
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported)) {
+		/* Config the fast retrain for the link 2500M */
+		ret = qca808x_phy_fast_retrain_config(phydev);
+		if (ret)
+			return ret;
 
-	/* Configure lower ramdom seed to make phy linked as slave mode */
-	ret = qca808x_phy_ms_random_seed_set(phydev);
-	if (ret)
-		return ret;
+		/* Configure lower ramdom seed to make phy linked as slave mode */
+		ret = qca808x_phy_ms_random_seed_set(phydev);
+		if (ret)
+			return ret;
 
-	/* Enable seed */
-	ret = qca808x_phy_ms_seed_enable(phydev, true);
-	if (ret)
-		return ret;
+		/* Enable seed */
+		ret = qca808x_phy_ms_seed_enable(phydev, true);
+		if (ret)
+			return ret;
+	}
 
 	/* Configure adc threshold as 100mv for the link 10M */
 	return at803x_debug_reg_mask(phydev, QCA808X_PHY_DEBUG_ADC_THRESHOLD,
@@ -789,7 +804,8 @@ static int qca808x_read_status(struct phy_device *phydev)
 	 * value is configured as the same value, the link can't be up and no link change
 	 * occurs.
 	 */
-	if (!phydev->link) {
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT, phydev->supported) &&
+			!phydev->link) {
 		int val = phy_read(phydev, MII_STAT1000);
 		if (val & LPA_1000MSFAIL) {
 			qca808x_phy_ms_seed_enable(phydev, false);

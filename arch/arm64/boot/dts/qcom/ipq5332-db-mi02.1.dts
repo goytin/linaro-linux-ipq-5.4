@@ -25,7 +25,6 @@
 
 	aliases {
 		serial0 = &blsp1_uart0;
-		serial1 = &blsp1_uart1;
 	};
 
 	chosen {
@@ -39,7 +38,7 @@
 					pins = "gpio13";
 					function = "sdc_clk";
 					drive-strength = <8>;
-					bias-disable;
+					bias-pull-down;
 				};
 				emmc_cmd {
 					pins = "gpio12";
@@ -52,7 +51,7 @@
 						"gpio11";
 					function = "sdc_data";
 					drive-strength = <8>;
-					bias-pull-up;
+					bias-pull-down;
 				};
 			};
 
@@ -61,21 +60,21 @@
 					pins = "gpio13";
 					function = "qspi_clk";
 					drive-strength = <8>;
-					bias-disable;
+					bias-pull-down;
 				};
 
 				qspi_cs {
 					pins = "gpio12";
 					function = "qspi_cs";
 					drive-strength = <8>;
-					bias-disable;
+					bias-pull-up;
 				};
 
 				qspi_data {
 					pins = "gpio8", "gpio9", "gpio10", "gpio11";
 					function = "qspi_data";
 					drive-strength = <8>;
-					bias-disable;
+					bias-pull-down;
 				};
 			};
 
@@ -83,14 +82,7 @@
 				pins = "gpio18", "gpio19";
 				function = "blsp0_uart0";
 				drive-strength = <8>;
-				bias-pull-down;
-			};
-
-			serial_1_pins: serial1-pinmux {
-				pins = "gpio25", "gpio26", "gpio27", "gpio28";
-				function = "blsp1_uart1";
-				drive-strength = <8>;
-				bias-pull-down;
+				bias-pull-up;
 			};
 		};
 
@@ -106,11 +98,6 @@
 			pinctrl-0 = <&serial_0_pins>;
 			pinctrl-names = "default";
 			status = "ok";
-		};
-
-		serial@78b0000 {
-			pinctrl-0 = <&serial_1_pins>;
-			pinctrl-names = "default";
 		};
 
 		dma@7984000 {

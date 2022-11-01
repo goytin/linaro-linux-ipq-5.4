@@ -494,7 +494,7 @@ static inline int cpu_is_nss_crypto_enabled(void)
 	return  cpu_is_ipq807x() || cpu_is_ipq60xx() ||
 		cpu_is_ipq50xx() || cpu_is_ipq9570() ||
 		cpu_is_ipq9550() || cpu_is_ipq9574() ||
-		cpu_is_ipq9554();
+		cpu_is_ipq9554() || cpu_is_ipq53xx();
 #else
 	return 0;
 #endif
@@ -505,7 +505,8 @@ static inline int cpu_is_internal_wifi_enabled(void)
 #ifdef CONFIG_ARCH_QCOM
 	return  cpu_is_ipq807x() || cpu_is_ipq60xx() ||
 		cpu_is_ipq50xx() || cpu_is_ipq9514() ||
-		cpu_is_ipq9554() || cpu_is_ipq9574();
+		cpu_is_ipq9554() || cpu_is_ipq9574() ||
+		cpu_is_ipq53xx();
 #else
 	return 0;
 #endif
@@ -515,7 +516,8 @@ static inline int cpu_is_uniphy1_enabled(void)
 {
 #ifdef CONFIG_ARCH_QCOM
 	return  cpu_is_ipq807x() || cpu_is_ipq60xx() ||
-		cpu_is_ipq9570() || cpu_is_ipq9574();
+		cpu_is_ipq9570() || cpu_is_ipq9574() ||
+		cpu_is_ipq53xx();
 #else
 	return 0;
 #endif

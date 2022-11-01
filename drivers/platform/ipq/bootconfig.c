@@ -491,6 +491,9 @@ static int __init bootconfig_partition_init(void)
  * failsafe parameters can be retained.
  */
 
+	if (!bootconfig1 || !bootconfig2)
+		return 0;
+
 	boot_info_dir = proc_mkdir("boot_info",NULL);
 	upgrade_info_dir = proc_mkdir("upgrade_info",NULL);
 

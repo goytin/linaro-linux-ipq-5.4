@@ -3666,7 +3666,7 @@
 	};
 
 	qti,scm_restart_reason {
-		compatible = "qti,scm_restart_reason";
+		compatible = "qti_ipq9574,scm_restart_reason";
 	};
 
 	qti,gadget_diag@0 {

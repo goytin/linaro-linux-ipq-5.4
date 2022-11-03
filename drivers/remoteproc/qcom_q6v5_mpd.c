@@ -999,19 +999,6 @@ int enable_ipq5332_clocks(struct q6_wcss *wcss)
 			break;
 	}
 
-	/*2. Deassert AON Reset */
-	ret = reset_control_deassert(wcss->wcss_aon_reset);
-	if (ret) {
-		dev_err(wcss->dev, "wcss_aon_reset failed\n");
-		return ret;
-	}
-
-	loop = 0;
-	while (loop < 2000) {
-		mdelay(1);
-		loop++;
-	}
-
 	writel(0x1, wcss->ce_ahb_base + SYS_NOC_WCSS_AHB_CBCR);
 	for (loop = 0; loop < 10; loop++) {
 		udelay(1);
@@ -3365,7 +3352,6 @@ static const struct wcss_data q6_ipq5332_res_init = {
 	.q6_firmware_name = "IPQ5332/q6_fw0.mdt",
 	.crash_reason_smem = WCSS_CRASH_REASON,
 	.remote_id = WCSS_SMEM_HOST,
-	.aon_reset_required = true,
 	.wcss_q6_reset_required = true,
 	.ssr_name = "q6wcss",
 	.reset_cmd_id = 0x18,

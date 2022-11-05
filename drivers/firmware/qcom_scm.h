@@ -214,6 +214,7 @@ extern int __qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 #define SET_MAGIC				0x1
 #define SET_MAGIC_WARMRESET			0x2
 #define ABNORMAL_MAGIC				0x3
+#define CLEAR_ABNORMAL_MAGIC		        0x4
 
 #define DLOAD_MODE_DISABLE			(~BIT(4))
 #define DLOAD_MODE_ENABLE			BIT(4)

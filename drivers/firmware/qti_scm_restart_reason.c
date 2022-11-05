@@ -51,6 +51,14 @@ static void scm_restart_sdi_disable(void)
 	qti_scm_sdi(QCOM_SCM_SVC_BOOT, SCM_CMD_TZ_CONFIG_HW_FOR_RAM_DUMP_ID);
 }
 
+static void scm_restart_abnormal_magic_disable(void)
+{
+	unsigned int magic_cookie = CLEAR_ABNORMAL_MAGIC;
+
+	qti_scm_dload(QCOM_SCM_SVC_BOOT, SCM_CMD_TZ_FORCE_DLOAD_ID,
+			&magic_cookie);
+};
+
 static int scm_restart_panic(struct notifier_block *this,
 	unsigned long event, void *data)
 {
@@ -69,6 +77,7 @@ static int scm_restart_reason_reboot(struct notifier_block *nb,
 {
 	scm_restart_sdi_disable();
 	scm_restart_dload_mode_disable();
+	scm_restart_abnormal_magic_disable();
 
 	return NOTIFY_DONE;
 }
@@ -83,6 +92,9 @@ static const struct of_device_id scm_restart_reason_match_table[] = {
 	  .data = (void *)CLEAR_MAGIC,
 	},
 	{ .compatible = "qti_ipq6018,scm_restart_reason",
+	  .data = (void *)ABNORMAL_MAGIC,
+	},
+	{ .compatible = "qti_ipq9574,scm_restart_reason",
 	  .data = (void *)ABNORMAL_MAGIC,
 	},
 	{}

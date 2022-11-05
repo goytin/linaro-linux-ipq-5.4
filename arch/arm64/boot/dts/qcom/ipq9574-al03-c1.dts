@@ -257,6 +257,17 @@
 			status = "ok";
 		};
 
+		i2c_3: i2c@78b8000 {
+			status = "ok";
+			pinctrl-0 = <&i2c_3_pins>;
+			pinctrl-names = "default";
+
+			bmp390@77 {
+				compatible = "bosch,bmp390";
+				reg = <0x77>;
+			};
+		};
+
 		usb: usb3@8A00000 {
 			status = "ok";
 		};

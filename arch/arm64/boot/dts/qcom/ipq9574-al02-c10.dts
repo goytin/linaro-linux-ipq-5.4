@@ -97,9 +97,9 @@
 				switch_access_mode = "mdio";
 				mdio-bus = <&mdio0>;
 				switch_mac_mode = <0xc>; /* mac mode for uniphy instance0 */
-				switch_mac_mode1 = <0xc>; /* mac mode1 for uniphy instance1 */
+				switch_mac_mode1 = <0xff>; /* mac mode1 for uniphy instance1 */
 				switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
-				switch_lan_bmp = <0x3e>; /* lan port bitmap */
+				switch_lan_bmp = <0x1e>; /* lan port bitmap */
 				switch_wan_bmp = <0x0>;  /* wan port bitmap */
 				link-polling-required = <0>;
 				link-intr-gpio = <&tlmm 0x2f 0>;
@@ -124,11 +124,6 @@
 					port@4 {
 						port_id = <4>;
 						phy_address = <4>;
-					};
-					port@5 {
-						port_id = <5>;
-						forced-speed = <2500>;
-						forced-duplex = <1>;
 					};
 				};
 

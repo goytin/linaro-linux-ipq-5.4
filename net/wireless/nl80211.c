@@ -639,6 +639,8 @@ const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
 	[NL80211_ATTR_MLD_REFERENCE] = { .type = NLA_U32 },
 	[NL80211_ATTR_MLD_LINK_MACS] = { .type = NLA_NESTED },
 	[NL80211_ATTR_MLD_LINK_IDS] = { .type = NLA_NESTED },
+	[NL80211_ATTR_MLO_LINK_ID] =
+		NLA_POLICY_RANGE(NLA_U8, 0, NL80211_MLD_MAX_NUM_LINKS),
 
 };
 
@@ -15568,7 +15570,8 @@ void nl80211_send_port_authorized(struct cfg80211_registered_device *rdev,
 
 void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
 			       struct net_device *netdev, u16 reason,
-			       const u8 *ie, size_t ie_len, bool from_ap)
+			       const u8 *ie, size_t ie_len, bool from_ap,
+			       int link_id)
 {
 	struct sk_buff *msg;
 	void *hdr;
@@ -15589,7 +15592,9 @@ void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
 	     nla_put_u16(msg, NL80211_ATTR_REASON_CODE, reason)) ||
 	    (from_ap &&
 	     nla_put_flag(msg, NL80211_ATTR_DISCONNECTED_BY_AP)) ||
-	    (ie && nla_put(msg, NL80211_ATTR_IE, ie_len, ie)))
+	    (ie && nla_put(msg, NL80211_ATTR_IE, ie_len, ie)) ||
+	    (link_id >= 0 && link_id <= NL80211_MLD_MAX_NUM_LINKS &&
+	    nla_put_u8(msg, NL80211_ATTR_MLO_LINK_ID, link_id)))
 		goto nla_put_failure;
 
 	genlmsg_end(msg, hdr);

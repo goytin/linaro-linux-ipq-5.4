@@ -43,13 +43,6 @@
 	 * snippet.
 	 */
 
-	/* Below nodes are QSEE dependent */
-	/delete-node/ firmware;
-	/delete-node/ qti,tzlog;
-	/delete-node/ qti,scm_restart_reason;
-	/delete-node/ ctx-save;
-	/delete-node/ qseecom;
-
 	/* Misc nodes */
 	/delete-node/ pmu;
 	/delete-node/ pmu-v7;
@@ -68,13 +61,10 @@
 		/* Misc nodes */
 		/delete-node/ prng@e3000;
 		/delete-node/ watchdog@b017000;
-		/delete-node/ qcom,msm-imem@8600000;
 
-		/delete-node/ syscon@193d100;
 		/delete-node/ syscon@1905000;
 		/delete-node/ hwlock;
 		/delete-node/ smem;
-		/delete-node/ scm;
 
 		/*
 		 * Below nodes are referenced by other nodes, deleting it

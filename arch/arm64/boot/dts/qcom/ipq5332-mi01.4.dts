@@ -49,35 +49,11 @@
 	/delete-node/ qti,gadget_diag@0;
 
 	soc {
-
-		/*
-		 * Below nodes are applicable for all RDPs, hence enabled by
-		 * default in base dtsi file itself.
-		 * So, rather than marking these nodes with status = "disabled",
-		 * delete it. Once verified in silicon, we can remove the below
-		 * snippet.
-		 */
-
-		/* Misc nodes */
-		/delete-node/ syscon@1905000;
-		/delete-node/ hwlock;
-		/delete-node/ smem;
-
-		/*
-		 * Below nodes are referenced by other nodes, deleting it
-		 * will lead to build error, so disable it.
-		 */
-		mailbox@b111000 {
-			status = "disabled";
-		};
-		wcss-smp2p {
-			status = "disabled";
-		};
-		syscon@1945000 {
-			status = "disabled";
-		};
 		remoteproc@d100000 {
-			status = "disabled";
+			qcom,nosecure;
+			remoteproc_pd1 {
+				qcom,nosecure;
+			};
 		};
 
 		pinctrl@1000000 {

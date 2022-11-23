@@ -46,7 +46,6 @@
 	/* Misc nodes */
 	/delete-node/ pmu;
 	/delete-node/ pmu-v7;
-	/delete-node/ qti,gadget_diag@0;
 
 	soc {
 		remoteproc@d100000 {
@@ -98,8 +97,8 @@
 		};
 
 		usb3@8A00000 {
-			status = "disabled";
-
+			status = "ok";
+			qcom,select-utmi-as-pipe-clk;
 			dwc3@8A00000 {
 				/delete-property/ #phy-cells;
 				/delete-property/ phys;
@@ -108,7 +107,7 @@
 		};
 
 		hs_m31phy@7b000 {
-			status = "disabled";
+			status = "ok";
 		};
 
 		leds {

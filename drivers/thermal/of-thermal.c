@@ -324,8 +324,7 @@ static int of_thermal_get_trip_type(struct thermal_zone_device *tz, int trip,
 {
 	struct __thermal_zone *data = tz->devdata;
 
-	if (trip >= data->ntrips || trip < 0
-				|| (data->mode == THERMAL_DEVICE_DISABLED))
+	if (trip >= data->ntrips || trip < 0)
 		return -EDOM;
 
 	*type = data->trips[trip].type;
@@ -364,8 +363,7 @@ static int of_thermal_get_trip_temp(struct thermal_zone_device *tz, int trip,
 {
 	struct __thermal_zone *data = tz->devdata;
 
-	if (trip >= data->ntrips || trip < 0
-				|| (data->mode == THERMAL_DEVICE_DISABLED))
+	if (trip >= data->ntrips || trip < 0)
 		return -EDOM;
 
 	*temp = data->trips[trip].temperature;

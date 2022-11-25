@@ -60,8 +60,6 @@
 
 		/* Misc nodes */
 		/delete-node/ prng@e3000;
-		/delete-node/ watchdog@b017000;
-
 		/delete-node/ syscon@1905000;
 		/delete-node/ hwlock;
 		/delete-node/ smem;

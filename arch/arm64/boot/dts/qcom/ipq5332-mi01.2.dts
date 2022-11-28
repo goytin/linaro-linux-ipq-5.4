@@ -35,18 +35,6 @@
 		bootargs-append = " clk_ignore_unused";
 	};
 
-	/*
-	 * Below nodes are applicable for all RDPs, hence enabled by
-	 * default in base dtsi file itself.
-	 * So, rather than marking these nodes with status = "disabled",
-	 * delete it. Once verified in silicon, we can remove the below
-	 * snippet.
-	 */
-
-	/* Misc nodes */
-	/delete-node/ pmu;
-	/delete-node/ pmu-v7;
-
 	soc {
 		remoteproc@d100000 {
 			qcom,nosecure;

@@ -138,6 +138,9 @@
 #define QCA808X_PHY_MMD7_CHIP_TYPE		0x901d
 #define QCA808X_PHY_CHIP_TYPE_1G		BIT(0)
 
+#define QCA8081_PHY_SERDES_MMD1_FIFO_CTRL	0x9072
+#define QCA8081_PHY_FIFO_RSTN			BIT(11)
+
 MODULE_DESCRIPTION("Qualcomm Atheros AR803x and QCA808X PHY driver");
 MODULE_AUTHOR("Matus Ujhelyi");
 MODULE_LICENSE("GPL");
@@ -783,6 +786,30 @@ static int qca808x_config_init(struct phy_device *phydev)
 			QCA808X_ADC_THRESHOLD_MASK, QCA808X_ADC_THRESHOLD_100MV);
 }
 
+static int qca808x_fifo_reset(struct phy_device *phydev, bool reset)
+{
+	int val, ret;
+	u32 addr;
+
+	if (phydev->phy_id != QCA8081_PHY_ID)
+		return 0;
+
+	addr = MII_ADDR_C45 | (MDIO_MMD_PMAPMD << 16) |
+		(QCA8081_PHY_SERDES_MMD1_FIFO_CTRL & 0xffff);
+
+	/* Reset serdes fifo, the serdes address is phy address added by 1 */
+	val = mdiobus_read(phydev->mdio.bus, phydev->mdio.addr + 1, addr);
+
+	if (reset)
+		val &= ~QCA8081_PHY_FIFO_RSTN;
+	else
+		val |= QCA8081_PHY_FIFO_RSTN;
+
+	ret = mdiobus_write(phydev->mdio.bus, phydev->mdio.addr + 1, addr, val);
+
+	return ret;
+}
+
 static int qca808x_read_status(struct phy_device *phydev)
 {
 	int ret;
@@ -801,6 +828,12 @@ static int qca808x_read_status(struct phy_device *phydev)
 	ret = at803x_read_specific_status(phydev);
 	if (ret < 0)
 		return ret;
+
+	/* Need to reset fifo to avoid garbge packet generated when link is changed */
+	if (phydev->link)
+		qca808x_fifo_reset(phydev, false);
+	else
+		qca808x_fifo_reset(phydev, true);
 
 	if (phydev->link && phydev->speed == SPEED_2500)
 		phydev->interface = PHY_INTERFACE_MODE_2500BASEX;

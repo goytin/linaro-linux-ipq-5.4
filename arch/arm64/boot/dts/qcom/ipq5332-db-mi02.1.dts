@@ -60,7 +60,7 @@
 			sfp_pins: sfp_pinmux {
 				sfp0_rx {
 					pins = "gpio48";
-					function = "rx0";
+					function = "gpio";
 					bias-disable;
 				};
 				sfp0_tx {

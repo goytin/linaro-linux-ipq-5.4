@@ -24,6 +24,7 @@
 #include <linux/phy.h>
 #include <linux/platform_device.h>
 #include <linux/of_gpio.h>
+#include <soc/qcom/socinfo.h>
 
 #define MDIO_CTRL_0_REG		0x40
 #define MDIO_CTRL_1_REG		0x44
@@ -45,7 +46,9 @@
 
 #define QCA_MAX_PHY_RESET	3
 
-#define QCA_MDIO_CLK_RATE	100000000
+#define QCA_MDIO_CLK_RATE		100000000
+#define UNIPHY_AHB_CLK_RATE		100000000
+#define UNIPHY_SYS_CLK_RATE	24000000
 
 #define TCSR_LDO_ADDR		0x19475C4
 #define GCC_GEPHY_ADDR	0x1856004
@@ -409,11 +412,11 @@ qca_mht_efuse_loading(struct mii_bus *mii_bus, u8 ethphy)
 			break;
 	}
 	reg_val = qca_phy_debug_read(mii_bus, phy_addr, PHY_LDO_EFUSE_REG);
-	reg_val = reg_val & ~GENMASK(7, 4) | ldo_efuse << 4;
+	reg_val = (reg_val & ~GENMASK(7, 4)) | ldo_efuse << 4;
 	qca_phy_debug_write(mii_bus, phy_addr, PHY_LDO_EFUSE_REG, reg_val);
 
 	reg_val = qca_phy_debug_read(mii_bus, phy_addr, PHY_ICC_EFUSE_REG);
-	reg_val = reg_val & ~GENMASK(4, 0) | icc_efuse;
+	reg_val = (reg_val & ~GENMASK(4, 0)) | icc_efuse;
 	qca_phy_debug_write(mii_bus, phy_addr, PHY_ICC_EFUSE_REG, reg_val);
 }
 
@@ -607,11 +610,29 @@ static void qca_phy_clock_enable(void)
 	writel(val, base);
 	usleep_range(100000, 110000);
 
-	val = readl(base+0x10000);
-	val |= BIT(0);
-	writel(val, base+0x10000);
-	usleep_range(100000, 110000);
+	if (cpu_is_uniphy1_enabled()) {
+		val = readl(base+0x10000);
+		val |= BIT(0);
+		writel(val, base+0x10000);
+		usleep_range(100000, 110000);
+	}
+
 	iounmap(base);
+}
+
+static int qca_mdio_clock_set_and_enable(struct device *dev,
+		const char *clk_id, unsigned long rate)
+{
+	struct clk *clk;
+
+	clk = devm_clk_get(dev, clk_id);
+	if (IS_ERR(clk))
+		return -1;
+
+	if (rate && clk_set_rate(clk, rate))
+		return -1;
+
+	return clk_prepare_enable(clk);
 }
 
 static int qca_mdio_probe(struct platform_device *pdev)
@@ -631,6 +652,17 @@ static int qca_mdio_probe(struct platform_device *pdev)
 	}
 
 	if (of_machine_is_compatible("qcom,ipq5332")) {
+		if (cpu_is_uniphy1_enabled()) {
+			qca_mdio_clock_set_and_enable(&pdev->dev,
+					"uniphy1_ahb_clk", UNIPHY_AHB_CLK_RATE);
+			qca_mdio_clock_set_and_enable(&pdev->dev,
+					"uniphy1_sys_clk", UNIPHY_SYS_CLK_RATE);
+		}
+
+		qca_mdio_clock_set_and_enable(&pdev->dev,
+				"uniphy0_ahb_clk", UNIPHY_AHB_CLK_RATE);
+		qca_mdio_clock_set_and_enable(&pdev->dev,
+				"uniphy0_sys_clk", UNIPHY_SYS_CLK_RATE);
 		qca_phy_clock_enable();
 	}
 

@@ -51,6 +51,9 @@
 #define GCC_GEPHY_ADDR	0x1856004
 #define REG_SIZE		4
 
+#define PHY_CLK_REG_ADDR	0x7a00610
+#define PHY_CLK_REG_SIZE	0x20000
+
 /* macro for mht chipset start */
 #define EPHY_CFG				0xC90F018
 #define GEPHY0_TX_CBCR				0xC800058
@@ -590,6 +593,27 @@ static void qca_phy_addr_fixup(struct mii_bus *mii_bus, struct device_node *np)
 	}
 }
 
+static void qca_phy_clock_enable(void)
+{
+	void __iomem *base = NULL;
+	u32 val;
+
+	base = ioremap_nocache(PHY_CLK_REG_ADDR, PHY_CLK_REG_SIZE);
+	if (!base)
+		return;
+
+	val = readl(base);
+	val |= BIT(0);
+	writel(val, base);
+	usleep_range(100000, 110000);
+
+	val = readl(base+0x10000);
+	val |= BIT(0);
+	writel(val, base+0x10000);
+	usleep_range(100000, 110000);
+	iounmap(base);
+}
+
 static int qca_mdio_probe(struct platform_device *pdev)
 {
 	struct qca_mdio_data *am;
@@ -604,6 +628,10 @@ static int qca_mdio_probe(struct platform_device *pdev)
 			reset_control_deassert(rst);
 			usleep_range(100000, 110000);
 		}
+	}
+
+	if (of_machine_is_compatible("qcom,ipq5332")) {
+		qca_phy_clock_enable();
 	}
 
 	ret = qca_phy_reset(pdev);

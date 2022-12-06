@@ -12,6 +12,7 @@
 #include <dt-bindings/clock/qcom,nsscc-ipq5332.h>
 #include <dt-bindings/reset/qcom,nsscc-ipq5332.h>
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 #include <dt-bindings/clock/qca,apss-ipq5332.h>
 
 / {
@@ -859,6 +860,15 @@
 					function = "qspi_data";
 					drive-strength = <8>;
 					bias-pull-down;
+				};
+			};
+
+			button_pins: button_pins {
+				wps_button {
+					pins = "gpio35";
+					function = "gpio";
+					drive-strength = <8>;
+					bias-pull-up;
 				};
 			};
 		};
@@ -2404,6 +2414,21 @@
 	license_manager {
 		compatible = "qti,license-manager-service";
 		device-license-termination;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&button_pins>;
+		pinctrl-names = "default";
+		status = "ok";
+
+		button@1 {
+			label = "wps";
+			linux,code = <KEY_WPS_BUTTON>;
+			gpios = <&tlmm 35 GPIO_ACTIVE_LOW>;
+			linux,input-type = <1>;
+			debounce-interval = <60>;
+		};
 	};
 
 	pmu {

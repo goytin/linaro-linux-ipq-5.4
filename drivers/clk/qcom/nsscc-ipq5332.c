@@ -310,7 +310,7 @@ static struct clk_regmap_div nss_cc_port1_rx_div_clk_src = {
 		},
 		.num_parents = 1,
 		.flags = CLK_SET_RATE_PARENT,
-		.ops = &clk_regmap_div_ro_ops,
+		.ops = &clk_regmap_div_ops,
 	},
 };
 
@@ -325,7 +325,7 @@ static struct clk_regmap_div nss_cc_port1_tx_div_clk_src = {
 		},
 		.num_parents = 1,
 		.flags = CLK_SET_RATE_PARENT,
-		.ops = &clk_regmap_div_ro_ops,
+		.ops = &clk_regmap_div_ops,
 	},
 };
 
@@ -340,7 +340,7 @@ static struct clk_regmap_div nss_cc_port2_rx_div_clk_src = {
 		},
 		.num_parents = 1,
 		.flags = CLK_SET_RATE_PARENT,
-		.ops = &clk_regmap_div_ro_ops,
+		.ops = &clk_regmap_div_ops,
 	},
 };
 
@@ -355,7 +355,7 @@ static struct clk_regmap_div nss_cc_port2_tx_div_clk_src = {
 		},
 		.num_parents = 1,
 		.flags = CLK_SET_RATE_PARENT,
-		.ops = &clk_regmap_div_ro_ops,
+		.ops = &clk_regmap_div_ops,
 	},
 };
 

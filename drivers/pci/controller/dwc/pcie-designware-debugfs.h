@@ -15,6 +15,8 @@
 
 #define RAS_DES_EVENT_COUNTER_CTRL_REG	0x8
 #define RAS_DES_EVENT_COUNTER_DATA_REG	0xC
+#define RAS_DES_TIME_BASE_CTRL_REG	0x10
+#define RAS_DES_TIME_BASE_DATA_REG	0X14
 #define SD_STATUS_L1LANE_REG		0xB0
 #define ERR_INJ_ENABLE_REG		0x30
 #define ERR_INJ0_OFF			0x34
@@ -35,6 +37,11 @@
 #define EINJ_COUNT_MASK			0xFF
 #define EINJ_TYPE_MASK			0xFFFFFF
 #define EINJ_TYPE_SHIFT			8
+
+#define TIME_BASED_REPORT_SHIFT		24
+#define TIMER_SHIFT			8
+#define TIMER_ENABLE			0x1
+#define TIMER_MASK			(0xFF << TIMER_SHIFT)
 
 enum event_numbers {
 	ebuf_overflow		= 0x0,
@@ -98,6 +105,67 @@ struct error_injections {
 	const char *name;
 	u32 type_of_err;
 };
+
+enum time_analysis_code {
+	core_1_cycle		= 0x0,
+	core_tx_l0s		= 0x1,
+	core_rx_l0s		= 0x2,
+	core_l0			= 0x3,
+	core_l1			= 0x4,
+	core_cfg_rvcry		= 0x7,
+	core_tx_rx_l0s		= 0x8,
+	aux_l1_1		= 0x5,
+	aux_l1_2		= 0x6,
+	aux_l1			= 0x9,
+	ccix_1_cycle		= 0x10,
+	ccix_tx_l0s		= 0x11,
+	ccix_rx_l0s		= 0x12,
+	ccix_l0			= 0x13,
+	ccix_l1			= 0x14,
+	ccix_cfg_rvcry		= 0x17,
+	ccix_tx_rx_l0s		= 0x18,
+	tx_pcie_tlp_data	= 0x20,
+	rx_pcie_tlp_data	= 0x21,
+	tx_ccix_tlp_data	= 0x22,
+	rx_ccix_tlp_data	= 0x23,
+};
+
+/* Place holder value for core_multiplier,
+ * aux_multiplier and ccix_multiplier
+ * Actual value will be updated later
+ */
+enum multiplier_code {
+	core_multiplier		= 0x1,
+	aux_multiplier		= 0x1,
+	ccix_multiplier		= 0x1,
+	data_multiplier		= 0x10,
+};
+
+/*
+ * struct time_report: Struct to store time report number
+ *
+ * @name: name of the type of data for selected time
+ *        eg: tx_pcie_tlp_data, core_tx_rx_l0s
+ * @event_num: Event number and group number
+ * [31:8]: Group number
+ * [7:0]: Event number
+ */
+struct time_report {
+	const char *name;
+	u32 tevent_num;
+	u32 multiplier;
+};
+
+#define CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(name)			\
+do {									\
+	sub_dir = debugfs_create_dir(#name, ras_des_time_analysis);	\
+	debugfs_create_file("select_duration", 0644, sub_dir, pci,	\
+				&config_timer_ops);			\
+	debugfs_create_file("stop_timer", 0644, sub_dir, pci,		\
+				&stop_timer_ops);			\
+	debugfs_create_file("read_data", 0444, sub_dir, pci,		\
+				&read_data_ops);			\
+} while (0)
 
 #define CREATE_RAS_EVENT_COUNTER_DEBUGFS(name)				\
 do {									\

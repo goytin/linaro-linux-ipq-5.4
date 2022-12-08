@@ -58,11 +58,68 @@ static struct error_injections error_list[] = {
 	{0, 0},
 };
 
+static struct time_report time_based_list[] = {
+	{"core_1_cycle",	core_1_cycle,		core_multiplier},
+	{"core_tx_l0s",		core_tx_l0s,		core_multiplier},
+	{"core_rx_l0s",		core_rx_l0s,		core_multiplier},
+	{"core_l0",		core_l0,		core_multiplier},
+	{"core_l1",		core_l1,		core_multiplier},
+	{"core_cfg_rvcry",	core_cfg_rvcry,		core_multiplier},
+	{"core_tx_rx_l0s",	core_tx_rx_l0s,		core_multiplier},
+	{"aux_l1_1",		aux_l1_1,		aux_multiplier},
+	{"aux_l1_2",		aux_l1_2,		aux_multiplier},
+	{"aux_l1",		aux_l1,			aux_multiplier},
+	{"ccix_1_cycle",	ccix_1_cycle,		ccix_multiplier},
+	{"ccix_tx_l0s",		ccix_tx_l0s,		ccix_multiplier},
+	{"ccix_rx_l0s",		ccix_rx_l0s,		ccix_multiplier},
+	{"ccix_l0",		ccix_l0,		ccix_multiplier},
+	{"ccix_l1",		ccix_l1,		ccix_multiplier},
+	{"ccix_cfg_rvcry",	ccix_cfg_rvcry,		ccix_multiplier},
+	{"ccix_tx_rx_l0s",	ccix_tx_rx_l0s,		data_multiplier},
+	{"tx_pcie_tlp_data",	tx_pcie_tlp_data,	data_multiplier},
+	{"rx_pcie_tlp_data",	rx_pcie_tlp_data,	data_multiplier},
+	{"tx_ccix_tlp_data",	tx_ccix_tlp_data,	data_multiplier},
+	{"rx_ccix_tlp_data",	rx_ccix_tlp_data,	data_multiplier},
+	{0 ,0, 0},
+};
+
 static int open(struct inode *inode, struct file *file)
 {
 	file->private_data = inode->i_private;
 
 	return 0;
+}
+
+/*
+ * set_time_event_number: Function to set event number based on filename
+ *
+ * This function is called from the common read and write function
+ * written for all event counters. Using the debugfs filname, the
+ * group number and event number for the counter is extracted and
+ * then programmed into the control register.
+ *
+ * @file: file pointer to the debugfs entry
+ *
+ * Return: void
+ */
+static void set_time_event_number(struct file *file)
+{
+	int i;
+	u32 val;
+	struct dw_pcie *pci = (struct dw_pcie *) file->private_data;
+	u32 max_size = sizeof(time_based_list) / sizeof(struct time_report);
+
+	for (i = 0; i < max_size; i++) {
+		if (strcmp(time_based_list[i].name,
+					file->f_path.dentry->d_parent->d_iname) == 0) {
+			val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
+					RAS_DES_TIME_BASE_CTRL_REG);
+			val = time_based_list[i].tevent_num << TIME_BASED_REPORT_SHIFT;
+			dw_pcie_writel_dbi(pci, pci->ras_cap_offset +
+					RAS_DES_TIME_BASE_CTRL_REG, val);
+			break;
+		}
+	}
 }
 
 /*
@@ -98,6 +155,7 @@ static void set_event_number(struct file *file)
 		}
 	}
 }
+
 /*
  * get_error_inj_number: Function to get error number based on filename
  *
@@ -111,7 +169,6 @@ static void set_event_number(struct file *file)
  * [31:8]: Type of error to be injected
  * [7:0]: Group of error it belongs to
  */
-
 static u32 get_error_inj_number(struct file *file)
 {
 	int i;
@@ -191,7 +248,6 @@ static ssize_t ras_event_counter_lane_sel_read(struct file *file,
  * cat /sys/kernel/debug/dwc_pcie_plat/ras_des_counter/<name>/counter_value
  * It returns the number of time the selected event has happened if enabled
  */
-
 static ssize_t ras_event_counter_value_read(struct file *file, char __user *buf,
 					    size_t count, loff_t *ppos)
 {
@@ -405,6 +461,111 @@ static ssize_t lane_selection_write(struct file *file, const char __user *buf,
 	return count;
 }
 
+/*
+ * ras_des_config_timer: Function to set timer
+ * This function is invoked when the following command is made:
+ * echo n > /sys/kernel/debug/dwc_pcie_plat/
+ *              ras_des_time_analysis/<name>/select_duration
+ * Here n can be 0 to 6 based on time duration
+ */
+static ssize_t ras_des_config_timer(struct file *file,
+					const char __user *buf,
+					size_t count, loff_t *ppos)
+{
+	u32 ret;
+	u32 val;
+	u32 timer;
+	struct dw_pcie *pci = (struct dw_pcie *) file->private_data;
+
+	ret = kstrtou32_from_user(buf, count, 0, &timer);
+	if (ret)
+		return ret;
+
+	if (timer < 0 || timer > 6)
+		return -EINVAL;
+
+	set_time_event_number(file);
+
+	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
+			RAS_DES_TIME_BASE_CTRL_REG);
+
+	val |= (timer << TIMER_SHIFT);
+	val |= TIMER_ENABLE;
+
+	dw_pcie_writel_dbi(pci, pci->ras_cap_offset +
+			RAS_DES_TIME_BASE_CTRL_REG , val);
+	return count;
+}
+
+/*
+ * ras_des_stop_timer: Function to stop manual timer
+ *
+ * This function is invoked when the following command is made:
+ * echo n > /sys/kernel/debug/dwc_pcie_plat/
+ *              ras_des_time_analysis/<name>/stop_timer
+ * Here n should be 1 to stop timer
+ */
+static ssize_t ras_des_stop_timer(struct file *file, const char __user *buf,
+					size_t count, loff_t *ppos)
+{
+	u32 ret;
+	u32 val;
+	u32 stop;
+	struct dw_pcie *pci = (struct dw_pcie *) file->private_data;
+
+	ret = kstrtou32_from_user(buf, count, 0, &stop);
+	if (ret)
+		return ret;
+
+	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
+			RAS_DES_TIME_BASE_CTRL_REG);
+
+	/* Disabling configured Manual Timer mode */
+	if ((val & TIMER_MASK) == 0) {
+		val &= ~TIMER_ENABLE;
+		dw_pcie_writel_dbi(pci, pci->ras_cap_offset +
+				RAS_DES_TIME_BASE_CTRL_REG, val);
+	}
+
+	return count;
+}
+
+/*
+ * ras_des_read_time: Function to get counter value
+ *
+ * This function is invoked when the following command is made:
+ * cat /sys/kernel/debug/dwc_pcie_plat/ras_des_time_analysis/<name>/read_time
+ * It returns time analysis of the selected event has happened if enabled
+*/
+static ssize_t ras_des_read_time(struct file *file, char __user *buf,
+					size_t count, loff_t *ppos)
+{
+	int i;
+	u32 ret;
+	u32 val;
+	u32 multiplier;
+	struct dw_pcie *pci = (struct dw_pcie *) file->private_data;
+	u32 max_size = sizeof(time_based_list) / sizeof(struct time_report);
+
+	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
+			RAS_DES_TIME_BASE_DATA_REG);
+
+	for (i = 0; i < max_size; i++) {
+		if (strcmp(time_based_list[i].name,
+					file->f_path.dentry->d_parent->d_iname) == 0) {
+			multiplier = time_based_list[i].multiplier;
+			break;
+		}
+	}
+
+	val = val * multiplier;
+
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", val);
+	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
+			strlen(debugfs_buf));
+	return ret;
+}
+
 static const struct file_operations lane_detection_fops = {
 	.open = open,
 	.read = lane_detection_read,
@@ -440,6 +601,21 @@ static const struct file_operations inj_ops = {
 	.open = simple_open,
 };
 
+static const struct file_operations config_timer_ops = {
+	.write = ras_des_config_timer,
+	.open = simple_open,
+};
+
+static const struct file_operations stop_timer_ops = {
+	.write = ras_des_stop_timer,
+	.open = simple_open,
+};
+
+static const struct file_operations read_data_ops = {
+	.read = ras_des_read_time,
+	.open = simple_open,
+};
+
 int create_debugfs_files(struct dw_pcie *pci)
 {
 	int ret = 0;
@@ -449,6 +625,7 @@ int create_debugfs_files(struct dw_pcie *pci)
 	struct dentry *ras_des_debug_regs;
 	struct dentry *ras_des_error_inj;
 	struct dentry *ras_des_event_counter;
+	struct dentry *ras_des_time_analysis;
 	struct dentry *lane_detection;
 	struct dentry *rx_valid;
 
@@ -496,6 +673,13 @@ int create_debugfs_files(struct dw_pcie *pci)
 		goto remove_debug_file;
 	}
 
+	ras_des_time_analysis = debugfs_create_dir("ras_des_time_analysis", dir);
+	if (ras_des_time_analysis == NULL) {
+		pr_err("error creating directory: %s\n", dirname);
+		ret = -ENODEV;
+		goto remove_debug_file;
+	}
+
 	/* Create debugfs files for Debug subdirectory */
 	lane_detection = debugfs_create_file("lane_detection", 0644,
 					     ras_des_debug_regs, pci,
@@ -530,6 +714,29 @@ int create_debugfs_files(struct dw_pcie *pci)
 	CREATE_RAS_EVENT_COUNTER_DEBUGFS(l2_entry);
 	CREATE_RAS_EVENT_COUNTER_DEBUGFS(speed_change);
 	CREATE_RAS_EVENT_COUNTER_DEBUGFS(width_chage);
+
+	/* Create debugfs files for Statistical time analysis sub dir */
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_1_cycle);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_tx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_rx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_l0);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_l1);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_cfg_rvcry);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(core_tx_rx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(aux_l1_1);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(aux_l1_2);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(aux_l1);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_1_cycle);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_tx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_rx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_l0);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_l1);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_cfg_rvcry);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(ccix_tx_rx_l0s);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(tx_pcie_tlp_data);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(rx_pcie_tlp_data);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(tx_ccix_tlp_data);
+	CREATE_RAS_DES_TIME_ANALYSIS_DEBUGFS(rx_ccix_tlp_data);
 
 	return ret;
 

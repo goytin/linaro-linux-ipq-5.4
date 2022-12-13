@@ -6749,6 +6749,7 @@ void cfg80211_port_authorized(struct net_device *dev, const u8 *bssid,
  * @ie_len: length of IEs
  * @reason: reason code for the disconnection, set it to 0 if unknown
  * @locally_generated: disconnection was requested locally
+ * @link_id: link_id of AP for non-AP STA MLD
  * @gfp: allocation flags
  *
  * After it calls this function, the driver should enter an idle state
@@ -6756,7 +6757,7 @@ void cfg80211_port_authorized(struct net_device *dev, const u8 *bssid,
  */
 void cfg80211_disconnected(struct net_device *dev, u16 reason,
 			   const u8 *ie, size_t ie_len,
-			   bool locally_generated, gfp_t gfp);
+			   bool locally_generated, int link_id, gfp_t gfp);
 
 /**
  * cfg80211_ready_on_channel - notification of remain_on_channel start

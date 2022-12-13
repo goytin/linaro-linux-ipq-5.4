@@ -259,6 +259,7 @@ struct cfg80211_event {
 			size_t ie_len;
 			u16 reason;
 			bool locally_generated;
+			int link_id;
 		} dc;
 		struct {
 			u8 bssid[ETH_ALEN];
@@ -409,7 +410,8 @@ void __cfg80211_connect_result(struct net_device *dev,
 			       struct cfg80211_connect_resp_params *params,
 			       bool wextev);
 void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
-			     size_t ie_len, u16 reason, bool from_ap);
+			     size_t ie_len, u16 reason, bool from_ap,
+			     int link_id);
 int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
 			struct net_device *dev, u16 reason,
 			bool wextev);

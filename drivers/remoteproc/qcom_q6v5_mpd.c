@@ -328,6 +328,7 @@ struct wcss_data {
 			phys_addr_t mem_phys, size_t mem_size,
 			phys_addr_t *reloc_base);
 	u32 pasid;
+	bool q6_reg_base_protected;
 };
 
 struct wcss_clk {
@@ -1541,7 +1542,7 @@ wait_for_reset:
 	if (debug_wcss && desc->q6ver != Q6V6)
 		writel(0x0, wcss->reg_base + Q6SS_DBG_CFG);
 
-	if (wcss->reg_base) {
+	if (!desc->q6_reg_base_protected) {
 		/*
 		 * Read the version registers to
 		 * make sure WCSS is out of reset
@@ -3492,6 +3493,8 @@ static const struct wcss_data q6_ipq5332_res_init = {
 	.q6ver = Q6V7,
 	.glink_subdev_required = true,
 	.pasid = RPD_SWID,
+	.q6_reg_base_protected = true,
+
 };
 
 static const struct wcss_data q6_ipq5018_res_init = {

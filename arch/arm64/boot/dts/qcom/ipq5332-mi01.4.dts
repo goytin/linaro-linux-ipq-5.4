@@ -88,7 +88,11 @@
 					bias-pull-up;
 				};
 			};
-
+			pwm_pins: pwm_pinmux {
+				pins = "gpio30";
+				function = "pwm1";
+				drive-strength = <8>;
+			};
 		};
 
 		dp1 {
@@ -123,6 +127,13 @@
 		i2c@78b6000 {
 			pinctrl-0 = <&i2c_1_pins>;
 			pinctrl-names = "default";
+		};
+
+		pwm {
+			pinctrl-0 = <&pwm_pins>;
+			pinctrl-names = "default";
+			used-pwm-indices = <0>, <0>, <1>, <0>;
+			status = "disabled";
 		};
 
 		mdio:mdio@90000 {

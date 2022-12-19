@@ -329,6 +329,7 @@ struct wcss_data {
 			phys_addr_t *reloc_base);
 	u32 pasid;
 	bool q6_reg_base_protected;
+	bool reset_dbg_reg;
 };
 
 struct wcss_clk {
@@ -1539,7 +1540,7 @@ wait_for_reset:
 	}
 
 	/*reset done clear the debug register*/
-	if (debug_wcss && desc->q6ver != Q6V6)
+	if (debug_wcss && desc->reset_dbg_reg)
 		writel(0x0, wcss->reg_base + Q6SS_DBG_CFG);
 
 	if (!desc->q6_reg_base_protected) {
@@ -3602,6 +3603,7 @@ static const struct wcss_data q6_ipq9574_res_init = {
 	.q6ver = Q6V7,
 	.version = Q6_IPQ,
 	.glink_subdev_required = true,
+	.reset_dbg_reg = true,
 };
 
 static const struct wcss_data wcss_ahb_ipq9574_res_init = {

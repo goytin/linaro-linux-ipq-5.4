@@ -8,8 +8,13 @@
 
 /dts-v1/;
 
-#include "ipq5332-mi01.2.dts"
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+#include "ipq5332-512MB-memory.dtsi"
+#else
+#include "ipq5332-default-memory.dtsi"
+#endif
 
+#include "ipq5332-mi01.2.dtsi"
 
 / {
 	#address-cells = <0x2>;

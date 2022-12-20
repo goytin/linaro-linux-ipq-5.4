@@ -319,7 +319,6 @@
 		};
 
 		pcie@18000000 {
-			perst-gpio = <&tlmm 47 GPIO_ACTIVE_LOW>;
 			status = "ok";
 			pcie1_rp {
 				reg = <0 0 0 0 0>;

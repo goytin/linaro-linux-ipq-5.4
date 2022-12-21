@@ -68,6 +68,35 @@
 				};
 			};
 
+			emmc_pins: emmc_pins {
+				emmc_clk {
+					pins = "gpio5";
+					function = "sdc_clk";
+					drive-strength = <8>;
+					bias-disable;
+				};
+				emmc_cmd {
+					pins = "gpio4";
+					function = "sdc_cmd";
+					drive-strength = <8>;
+					bias-pull-up;
+				};
+				emmc_data {
+					pins = "gpio0", "gpio1", "gpio2",
+						"gpio3", "gpio6", "gpio7",
+						"gpio8", "gpio9";
+					function = "sdc_data";
+					drive-strength = <8>;
+					bias-pull-up;
+				};
+				emmc_rclk {
+					pins = "gpio10";
+					function = "sdc_rclk";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+			};
+
 			qspi_nand_pins: qspi_nand_pins {
 				qspi_clock {
 					pins = "gpio5";
@@ -205,7 +234,7 @@
 		blsp1_uart3: serial@78b2000 {
 			pinctrl-0 = <&gps_pins>;
 			pinctrl-names = "default";
-			status = "ok";
+			status = "disabled";
 		};
 
 		blsp1_uart4: serial@78b3000 {
@@ -307,11 +336,51 @@
 		};
 
 		qpic_bam: dma@7984000 {
+			status = "disabled";
+		};
+
+		sdcc1_ice: sdcc1ice@7808000 {
+			compatible = "qcom,ice";
+			reg = <0x7808000 0x2000>;
+			interrupts = <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,msm-bus,vectors-KBps =
+				<78 512 0 0>,    /* No vote */
+				<78 512 1000 0>; /* Max. bandwidth */
+			qcom,bus-vector-names = "MIN", "MAX";
+			qcom,instance-type = "sdcc";
+			status = "ok";
+		};
+
+		sdhc_1: sdhci@7804000 {
+			compatible = "qcom,sdhci-msm-v5";
+			reg = <0x7804000 0x1000>, <0x7805000 0x1000>;
+			reg-names = "hc_mem", "cmdq_mem";
+
+			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
+					<GIC_SPI 138 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "hc_irq", "pwr_irq";
+
+			sdhc-msm-crypto = <&sdcc1_ice>;
+			clocks = <&xo>,
+				<&gcc GCC_SDCC1_AHB_CLK>,
+				<&gcc GCC_SDCC1_APPS_CLK>,
+				<&gcc GCC_SDCC1_ICE_CORE_CLK>;
+			clock-names = "xo", "iface", "core", "ice_core_clk";
+			qcom,ice-clk-rates = <150000000 300000000>;
+			mmc-ddr-1_8v;
+			mmc-hs200-1_8v;
+			mmc-hs400-1_8v;
+			mmc-hs400-enhanced-strobe;
+			max-frequency = <384000000>;
+			bus-width = <8>;
+			non-removable;
+			pinctrl-0 = <&emmc_pins>;
+			pinctrl-names = "default";
 			status = "ok";
 		};
 
 		qpic_nand: nand@79b0000 {
-			status = "ok";
+			status = "disabled";
 			pinctrl-0 = <&qspi_nand_pins>;
 			pinctrl-names = "default";
 

@@ -1276,6 +1276,7 @@
 
 			msi-parent = <&v2m0>;
 			max-payload-size = <1>;
+			perst-gpio = <&tlmm 44 GPIO_ACTIVE_LOW>;
 			status = "disabled";
 
 			pcie2_rp: pcie2_rp {
@@ -1362,6 +1363,7 @@
 
 			msi-parent = <&v2m0>;
 			max-payload-size = <1>;
+			perst-gpio = <&tlmm 47 GPIO_ACTIVE_LOW>;
 			status = "disabled";
 
 			pcie1_rp: pcie1_rp {
@@ -1445,6 +1447,7 @@
 
 			msi-parent = <&v2m0>;
 			max-payload-size = <1>;
+			perst-gpio = <&tlmm 38 GPIO_ACTIVE_LOW>;
 			status = "disabled";
 
 			pcie0_rp: pcie0_rp {

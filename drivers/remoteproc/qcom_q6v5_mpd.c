@@ -1697,7 +1697,7 @@ state:
 static int wcss_ahb_pd_start(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv;
-	int ret;
+	int ret = 0;
 	u32 val;
 	const struct wcss_data *desc;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
@@ -2356,7 +2356,7 @@ shut_dn_rpd:
 static int wcss_ahb_pd_stop(struct rproc *rproc)
 {
 	struct q6_wcss *wcss = rproc->priv;
-	int ret;
+	int ret = 0;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
 	const struct wcss_data *desc;
 

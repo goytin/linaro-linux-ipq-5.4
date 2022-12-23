@@ -209,6 +209,57 @@ skip:
 	return 0;
 }
 
+static int __maybe_unused set_temp_trips(struct tsens_priv *tmdev, int sensor, int low_th, int high_th)
+{
+	u32 reg_th, reg_th_offset;
+	int cur_temp;
+
+	if (!tmdev)
+		return -EINVAL;
+
+	if ((sensor < 0) || (sensor > (MAX_SENSOR - 1)))
+		return -EINVAL;
+
+	get_temp_ipq5018(tmdev, sensor, &cur_temp);
+
+	reg_th_offset = TSENS_TM_UPPER_LOWER_STATUS_CTRL(sensor);
+
+	regmap_read(tmdev->tm_map, reg_th_offset, &reg_th);
+
+	/*
+	 * Clear low-temp if "low" is too small. As per thermal framework
+	 * API, we use -INT_MAX rather than INT_MIN.
+	 */
+	if (low_th <= -INT_MAX) {
+		/* clear lower threshold values */
+		reg_th &= TSENS_TM_UPPER_THRESHOLD_MASK;
+		regmap_write(tmdev->tm_map, reg_th_offset, reg_th);
+
+	} else if (low_th < cur_temp) {
+		low_th = low_th / 1000;
+		low_th = degc_to_code(low_th, sensor);
+		reg_th &= TSENS_TM_UPPER_THRESHOLD_MASK;
+		reg_th |= low_th;
+
+		regmap_write(tmdev->tm_map, reg_th_offset, reg_th);
+	}
+
+	if (high_th != INT_MAX) {
+		high_th = high_th / 1000;
+		high_th = degc_to_code(high_th, sensor);
+		high_th = TSENS_TM_UPPER_THRESHOLD_SET(high_th);
+		reg_th &= TSENS_TM_LOWER_THRESHOLD_MASK;
+		reg_th |= high_th;
+
+		regmap_write(tmdev->tm_map, reg_th_offset, reg_th);
+	}
+
+	/* Sync registers */
+	mb();
+
+	return 0;
+}
+
 static void notify_uspace_tsens_fn(struct work_struct *work)
 {
 	struct tsens_sensor *s = container_of(work, struct tsens_sensor,
@@ -262,8 +313,14 @@ static void tsens_scheduler_fn(struct work_struct *work)
 
 		if (th_upper || th_lower) {
 			regmap_write(tmdev->tm_map, reg_addr, reg_thr);
+#ifdef CONFIG_CPU_THERMAL
+			/* If CPUFreq cooling is enabled, then notify Thermal framework */
+			thermal_zone_device_update(tmdev->sensor[i].tzd, THERMAL_EVENT_UNSPECIFIED);
+			regmap_read(tmdev->tm_map, reg_addr, &reg_thr);
+#else
 			/* Notify user space */
 			schedule_work(&tmdev->sensor[i].notify_work);
+#endif
 
 			if (th_lower &&
 				((reg_thr & TSENS_TM_LOWER_THRESHOLD_MASK) >=
@@ -446,7 +503,7 @@ static int calibrate_ipq5018(struct tsens_priv *tmdev)
 	return 0;
 }
 
-static int set_trip_temp_ipq5018(void *data, int trip, int temp)
+static int __maybe_unused set_trip_temp_ipq5018(void *data, int trip, int temp)
 {
 	const struct tsens_sensor *s = data;
 
@@ -454,6 +511,16 @@ static int set_trip_temp_ipq5018(void *data, int trip, int temp)
 		return -EINVAL;
 
 	return set_trip_temp(s->priv, s->id, trip, temp);
+}
+
+static int __maybe_unused set_temp_trips_ipq5018(void *data, int low, int high)
+{
+	const struct tsens_sensor *s = data;
+
+	if (!s)
+		return -EINVAL;
+
+	return set_temp_trips(s->priv, s->id, low, high);
 }
 
 static int get_temp_ipq5018(struct tsens_priv *tmdev, int id, int *temp)
@@ -508,5 +575,9 @@ const struct tsens_ops ops_ipq5018 = {
 	.init		= init_ipq5018,
 	.calibrate	= calibrate_ipq5018,
 	.get_temp	= get_temp_ipq5018,
+#ifdef CONFIG_CPU_THERMAL
+	.set_temp_trips = set_temp_trips_ipq5018,
+#else
 	.set_trip_temp	= set_trip_temp_ipq5018,
+#endif
 };

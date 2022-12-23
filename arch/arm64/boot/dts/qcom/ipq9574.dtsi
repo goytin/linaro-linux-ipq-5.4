@@ -1437,6 +1437,8 @@
 			qcom,edma-lite-enabled;
 			qcom,capwap-enabled;
 			qcom,trustsec-enabled;
+			qcom,dtls-enabled;
+			qcom,crypto-enabled;
 			npu-supply = <&npu_vreg>;
 			mx-supply = <&ipq9574_s4>;
 		};

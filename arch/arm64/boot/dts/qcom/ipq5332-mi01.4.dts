@@ -223,6 +223,35 @@
 						phy_address = <4>;
 					};
 				};
+
+				led_source@2 {
+					source = <2>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@5 {
+					source = <5>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@8 {
+					source = <8>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
+				led_source@11 {
+					source = <11>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "high";
+				};
 			};
 		};
 

@@ -288,7 +288,6 @@
 		};
 
 		pcie1: pcie@18000000 {
-			max-link-speed = <1>;
 			status = "ok";
 			pcie1_rp {
 				reg = <0 0 0 0 0>;
@@ -302,7 +301,6 @@
 		};
 
 		pcie0: pcie@20000000 {
-			max-link-speed = <1>;
 			status = "ok";
 			pcie0_rp {
 				reg = <0 0 0 0 0>;

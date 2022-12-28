@@ -147,9 +147,9 @@ static ssize_t ras_event_counter_en_read(struct file *file, char __user *buf,
 				RAS_DES_EVENT_COUNTER_CTRL_REG);
 	val = (val >> EVENT_COUNTER_STATUS_SHIFT) & EVENT_COUNTER_STATUS_MASK;
 	if (val)
-		sprintf(debugfs_buf, "Enabled\n");
+		scnprintf(debugfs_buf, sizeof(debugfs_buf), "Enabled\n");
 	else
-		sprintf(debugfs_buf, "Disabled\n");
+		scnprintf(debugfs_buf, sizeof(debugfs_buf), "Disabled\n");
 
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
@@ -177,7 +177,7 @@ static ssize_t ras_event_counter_lane_sel_read(struct file *file,
 	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
 			RAS_DES_EVENT_COUNTER_CTRL_REG);
 	val = (val >> LANE_SELECT_SHIFT) & LANE_SELECT_MASK;
-	sprintf(debugfs_buf, "0x%x\n", val);
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", val);
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
 
@@ -203,7 +203,7 @@ static ssize_t ras_event_counter_value_read(struct file *file, char __user *buf,
 
 	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
 				RAS_DES_EVENT_COUNTER_DATA_REG);
-	sprintf(debugfs_buf, "0x%x\n", val);
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", val);
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
 
@@ -297,7 +297,7 @@ static ssize_t ras_error_inj_read(struct file *file, char __user *buf,
 
 	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset + ERR_INJ0_OFF +
 				(0x4 * inj_num));
-	sprintf(debugfs_buf, "0x%x\n", (val & EINJ_COUNT_MASK));
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", (val & EINJ_COUNT_MASK));
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
 
@@ -354,7 +354,7 @@ static ssize_t lane_detection_read(struct file *file, char __user *buf,
 	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
 				SD_STATUS_L1LANE_REG);
 	val = (val >> LANE_DETECT_SHIFT) & LANE_DETECT_MASK;
-	sprintf(debugfs_buf, "0x%x\n", val);
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", val);
 
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
@@ -372,7 +372,7 @@ static ssize_t rx_valid_read(struct file *file, char __user *buf,
 	val = dw_pcie_readl_dbi(pci, pci->ras_cap_offset +
 				SD_STATUS_L1LANE_REG);
 	val = (val >> PIPE_RXVALID_SHIFT) & PIPE_RXVALID_MASK;
-	sprintf(debugfs_buf, "0x%x\n", val);
+	scnprintf(debugfs_buf, sizeof(debugfs_buf), "0x%x\n", val);
 
 	ret = simple_read_from_buffer(buf, count, ppos, debugfs_buf,
 				      strlen(debugfs_buf));
@@ -458,7 +458,7 @@ int create_debugfs_files(struct dw_pcie *pci)
 	}
 
 	dev = pci->dev;
-	sprintf(dirname, "pcie_dwc_%s", dev_name(dev));
+	scnprintf(dirname, sizeof(dirname), "pcie_dwc_%s", dev_name(dev));
 
 	pci->ras_cap_offset = dw_pcie_find_vsec_capability(pci,
 							   DW_PCIE_RAS_CAP_ID);

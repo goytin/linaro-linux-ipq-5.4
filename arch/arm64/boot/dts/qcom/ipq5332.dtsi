@@ -2280,6 +2280,9 @@
 					<&q6_etr_region>,
 					<&q6_caldb_region>;
 			qcom,rproc = <&q6v5_wcss>;
+			qcom,bootargs_smem = <507>;
+			qcom,bootargs_version = <2>;
+			qcom,userpd-bootargs;
 			glink-edge {
 				interrupts = <GIC_SPI 417 IRQ_TYPE_EDGE_RISING>;
 				qcom,remote-pid = <1>;

@@ -23,12 +23,15 @@
 #include <linux/qcom_scm.h>
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
+#include <linux/dma-mapping.h>
 #ifdef CONFIG_IPQ_SUBSYSTEM_RAMDUMP
 #include <soc/qcom/ramdump.h>
 #endif
 #include <soc/qcom/socinfo.h>
 #include "qcom_common.h"
 #include "qcom_q6v5.h"
+
+#include "remoteproc_internal.h"
 
 #define WCSS_CRASH_REASON		421
 #define WCSS_SMEM_HOST			1
@@ -120,7 +123,6 @@
 
 #define BUF_SIZE 35
 #define REMOTE_PID	1
-#define VERSION 1
 #define Q6_BOOT_ARGS_SMEM_SIZE 4096
 
 #define AXIS_CBCR		0x60
@@ -164,6 +166,9 @@
 #define TURBO_FREQ	533333333
 #define NOMIN_FREQ	480000000
 
+#define UPD_BOOTARGS_HEADER_TYPE	0x2
+#define LIC_BOOTARGS_HEADER_TYPE	0x3
+
 static const struct wcss_data q6_ipq5332_res_init;
 static int debug_wcss;
 static int userpd1_bootaddr;
@@ -194,6 +199,11 @@ enum q6_version {
 	Q6V5,
 	Q6V6,
 	Q6V7,
+};
+
+enum q6_bootargs_version {
+	VERSION1 = 1,
+	VERSION2,
 };
 
 struct q6_wcss {
@@ -330,12 +340,45 @@ struct wcss_data {
 	u32 pasid;
 	bool q6_reg_base_protected;
 	bool reset_dbg_reg;
+	u8 bootargs_version;
 };
 
 struct wcss_clk {
 	const char* clk;
 	unsigned long rate;
 };
+
+struct bootargs_smem_info {
+	void *smem_base_ptr;
+	void *smem_elem_cnt_ptr;
+	void *smem_bootargs_ptr;
+};
+
+struct license_params {
+	dma_addr_t dma_buf;
+	void *buf;
+	size_t size;
+};
+
+static struct license_params lic_param;
+
+struct bootargs_header {
+	u8 type;
+	u8 length;
+};
+
+struct q6_userpd_bootargs {
+	struct bootargs_header header;
+	u8 pid;
+	u32 bootaddr;
+	u32 data_size;
+} __packed;
+
+struct license_bootargs {
+	struct bootargs_header header;
+	u8 license_type;
+	dma_addr_t dma_buf;
+} __packed;
 
 static int qcom_get_pd_fw_info(struct q6_wcss *wcss, const struct firmware *fw,
 				struct ramdump_segment *segs, int index,
@@ -1531,7 +1574,7 @@ static int q6_wcss_start(struct rproc *rproc)
 		goto wcss_q6_reset;
 
 wait_for_reset:
-	ret = qcom_q6v5_wait_for_start(&wcss->q6, 5 * HZ);
+	ret = qcom_q6v5_wait_for_start(&wcss->q6, msecs_to_jiffies(10000));
 	if (ret == -ETIMEDOUT) {
 		if (debug_wcss)
 			goto wait_for_reset;
@@ -1597,7 +1640,7 @@ static int q6_wcss_spawn_pd(struct rproc *rproc)
 		return ret;
 	}
 
-	ret = qcom_q6v5_wait_for_start(&wcss->q6, 5 * HZ);
+	ret = qcom_q6v5_wait_for_start(&wcss->q6, msecs_to_jiffies(10000));
 	if (ret == -ETIMEDOUT) {
 		pr_err("%s start timedout\n", rproc->name);
 		wcss->q6.running = false;
@@ -2230,6 +2273,11 @@ static int q6_wcss_stop(struct rproc *rproc)
 	if (ret)
 		return ret;
 
+	if (lic_param.dma_buf) {
+		dma_free_coherent(wcss->dev, lic_param.size, lic_param.buf,
+							lic_param.dma_buf);
+		lic_param.dma_buf = 0x0;
+	}
 pas_done:
 	qcom_q6v5_unprepare(&wcss->q6);
 
@@ -2432,6 +2480,131 @@ static void *q6_wcss_da_to_va(struct rproc *rproc, u64 da, int len)
 	return wcss->mem_region + offset;
 }
 
+static int load_license_params_to_bootargs(struct device *dev,
+					struct bootargs_smem_info *boot_args)
+{
+	int ret = 0;
+	const char *lic_file_name;
+	const struct firmware *file = NULL;
+	u16 cnt;
+	u32 rd_val;
+	struct license_bootargs lic_bootargs = {0x0};
+
+	ret = of_property_read_string(dev->of_node, "license-file",
+							&lic_file_name);
+	if (ret)
+		return ret;
+
+	ret = request_firmware(&file, lic_file_name, dev);
+	if (ret) {
+		dev_err(dev, "failed to get %s\n", lic_file_name);
+		return ret;
+	}
+
+	/* No of elements */
+	cnt = *((u16 *)boot_args->smem_elem_cnt_ptr);
+	cnt += sizeof(struct license_bootargs);
+	memcpy_toio(boot_args->smem_elem_cnt_ptr, &cnt, sizeof(u16));
+
+	lic_param.buf = dma_alloc_coherent(dev, file->size,
+				&lic_param.dma_buf, GFP_KERNEL);
+	if (!lic_param.buf) {
+		release_firmware(file);
+		pr_err("failed to allocate memory\n");
+		return PTR_ERR(lic_param.buf);
+	}
+	memcpy(lic_param.buf, file->data, file->size);
+	lic_param.size = file->size;
+	release_firmware(file);
+
+	/* TYPE */
+	lic_bootargs.header.type = LIC_BOOTARGS_HEADER_TYPE;
+
+	/* LENGTH */
+	lic_bootargs.header.length =
+			sizeof(lic_bootargs) - sizeof(lic_bootargs.header);
+
+	/* license type */
+	if (!of_property_read_u32(dev->of_node, "license-type", &rd_val))
+		lic_bootargs.license_type = (u8)rd_val;
+
+	/* ADDRESS */
+	lic_bootargs.dma_buf = lic_param.dma_buf;
+	memcpy_toio(boot_args->smem_bootargs_ptr,
+					&lic_bootargs, sizeof(lic_bootargs));
+	boot_args->smem_bootargs_ptr += sizeof(lic_bootargs);
+	return ret;
+}
+
+static int load_userpd_params_to_bootargs(struct device *dev,
+				struct bootargs_smem_info *boot_args)
+{
+	int ret = 0;
+	struct device_node *upd_np;
+	struct platform_device *upd_pdev;
+	struct rproc *upd_rproc;
+	struct q6_wcss *upd_wcss;
+	u16 cnt;
+	u8 upd_cnt = 0;
+	const struct firmware *fw;
+	struct q6_userpd_bootargs upd_bootargs = {0};
+
+	if (!of_property_read_bool(dev->of_node, "qcom,userpd-bootargs"))
+		return -EINVAL;
+
+	for_each_available_child_of_node(dev->of_node, upd_np) {
+		if (strstr(upd_np->name, "pd") == NULL)
+			continue;
+		upd_cnt++;
+	}
+
+	/* No of elements */
+	cnt = *((u16 *)boot_args->smem_elem_cnt_ptr);
+	cnt += (sizeof(struct q6_userpd_bootargs) * upd_cnt);
+	memcpy_toio(boot_args->smem_elem_cnt_ptr, &cnt, sizeof(u16));
+
+	for_each_available_child_of_node(dev->of_node, upd_np) {
+		if (strstr(upd_np->name, "pd") == NULL)
+			continue;
+		upd_pdev = of_find_device_by_node(upd_np);
+		upd_rproc = platform_get_drvdata(upd_pdev);
+		upd_wcss = upd_rproc->priv;
+
+		memset(&upd_bootargs, 0, sizeof(upd_bootargs));
+		/* TYPE */
+		upd_bootargs.header.type = UPD_BOOTARGS_HEADER_TYPE;
+
+		/* LENGTH */
+		upd_bootargs.header.length =
+			sizeof(upd_bootargs) - sizeof(upd_bootargs.header);
+
+		/* PID */
+		upd_bootargs.pid = qcom_get_pd_asid(upd_wcss->dev->of_node) + 1;
+
+		ret = request_firmware(&fw, upd_rproc->firmware,
+							&upd_pdev->dev);
+		if (ret < 0) {
+			dev_err(&upd_pdev->dev, "request_firmware failed: %d\n",
+									ret);
+			return ret;
+		}
+
+		/* Load address */
+		upd_bootargs.bootaddr = rproc_get_boot_addr(upd_rproc, fw);
+
+		/* PIL data size */
+		upd_bootargs.data_size = qcom_mdt_get_file_size(fw);
+
+		release_firmware(fw);
+
+		/* copy into smem bootargs array*/
+		memcpy_toio(boot_args->smem_bootargs_ptr,
+					&upd_bootargs, sizeof(upd_bootargs));
+		boot_args->smem_bootargs_ptr += sizeof(upd_bootargs);
+	}
+	return ret;
+}
+
 static int share_bootargs_to_q6(struct device *dev)
 {
 	int ret;
@@ -2442,6 +2615,12 @@ static int share_bootargs_to_q6(struct device *dev)
 	void *ptr;
 	u8 *bootargs_arr;
 	struct device_node *np = dev->of_node;
+	struct bootargs_smem_info boot_args;
+	const struct wcss_data *desc =
+				of_device_get_match_data(dev);
+
+	if (!desc)
+		return -EINVAL;
 
 	ret = of_property_read_u32(np, key, &smem_id);
 	if (ret) {
@@ -2456,22 +2635,34 @@ static int share_bootargs_to_q6(struct device *dev)
 		return ret;
 	}
 
-	ptr = qcom_smem_get(REMOTE_PID, smem_id, &size);
-	if (IS_ERR(ptr)) {
+	boot_args.smem_base_ptr = qcom_smem_get(REMOTE_PID, smem_id, &size);
+	if (IS_ERR(boot_args.smem_base_ptr)) {
 		pr_err("Unable to acquire smp2p item(%d) ret:%ld\n",
-					smem_id, PTR_ERR(ptr));
-		return PTR_ERR(ptr);
+				smem_id, PTR_ERR(boot_args.smem_base_ptr));
+		return PTR_ERR(boot_args.smem_base_ptr);
 	}
+	ptr = boot_args.smem_base_ptr;
+
+	/*get physical address*/
+	pr_info("smem phyiscal address:0x%lX\n",
+				(uintptr_t)qcom_smem_virt_to_phys(ptr));
 
 	/*Version*/
-	version = VERSION;
+	version = desc->bootargs_version;
+	if (!of_property_read_u32(dev->of_node, "qcom,bootargs_version",
+								&rd_val))
+		version = (u16)rd_val;
 	memcpy_toio(ptr, &version, sizeof(version));
 	ptr += sizeof(version);
+	boot_args.smem_elem_cnt_ptr = ptr;
 
 	cnt = ret = of_property_count_u32_elems(np, "boot-args");
 	if (ret < 0) {
-		pr_err("failed to read boot args ret:%d\n", ret);
-		return ret;
+		if (ret == -ENODATA) {
+			pr_err("failed to read boot args ret:%d\n", ret);
+			return ret;
+		}
+		cnt = 0;
 	}
 
 	/* No of elements */
@@ -2497,9 +2688,23 @@ static int share_bootargs_to_q6(struct device *dev)
 	/* Copy bootargs */
 	memcpy_toio(ptr, bootargs_arr, cnt);
 	ptr += (cnt);
+	boot_args.smem_bootargs_ptr = ptr;
 
 	of_node_put(np);
 	kfree(bootargs_arr);
+
+	ret = load_userpd_params_to_bootargs(dev, &boot_args);
+	if (ret < 0) {
+		pr_err("failed to read userpd boot args ret:%d\n", ret);
+		return ret;
+	}
+
+	ret = load_license_params_to_bootargs(dev, &boot_args);
+	if (ret < 0) {
+		pr_err("failed to read license file ret:%d\n", ret);
+		return ret;
+	}
+
 	return ret;
 }
 
@@ -3495,7 +3700,7 @@ static const struct wcss_data q6_ipq5332_res_init = {
 	.glink_subdev_required = true,
 	.pasid = RPD_SWID,
 	.q6_reg_base_protected = true,
-
+	.bootargs_version = VERSION2,
 };
 
 static const struct wcss_data q6_ipq5018_res_init = {
@@ -3513,6 +3718,7 @@ static const struct wcss_data q6_ipq5018_res_init = {
 	.q6ver = Q6V6,
 	.glink_subdev_required = true,
 	.pasid = MPD_WCNSS_PAS_ID,
+	.bootargs_version = VERSION1,
 };
 
 static const struct wcss_data wcss_ahb_ipq5332_res_init = {

@@ -497,13 +497,13 @@
 		trips {
 			cpu-critical-hi {
 				temperature = <120000>;
-				hysteresis = <10000>;
+				hysteresis = <9000>;
 				type = "critical_high";
 			};
 
 			tsens13_cpu_alert0: cpu-alert0 {
 				temperature = <110000>;
-				hysteresis = <10000>;
+				hysteresis = <9000>;
 				type = "passive";
 			};
 		};

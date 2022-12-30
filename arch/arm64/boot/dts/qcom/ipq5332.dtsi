@@ -2442,7 +2442,7 @@
 	};
 
 	qti,tzlog {
-		compatible = "qti,tzlog";
+		compatible = "qti,tzlog-ipq5332";
 		interrupts = <GIC_SPI 267 IRQ_TYPE_EDGE_RISING>;
 		qti,tz-diag-buf-size = <0x3000>;
 		qti,tz-ring-off = <7>;

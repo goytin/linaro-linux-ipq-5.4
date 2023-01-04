@@ -64,11 +64,11 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI0  |    DYNAMIC   |          26MB           |
+	 * |  MHI0  |    DYNAMIC   |          9MB            |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |    DYNAMIC   |          26MB           |
+	 * |  MHI1  |    DYNAMIC   |          9MB            |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |  MLO   |    Dynamic   |          17MB           |
@@ -153,14 +153,14 @@
 		mhi_region0: dma_pool0@0 {
 			compatible = "shared-dma-pool";
 			no-map;
-			size = <0x0 0x00F00000>;
+			size = <0x0 0x00900000>;
 			status = "disabled";
 		};
 
 		mhi_region1: dma_pool1@1 {
 			compatible = "shared-dma-pool";
 			no-map;
-			size = <0x0 0x00F00000>;
+			size = <0x0 0x00900000>;
 			status = "disabled";
                 };
 

@@ -377,7 +377,8 @@ struct q6_userpd_bootargs {
 struct license_bootargs {
 	struct bootargs_header header;
 	u8 license_type;
-	dma_addr_t dma_buf;
+	u32 addr;
+	u32 size;
 } __packed;
 
 static int qcom_get_pd_fw_info(struct q6_wcss *wcss, const struct firmware *fw,
@@ -2479,7 +2480,7 @@ static int load_license_params_to_bootargs(struct device *dev,
 
 	ret = request_firmware(&file, lic_file_name, dev);
 	if (ret) {
-		dev_err(dev, "failed to get %s\n", lic_file_name);
+		dev_err(dev, "request_firmware failed: %d\n", ret);
 		return ret;
 	}
 
@@ -2511,7 +2512,10 @@ static int load_license_params_to_bootargs(struct device *dev,
 		lic_bootargs.license_type = (u8)rd_val;
 
 	/* ADDRESS */
-	lic_bootargs.dma_buf = lic_param.dma_buf;
+	lic_bootargs.addr = (u32)lic_param.dma_buf;
+
+	/* License file size */
+	lic_bootargs.size = lic_param.size;
 	memcpy_toio(boot_args->smem_bootargs_ptr,
 					&lic_bootargs, sizeof(lic_bootargs));
 	boot_args->smem_bootargs_ptr += sizeof(lic_bootargs);

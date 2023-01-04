@@ -3,7 +3,7 @@
  * IPQ5332 AP-MI01.4 board device tree source
  *
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 /dts-v1/;
@@ -103,7 +103,7 @@
 			qcom,mactype = <1>;
 			local-mac-address = [000000000000];
 			mdio-bus = <&mdio>;
-			qcom,phy-mdio-addr = <28>;
+			qcom,phy-mdio-addr = <12>;
 			qcom,link-poll = <1>;
 			phy-mode = "sgmii";
 		};

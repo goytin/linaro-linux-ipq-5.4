@@ -192,7 +192,7 @@
 		trips {
 			cpu-critical-hi {
 				temperature = <120000>;
-				hysteresis = <10000>;
+				hysteresis = <9000>;
 				type = "critical_high";
 			};
 		};

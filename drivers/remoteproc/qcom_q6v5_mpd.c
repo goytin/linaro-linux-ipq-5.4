@@ -1013,6 +1013,13 @@ int enable_ipq5332_clocks(struct q6_wcss *wcss)
 {
 	int ret, loop = 0;
 
+	ret = clk_prepare_enable(wcss->axmis_clk);
+	if (ret) {
+		dev_err(wcss->dev, "q6_axis clk enable failed");
+		return ret;
+	}
+	clk_disable_unprepare(wcss->axmis_clk);
+
 	ret = reset_control_assert(wcss->wcss_q6_reset);
 	if (ret) {
 		dev_err(wcss->dev, "wcss_q6_reset assert failed\n");
@@ -3228,7 +3235,7 @@ static int ipq5332_init_q6_clock(struct q6_wcss *wcss)
 {
 	int ret, i;
 	const char *clks[] = { "wcss_ecahb", "q6_tsctr_1to2", "q6ss_trig",
-				"q6_axis", "q6_ahb_s", "q6ss_atbm", "q6_ahb",
+				"q6_ahb_s", "q6ss_atbm", "q6_ahb",
 				"q6ss_pclkdbg", "sys_noc_wcss_ahb" };
 	const char *cfg_clks[] = { "q6_axim", "mem_noc_q6_axi" };
 
@@ -3243,6 +3250,14 @@ static int ipq5332_init_q6_clock(struct q6_wcss *wcss)
 
 	for (i = 0; i < wcss->num_clks; i++)
 		wcss->clks[i].id = clks[i];
+
+	wcss->axmis_clk = devm_clk_get(wcss->dev, "q6_axis");
+	if (IS_ERR(wcss->axmis_clk)) {
+		ret = PTR_ERR(wcss->axmis_clk);
+		if (ret != -EPROBE_DEFER)
+			dev_err(wcss->dev, "failed to get q6_axis clk\n");
+		return PTR_ERR(wcss->axmis_clk);
+	}
 
 	wcss->cfg_clks = devm_kcalloc(wcss->dev, wcss->num_cfg_clks,
 					sizeof(*wcss->cfg_clks), GFP_KERNEL);

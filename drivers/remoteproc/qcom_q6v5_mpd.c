@@ -1026,23 +1026,6 @@ int enable_ipq5332_clocks(struct q6_wcss *wcss)
 			if (readl(wcss->ce_ahb_base + AXIS_CBCR) == CLK_OFF)
 				break;
 		}
-	} else {
-		ret = reset_control_deassert(wcss->wcss_aon_reset);
-		if (ret) {
-			dev_err(wcss->dev, "wcss_aon_reset deassert failed\n");
-			return ret;
-		}
-		ret = clk_prepare_enable(wcss->axi_s_clk);
-		if (ret) {
-			dev_err(wcss->dev, "wcss axi_s clk enable failed");
-			return ret;
-		}
-		clk_disable_unprepare(wcss->axi_s_clk);
-		ret = reset_control_assert(wcss->wcss_aon_reset);
-		if (ret) {
-			dev_err(wcss->dev, "wcss_aon_reset assert failed\n");
-			return ret;
-		}
 	}
 
 	ret = reset_control_deassert(wcss->wcss_q6_reset);
@@ -1130,14 +1113,6 @@ int enable_ipq5332_clocks(struct q6_wcss *wcss)
 				break;
 		}
 	} else {
-		/* Enable Q6 clocks */
-		ret = clk_prepare_enable(wcss->gcc_ce_ahb_clk);
-		if (ret) {
-			dev_err(wcss->dev, "ce ahb clk enable failed");
-			return ret;
-		}
-		clk_disable_unprepare(wcss->gcc_ce_ahb_clk);
-
 		ret = clk_bulk_prepare_enable(wcss->num_clks, wcss->clks);
 		if (ret) {
 			dev_err(wcss->dev, "failed to enable clocks, err=%d\n", ret);
@@ -3279,22 +3254,6 @@ static int ipq5332_init_q6_clock(struct q6_wcss *wcss)
 	for (i = 0; i < wcss->num_cfg_clks; i++)
 		wcss->cfg_clks[i].id = cfg_clks[i];
 
-	wcss->axi_s_clk = devm_clk_get(wcss->dev, "wcss_axi_s");
-	if (IS_ERR(wcss->axi_s_clk)) {
-		ret = PTR_ERR(wcss->axi_s_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get axi_s_clk clk\n");
-		return PTR_ERR(wcss->axi_s_clk);
-	}
-
-	wcss->gcc_ce_ahb_clk = devm_clk_get(wcss->dev, "ce_ahb");
-	if (IS_ERR(wcss->gcc_ce_ahb_clk)) {
-		ret = PTR_ERR(wcss->gcc_ce_ahb_clk);
-		if (ret != -EPROBE_DEFER)
-			dev_err(wcss->dev, "failed to get ce_ahb clk\n");
-		return PTR_ERR(wcss->gcc_ce_ahb_clk);
-	}
-
 	ret = devm_clk_bulk_get(wcss->dev, wcss->num_cfg_clks, wcss->cfg_clks);
 	if (ret) {
 		dev_err(wcss->dev, "failed to enable cfg clocks, err=%d\n",
@@ -3689,7 +3648,6 @@ static const struct wcss_data q6_ipq5332_res_init = {
 	.q6_clk_enable = ipq5332_q6_clk_enable,
 	.crash_reason_smem = WCSS_CRASH_REASON,
 	.remote_id = WCSS_SMEM_HOST,
-	.aon_reset_required = true,
 	.wcss_q6_reset_required = true,
 	.ssr_name = "q6wcss",
 	.reset_cmd_id = 0x18,

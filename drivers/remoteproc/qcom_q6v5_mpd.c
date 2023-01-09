@@ -1656,7 +1656,7 @@ static int wcss_ipq5332_ahb_pd_start(struct rproc *rproc)
 	int ret;
 	const struct wcss_data *desc;
 	u8 pd_asid;
-	u32 val;
+	u32 val, pasid;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
 	struct q6_wcss *rpd_wcss = rpd_rproc->priv;
 
@@ -1665,7 +1665,9 @@ static int wcss_ipq5332_ahb_pd_start(struct rproc *rproc)
 		return -EINVAL;
 
 	if (wcss->need_mem_protection) {
-		ret = qcom_scm_pas_auth_and_reset(desc->pasid, 0x0, 0x0);
+		pd_asid = qcom_get_pd_asid(wcss->dev->of_node);
+		pasid = (pd_asid << 8) | UPD_SWID;
+		ret = qcom_scm_pas_auth_and_reset(pasid, 0x0, 0x0);
 		if (ret) {
 			dev_err(wcss->dev, "failed to power up ahb pd\n");
 			return ret;
@@ -2346,6 +2348,8 @@ static int wcss_ipq5332_ahb_pd_stop(struct rproc *rproc)
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
 	const struct wcss_data *desc;
 	bool q6_offload;
+	u8 pd_asid;
+	u32 pasid;
 
 	rpd_wcss = rpd_rproc->priv;
 	desc = of_device_get_match_data(wcss->dev);
@@ -2363,7 +2367,9 @@ static int wcss_ipq5332_ahb_pd_stop(struct rproc *rproc)
 	}
 
 	if (wcss->need_mem_protection) {
-		ret = qcom_scm_pas_shutdown(desc->pasid);
+		pd_asid = qcom_get_pd_asid(wcss->dev->of_node);
+		pasid = (pd_asid << 8) | UPD_SWID;
+		ret = qcom_scm_pas_shutdown(pasid);
 		if (ret) {
 			dev_err(wcss->dev, "failed to power down ahb pd\n");
 			return ret;
@@ -2805,6 +2811,8 @@ static int wcss_ahb_pcie_pd_load(struct rproc *rproc, const struct firmware *fw)
 {
 	struct q6_wcss *wcss = rproc->priv, *wcss_rpd;
 	struct rproc *rpd_rproc = dev_get_drvdata(wcss->dev->parent);
+	u8 pd_asid;
+	u32 pasid;
 	int ret;
 
 	wcss_rpd = rpd_rproc->priv;
@@ -2825,14 +2833,11 @@ static int wcss_ahb_pcie_pd_load(struct rproc *rproc, const struct firmware *fw)
 	}
 
 	if (wcss->need_mem_protection) {
-		const struct wcss_data *desc =
-					of_device_get_match_data(wcss->dev);
-
-		if (!desc)
-			return -EINVAL;
+		pd_asid = qcom_get_pd_asid(wcss->dev->of_node);
+		pasid = (pd_asid << 8) | UPD_SWID;
 
 		return wcss->mdt_load_sec(wcss->dev, fw, rproc->firmware,
-				     desc->pasid, wcss->mem_region,
+				     pasid, wcss->mem_region,
 				     wcss->mem_phys, wcss->mem_size,
 				     &wcss->mem_reloc);
 	}
@@ -3738,7 +3743,6 @@ static const struct wcss_data wcss_ahb_ipq5332_res_init = {
 	.halt_v2 = true,
 	.mdt_load_sec = qcom_mdt_load,
 	.mdt_load_nosec = qcom_mdt_load_no_init,
-	.pasid = (AHB_ASID << 8) | UPD_SWID,
 };
 
 static const struct wcss_data wcss_ahb_ipq5018_res_init = {
@@ -3772,7 +3776,6 @@ static const struct wcss_data wcss_pcie_ipq5332_res_init = {
 	.is_fw_shared = false,
 	.mdt_load_sec = qcom_mdt_load,
 	.mdt_load_nosec = qcom_mdt_load_no_init,
-	.pasid = MPD_WCNSS_PAS_ID,
 };
 
 static const struct wcss_data wcss_pcie_ipq5018_res_init = {

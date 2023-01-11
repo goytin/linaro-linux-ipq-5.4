@@ -25,19 +25,19 @@
 
 			trips {
 				cpu-critical-hi {
-					temperature = <125>;
+					temperature = <125000>;
 					hysteresis = <2>;
 					type = "critical_high";
 				};
 
 				cpu-config-hi {
-					temperature = <105>;
+					temperature = <105000>;
 					hysteresis = <2>;
 					type = "configurable_hi";
 				};
 
 				cpu-config-lo {
-					temperature = <95>;
+					temperature = <95000>;
 					hysteresis = <2>;
 					type = "configurable_lo";
 				};
@@ -57,19 +57,19 @@
 
 			trips {
 				cpu-critical-hi {
-					temperature = <125>;
+					temperature = <125000>;
 					hysteresis = <2>;
 					type = "critical_high";
 				};
 
 				cpu-config-hi {
-					temperature = <105>;
+					temperature = <105000>;
 					hysteresis = <2>;
 					type = "configurable_hi";
 				};
 
 				cpu-config-lo {
-					temperature = <95>;
+					temperature = <95000>;
 					hysteresis = <2>;
 					type = "configurable_lo";
 				};
@@ -89,19 +89,19 @@
 
 			trips {
 				cpu-critical-hi {
-					temperature = <125>;
+					temperature = <125000>;
 					hysteresis = <2>;
 					type = "critical_high";
 				};
 
 				cpu-config-hi {
-					temperature = <105>;
+					temperature = <105000>;
 					hysteresis = <2>;
 					type = "configurable_hi";
 				};
 
 				cpu-config-lo {
-					temperature = <95>;
+					temperature = <95000>;
 					hysteresis = <2>;
 					type = "configurable_lo";
 				};
@@ -121,19 +121,19 @@
 
 			trips {
 				cpu-critical-hi {
-					temperature = <125>;
+					temperature = <125000>;
 					hysteresis = <2>;
 					type = "critical_high";
 				};
 
 				cpu-config-hi {
-					temperature = <105>;
+					temperature = <105000>;
 					hysteresis = <2>;
 					type = "configurable_hi";
 				};
 
 				cpu-config-lo {
-					temperature = <95>;
+					temperature = <95000>;
 					hysteresis = <2>;
 					type = "configurable_lo";
 				};
@@ -153,19 +153,19 @@
 
 			trips {
 				cpu-critical-hi {
-					temperature = <125>;
+					temperature = <125000>;
 					hysteresis = <2>;
 					type = "critical_high";
 				};
 
 				cpu-config-hi {
-					temperature = <105>;
+					temperature = <105000>;
 					hysteresis = <2>;
 					type = "configurable_hi";
 				};
 
 				cpu-config-lo {
-					temperature = <95>;
+					temperature = <95000>;
 					hysteresis = <2>;
 					type = "configurable_lo";
 				};

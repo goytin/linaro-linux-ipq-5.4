@@ -2362,7 +2362,6 @@
 				qcom,smem-state-names = "shutdown",
 							"stop",
 							"spawn";
-				qcom,nosecure;
 				status = "disabled";
 			};
 		};

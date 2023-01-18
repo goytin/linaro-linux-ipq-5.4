@@ -27,8 +27,8 @@
 #define IS_ECB(mode)                    (mode & SEC_MODE_ECB)
 #define IS_CTR(mode)                    (mode & SEC_MODE_CTR)
 
-#define MODE_CBC	0
-#define MODE_ECB	1
+#define MODE_CBC	1
+#define MODE_ECB	0
 #define MODE_CTR	2
 
 struct sec_config_key_sec {
@@ -114,6 +114,8 @@ struct sec_alg_template {
 
 static LIST_HEAD(skcipher_algs);
 
+static DEFINE_MUTEX(seccrypt_spinlock);
+
 static int seccrypt_setkey_sec(unsigned int keylen)
 {
 	struct sec_config_key_sec key;
@@ -143,8 +145,10 @@ static int sec_skcipher_setkey(struct crypto_skcipher *tfm, const u8 *key,
 
 	if (sec->fallback_tz) {
 		ret = seccrypt_setkey_sec(keylen);
-		if (ret)
+		if (ret) {
+			pr_info("Error in setting Key by tz\n");
 			return ret;
+		}
 	}
 
 	memcpy(ctx->enc_key, key, keylen);
@@ -156,21 +160,20 @@ static int sec_skcipher_setkey(struct crypto_skcipher *tfm, const u8 *key,
 	return ret;
 }
 
-static int seccrypt_tz(struct skcipher_request *req, int encrypt)
+static int seccrypt_tz(struct skcipher_request *req,
+			struct sec_alg_template *tmpl, int encrypt)
 {
-	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
-	struct sec_alg_template *tmpl = sec_to_cipher_tmpl(tfm);
 	struct sec_crypt_device *sec = tmpl->sec;
 	struct secure_nand_aes_cmd *cptr = sec->cptr;
 	struct device *dev;
 	struct skcipher_walk walk;
-	unsigned int nbytes;
 	int err = 0, ivsize = 0, reqlen = 0, flag = 0;
 	u8 *src, *dst, *iv_buf;
-	dma_addr_t phy_src, phy_dst, phy_iv;
+	dma_addr_t phy_src = 0, phy_dst = 0, phy_iv = 0;
 	dev = sec->dev;
 	flag = tmpl->alg_flags;
 
+	mutex_lock(&seccrypt_spinlock);
 	err = skcipher_walk_virt(&walk, req, false);
 
 	src = walk.src.virt.addr;
@@ -179,21 +182,28 @@ static int seccrypt_tz(struct skcipher_request *req, int encrypt)
 	iv_buf = walk.iv;
 	reqlen = walk.total;
 
-	phy_src = dma_map_single(dev, src, reqlen, DMA_TO_DEVICE);
-	if (dma_mapping_error(dev, phy_src)) {
-		dev_err(dev, "failed to DMA MAP phy_src buffer\n");
-		return -EIO;
+	if (src) {
+		phy_src = dma_map_single(dev, src, reqlen, DMA_TO_DEVICE);
+		if (dma_mapping_error(dev, phy_src)) {
+			dev_err(dev, "failed to DMA MAP phy_src buffer\n");
+			return -EIO;
+		}
 	}
 
-	phy_dst = dma_map_single(dev, dst, reqlen, DMA_FROM_DEVICE);
-	if (dma_mapping_error(dev, phy_dst)) {
-		dev_err(dev, "failed to DMA MAP phy_dst buffer\n");
-		return -EIO;
+	if (dst) {
+		phy_dst = dma_map_single(dev, dst, reqlen, DMA_FROM_DEVICE);
+		if (dma_mapping_error(dev, phy_dst)) {
+			dev_err(dev, "failed to DMA MAP phy_dst buffer\n");
+			return -EIO;
+		}
 	}
-	phy_iv = dma_map_single(dev, iv_buf, AES_BLOCK_SIZE, DMA_TO_DEVICE);
-	if (dma_mapping_error(dev, phy_iv)) {
-		dev_err(dev, "failed to DMA MAP phy_iv buffer\n");
-		return -EIO;
+
+	if (iv_buf) {
+		phy_iv = dma_map_single(dev, iv_buf, AES_BLOCK_SIZE, DMA_TO_DEVICE);
+		if (dma_mapping_error(dev, phy_iv)) {
+			dev_err(dev, "failed to DMA MAP phy_iv buffer\n");
+			return -EIO;
+		}
 	}
 
 	/* Fill the structure to pass to TZ */
@@ -212,17 +222,25 @@ static int seccrypt_tz(struct skcipher_request *req, int encrypt)
 	cptr->rsplen = reqlen;
 
 	err = qti_sec_crypt(cptr, sizeof(struct secure_nand_aes_cmd));
+	if (err) {
+		dev_err(dev, "enc|dec smc call failed :%d\n", err);
+	}
 
-	dma_unmap_single(dev, phy_src, reqlen, DMA_TO_DEVICE);
-	dma_unmap_single(dev, phy_dst, reqlen, DMA_FROM_DEVICE);
-	dma_unmap_single(dev, phy_iv, reqlen, DMA_TO_DEVICE);
+	if (phy_src)
+		dma_unmap_single(dev, phy_src, reqlen, DMA_TO_DEVICE);
+	if (phy_dst)
+		dma_unmap_single(dev, phy_dst, reqlen, DMA_FROM_DEVICE);
+	if (phy_iv)
+		dma_unmap_single(dev, phy_iv, AES_BLOCK_SIZE, DMA_TO_DEVICE);
 
-	err = skcipher_walk_done(&walk, nbytes);
+	err = skcipher_walk_done(&walk, 0);
 
+	mutex_unlock(&seccrypt_spinlock);
 	return err;
 }
 
-static int crypto_skcipher_decrypt_tz(struct skcipher_request *req, int encrypt)
+static int crypto_skcipher_decrypt_tz(struct skcipher_request *req,
+					struct sec_alg_template *tmpl, int encrypt)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_alg *alg = tfm->base.__crt_alg;
@@ -233,13 +251,14 @@ static int crypto_skcipher_decrypt_tz(struct skcipher_request *req, int encrypt)
 	if (crypto_skcipher_get_flags(tfm) & CRYPTO_TFM_NEED_KEY)
 		ret = -ENOKEY;
 	else
-		ret = seccrypt_tz(req, encrypt);
+		ret = seccrypt_tz(req, tmpl, encrypt);
 
 	crypto_stats_skcipher_decrypt(cryptlen, ret, alg);
 	return ret;
 }
 
-static int crypto_skcipher_encrypt_tz(struct skcipher_request *req, int encrypt)
+static int crypto_skcipher_encrypt_tz(struct skcipher_request *req,
+					struct sec_alg_template *tmpl, int encrypt)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_alg *alg = tfm->base.__crt_alg;
@@ -250,7 +269,7 @@ static int crypto_skcipher_encrypt_tz(struct skcipher_request *req, int encrypt)
 	if (crypto_skcipher_get_flags(tfm) & CRYPTO_TFM_NEED_KEY)
 		ret = -ENOKEY;
 	else
-		ret = seccrypt_tz(req, encrypt);
+		ret = seccrypt_tz(req, tmpl, encrypt);
 
 	crypto_stats_skcipher_encrypt(cryptlen, ret, alg);
 	return ret;
@@ -264,6 +283,7 @@ static int sec_skcipher_crypt(struct skcipher_request *req, int encrypt)
 	struct sec_cipher_reqctx *rctx = skcipher_request_ctx(req);
 	struct sec_alg_template *tmpl = sec_to_cipher_tmpl(tfm);
 	struct sec_crypt_device *sec = tmpl->sec;
+
 	skcipher_request_set_tfm(&rctx->fallback_req, ctx->fallback);
 	skcipher_request_set_callback(&rctx->fallback_req,
 					req->base.flags,
@@ -272,8 +292,8 @@ static int sec_skcipher_crypt(struct skcipher_request *req, int encrypt)
 	skcipher_request_set_crypt(&rctx->fallback_req, req->src,
 				req->dst, req->cryptlen, req->iv);
 	if (sec->fallback_tz)
-		ret = encrypt ? crypto_skcipher_encrypt_tz(&rctx->fallback_req, encrypt) :
-			crypto_skcipher_decrypt_tz(&rctx->fallback_req, encrypt);
+		ret = encrypt ? crypto_skcipher_encrypt_tz(&rctx->fallback_req, tmpl, encrypt) :
+			crypto_skcipher_decrypt_tz(&rctx->fallback_req, tmpl, encrypt);
 	else
 		ret = encrypt ? crypto_skcipher_encrypt(&rctx->fallback_req) :
 			crypto_skcipher_decrypt(&rctx->fallback_req);
@@ -422,6 +442,13 @@ static int seccrypt_probe(struct platform_device *pdev)
 	}
 
 	sec->dev = dev;
+	platform_set_drvdata(pdev, sec);
+
+	sec->cptr = devm_kzalloc(dev, sizeof(struct secure_nand_aes_cmd), GFP_KERNEL);
+	if (!sec->cptr) {
+		pr_err("%s : Error in allocating memory\n",__func__);
+		return -ENOMEM;
+	}
 
 	if (device_property_read_bool(dev, "seccrypt,fallback_tz"))
 		sec->fallback_tz = true;

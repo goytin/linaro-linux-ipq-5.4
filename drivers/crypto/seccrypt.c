@@ -429,6 +429,73 @@ static void sec_skcipher_unregister(struct device *dev)
 	}
 }
 
+static void seccrypt_sysfs_deinit(struct sec_crypt_device *sec)
+{
+	kobject_del(&sec->kobj);
+	kobject_del(sec->kobj_parent);
+}
+
+#define to_seccryptdev(k) container_of(k, struct sec_crypt_device, kobj)
+
+static ssize_t tz_fallback_show(struct kobject *kobj,
+		struct attribute *attr, char *buf)
+{
+	struct sec_crypt_device *sec = to_seccryptdev(kobj);
+
+	return scnprintf(buf, sizeof(int), "%d\n", sec->fallback_tz);
+}
+
+static ssize_t tz_fallback_store(struct kobject *kobj,
+		struct attribute *attr, const char *buf, size_t count)
+{
+	int use_fixed_key;
+	struct sec_crypt_device *sec = to_seccryptdev(kobj);
+
+	sscanf(buf, "%du", &use_fixed_key);
+	if (use_fixed_key == 1) {
+		sec->fallback_tz = true;
+	} else {
+		sec->fallback_tz = false;
+	}
+	return count;
+}
+
+static struct attribute seccrypt_tz_fallback_attribute = {
+	.name = "fixed_sec_key",
+	.mode = 0660,
+};
+
+static struct attribute *seccrypt_attrs[] = {
+	&seccrypt_tz_fallback_attribute,
+	NULL
+};
+
+static struct sysfs_ops seccrypt_sysfs_ops = {
+	.show = tz_fallback_show,
+	.store = tz_fallback_store,
+};
+
+static struct kobj_type seccrypt_ktype = {
+	.sysfs_ops = &seccrypt_sysfs_ops,
+	.default_attrs = seccrypt_attrs,
+};
+
+static int sec_sysfs_init(struct sec_crypt_device *sec)
+{
+	int ret;
+
+	sec->kobj_parent = kobject_create_and_add("crypto", kernel_kobj);
+	if (!sec->kobj_parent)
+		return -ENOMEM;
+
+	ret = kobject_init_and_add(&sec->kobj, &seccrypt_ktype, sec->kobj_parent,
+				"%s", "seccrypt");
+	if (ret)
+		kobject_del(sec->kobj_parent);
+
+	return ret;
+}
+
 static int seccrypt_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -459,6 +526,10 @@ static int seccrypt_probe(struct platform_device *pdev)
 			goto err;
 	}
 
+	ret = sec_sysfs_init(sec);
+	if (ret)
+		goto err;
+
 	return 0;
 err:
 	sec_skcipher_unregister(dev);
@@ -468,7 +539,9 @@ err:
 static int seccrypt_remove(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
+	struct sec_crypt_device *sec = platform_get_drvdata(pdev);
 	sec_skcipher_unregister(dev);
+	seccrypt_sysfs_deinit(sec);
 	return 0;
 }
 

@@ -6,6 +6,10 @@
  */
 
 / {
+	memory {
+		device_type = "memory";
+		reg = <0x0 0x40000000 0x0 0x20000000>;
+	};
 
 	/*		  Core Memory Profile
 	 * +=========+==============+========================+
@@ -22,6 +26,7 @@
 	 * |        |              |                         |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
+	 * | TZ App is applicable only for 1GB profile.      |
 	 * |        |              |                         |
 	 * |        |              |                         |
 	 * | TZ App |  0x49B00000  |           6MB           |
@@ -49,11 +54,6 @@
 	 * +=================================================+
 	 */
 
-	memory {
-		device_type = "memory";
-		reg = <0x0 0x40000000 0x0 0x10000000>;
-	};
-
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -61,7 +61,9 @@
 
 		tzapp: tzapp@49B00000 {
 			no-map;
+		#if !defined(__IPQ_MEM_PROFILE_512_MB__)
 			reg = <0x0 0x49B00000 0x0 0x00600000>;
+		#endif
 		};
 
 		uboot@4A100000 {

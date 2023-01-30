@@ -226,7 +226,7 @@
 		};
 
 		ssuniphy_0: ssuniphy@4b0000 {
-			compatible = "qca,ipq5018-uni-ssphy";
+			compatible = "qca,ipq5332-uni-ssphy";
 			reg = <0x4b0000 0x800>;
 			clocks = <&gcc GCC_USB0_PIPE_CLK>,
 				<&gcc GCC_USB0_PHY_CFG_AHB_CLK>;
@@ -236,7 +236,6 @@
 			resets =  <&gcc GCC_USB0_PHY_BCR>;
 			reset-names = "por_rst";
 			#phy-cells = <0>;
-			no-reset-seq;
 			status = "disabled";
 		};
 

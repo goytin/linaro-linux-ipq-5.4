@@ -211,7 +211,7 @@ static int seccrypt_tz(struct skcipher_request *req, int encrypt)
 	cptr->rsp_buf = (u64 *)phy_dst;
 	cptr->rsplen = reqlen;
 
-	//err = qti_sec_crypt(cptr, sizeof(struct secure_nand_aes_cmd));
+	err = qti_sec_crypt(cptr, sizeof(struct secure_nand_aes_cmd));
 
 	dma_unmap_single(dev, phy_src, reqlen, DMA_TO_DEVICE);
 	dma_unmap_single(dev, phy_dst, reqlen, DMA_FROM_DEVICE);

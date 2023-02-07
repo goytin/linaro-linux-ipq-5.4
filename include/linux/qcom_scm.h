@@ -252,6 +252,7 @@ extern bool is_scm_armv8(void);
 extern int qti_set_qcekey_sec(void *buf, int size);
 extern int qti_sec_crypt(void *buf, int size);
 extern int qti_qcekey_release_xpu_prot(void);
+extern int qti_seccrypt_clearkey(void);
 extern int qti_scm_set_resettype(u32 reset_type);
 extern int qti_config_sec_ice(void *buf, int size);
 extern int qti_scm_pshold(void);

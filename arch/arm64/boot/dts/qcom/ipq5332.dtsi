@@ -270,7 +270,6 @@
 					"phy_phy",
 					"phy_ahb";
 			mode-fixed = <2>; /* TBD */
-			no-phy-init;
 			status = "disabled";
 		};
 
@@ -297,7 +296,6 @@
 					"phy_phy",
 					"phy_ahb";
 			mode-fixed = <2>; /* TBD */
-			no-phy-init;
 			status = "disabled";
 		};
 
@@ -328,7 +326,6 @@
 					"phy_phy",
 					"phy_ahb";
 			mode-fixed = <2>; /* TBD */
-			no-phy-init;
 			status = "disabled";
 		};
 

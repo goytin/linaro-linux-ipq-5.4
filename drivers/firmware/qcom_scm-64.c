@@ -1394,7 +1394,7 @@ int __qti_sec_crypt(struct device *dev, void *confBuf, int size)
 		dev_err(dev, "Allocation fail for conf buffer\n");
 		return -ENOMEM;
 	}
-	desc.arginfo = SCM_ARGS(1, QCOM_SCM_RW);
+	desc.arginfo = SCM_ARGS(2, QCOM_SCM_RW, QCOM_SCM_VAL);
 	desc.args[0] = (u64)conf_phys;
 	desc.args[1] = size;
 

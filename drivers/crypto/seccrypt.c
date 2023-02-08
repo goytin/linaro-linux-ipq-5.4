@@ -455,6 +455,8 @@ static ssize_t tz_fallback_store(struct kobject *kobj,
 	if (use_fixed_key == 1) {
 		sec->fallback_tz = true;
 	} else {
+		if (qti_seccrypt_clearkey() < 0)
+			pr_err("error in clearing key.\n");
 		sec->fallback_tz = false;
 	}
 	return count;

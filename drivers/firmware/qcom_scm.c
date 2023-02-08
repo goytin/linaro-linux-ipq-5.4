@@ -973,6 +973,12 @@ int qti_qcekey_release_xpu_prot(void)
 }
 EXPORT_SYMBOL(qti_qcekey_release_xpu_prot);
 
+int qti_seccrypt_clearkey(void)
+{
+	return __qti_seccrypt_clearkey(__scm->dev);
+}
+EXPORT_SYMBOL(qti_seccrypt_clearkey);
+
 /**
  * qti_scm_resettype () - cold or warm reset
  * @reset type: 0 for cold 1 for warm

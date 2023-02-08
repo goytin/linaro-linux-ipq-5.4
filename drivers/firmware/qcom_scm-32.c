@@ -2037,6 +2037,23 @@ int __qti_qcekey_release_xpu_prot(struct device *dev)
 	return ret;
 }
 
+int __qti_seccrypt_clearkey(struct device *dev)
+{
+	int ret;
+	__le32 scm_ret;
+	struct scm_desc desc = {0};
+
+	desc.arginfo = SCM_ARGS(0, QCOM_SCM_VAL);
+	ret = qti_scm_call2(dev, SCM_SIP_FNID(QCOM_SCM_QCE_CRYPTO_SIP,
+				QCOM_SCM_SECCRYPT_CLRKEY_CMD), &desc);
+
+	scm_ret = desc.ret[0];
+	if (!ret)
+		return le32_to_cpu(scm_ret);
+
+	return ret;
+}
+
 int __qti_scm_set_resettype(struct device *dev, u32 reset_type)
 {
 	__le32 out;

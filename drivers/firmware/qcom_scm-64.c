@@ -1418,6 +1418,19 @@ int __qti_qcekey_release_xpu_prot(struct device *dev)
 	return ret ? : res.a1;
 }
 
+int __qti_seccrypt_clearkey(struct device *dev)
+{
+	int ret;
+	struct arm_smccc_res res;
+	struct qcom_scm_desc desc = {0};
+
+	desc.arginfo = SCM_ARGS(0, QCOM_SCM_VAL);
+	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, QCOM_SCM_QCE_CRYPTO_SIP,
+			QCOM_SCM_SECCRYPT_CLRKEY_CMD, &desc, &res);
+
+	return ret ? : res.a1;
+}
+
 int __qti_scm_set_resettype(struct device *dev, u32 reset_type)
 {
 	int ret;

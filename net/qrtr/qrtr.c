@@ -862,7 +862,6 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
 	size_t size;
 	unsigned int ver;
 	size_t hdrlen;
-	struct qrtr_ctrl_pkt *pkt;
 
 	if (len == 0 || len & 3)
 		return -EINVAL;
@@ -947,13 +946,6 @@ int qrtr_endpoint_post(struct qrtr_endpoint *ep, const void *data, size_t len)
 		skb_queue_tail(&node->rx_queue, skb);
 		kthread_queue_work(&node->kworker, &node->read_data);
 	} else {
-		/* Translate DEL_PROC to BYE for local enqueue */
-		if (cb->type == QRTR_TYPE_DEL_PROC) {
-			cb->type = QRTR_TYPE_BYE;
-			pkt = (struct qrtr_ctrl_pkt *)skb->data;
-			memset(pkt, 0, sizeof(struct qrtr_ctrl_pkt));
-			pkt->cmd = cpu_to_le32(QRTR_TYPE_BYE);
-		}
 		ipc = qrtr_port_lookup(cb->dst_port);
 		if (!ipc)
 			goto err;
@@ -1004,6 +996,14 @@ static void qrtr_node_rx_work(struct kthread_work *work)
 {
 	struct qrtr_node *node = container_of(work, struct qrtr_node,
 					      read_data);
+	struct qrtr_ctrl_pkt *pkt;
+	void __rcu **slot;
+	struct radix_tree_iter iter;
+	struct qrtr_tx_flow_waiter *waiter;
+	struct qrtr_tx_flow_waiter *temp;
+	unsigned long node_id;
+	struct qrtr_tx_flow *flow;
+
 	struct sk_buff *skb;
 	char name[32] = {0,};
 
@@ -1033,6 +1033,41 @@ static void qrtr_node_rx_work(struct kthread_work *work)
 			if (!ipc) {
 				kfree_skb(skb);
 			} else {
+				if (cb->type == QRTR_TYPE_DEL_PROC) {
+					if (skb->len == sizeof(*pkt))
+						pkt = (void *)skb->data;
+
+					/* Free tx flow counters */
+					mutex_lock(&node->qrtr_tx_lock);
+					radix_tree_for_each_slot(slot, &node->qrtr_tx_flow, &iter, 0) {
+						flow = *slot;
+
+						/* extract node id from the index key */
+						node_id = (iter.index & 0xFFFFFFFF00000000) >> 32;
+
+						if (node_id != le32_to_cpu(pkt->proc.node))
+							continue;
+
+						list_for_each_entry_safe(waiter, temp, &flow->resume_tx.head, node) {
+							list_del(&waiter->node);
+							sock_put(waiter->sk);
+							kfree(waiter);
+						}
+
+						kfree(flow);
+						radix_tree_delete(&node->qrtr_tx_flow, iter.index);
+					}
+
+					mutex_unlock(&node->qrtr_tx_lock);
+					wake_up_interruptible_all(&node->resume_tx);
+
+					/* Translate DEL_PROC to BYE for local enqueue */
+					cb->type = QRTR_TYPE_BYE;
+					pkt = (struct qrtr_ctrl_pkt *)skb->data;
+					memset(pkt, 0, sizeof(struct qrtr_ctrl_pkt));
+					pkt->cmd = cpu_to_le32(QRTR_TYPE_BYE);
+				}
+
 				if (sock_queue_rcv_skb(&ipc->sk, skb))
 					kfree_skb(skb);
 				qrtr_port_put(ipc);

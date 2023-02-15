@@ -164,20 +164,5 @@
 				default-state = "off";
 			};
 		};
-
-		pcie1_phy_x2: phy_x2@4b1000 {
-			status = "ok";
-		};
-
-		pcie1: pcie@18000000 {
-			status = "ok";
-			pcie1_rp {
-				reg = <0 0 0 0 0>;
-
-				qcom,mhi@1 {
-					reg = <0 0 0 0 0>;
-				};
-			};
-		};
 	};
 };

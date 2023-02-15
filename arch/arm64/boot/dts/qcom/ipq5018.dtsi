@@ -1240,7 +1240,7 @@
 	};
 
 	qti,scm_restart_reason {
-		compatible = "qti,scm_restart_reason";
+		compatible = "qti_ipq5018,scm_restart_reason";
 		dload_status = <0>;
 		dload_warm_reset = <0>;
 	};

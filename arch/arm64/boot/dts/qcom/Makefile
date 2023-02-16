@@ -85,7 +85,6 @@ dtb-$(CONFIG_ARCH_QCOM)	+= ipq5018-tb-mp04.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-emulation.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-emulation-fbc.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-emulation-ssoc.dtb
-dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-mi01.1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-mi01.2.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-mi01.2-qcn9160-c1.dtb
 dtb-$(CONFIG_ARCH_QCOM)	+= ipq5332-mi01.3.dtb

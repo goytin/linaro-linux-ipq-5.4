@@ -2405,6 +2405,28 @@
 							"spawn";
 				status = "disabled";
 			};
+
+			q6_wcss_pd3: remoteproc_pd3 {
+				compatible = "qcom,ipq5332-wcss-pcie-mpd";
+				firmware = "IPQ5332/q6_fw3.mdt";
+				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
+				interrupts-extended = <&wcss_smp2p_in 24 0>,
+							<&wcss_smp2p_in 25 0>,
+							<&wcss_smp2p_in 28 0>,
+							<&wcss_smp2p_in 27 0>;
+				interrupt-names = "fatal",
+						"ready",
+						"spawn-ack",
+						"stop-ack";
+
+				qcom,smem-states = <&wcss_smp2p_out 24>,
+						<&wcss_smp2p_out 25>,
+						<&wcss_smp2p_out 26>;
+				qcom,smem-state-names = "shutdown",
+							"stop",
+							"spawn";
+				status = "disabled";
+			};
 		};
 
 		apss_clk: qcom,apss_clk@b111000 {

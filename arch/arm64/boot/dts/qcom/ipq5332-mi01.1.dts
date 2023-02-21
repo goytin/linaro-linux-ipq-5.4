@@ -125,6 +125,42 @@
 					bias-pull-up;
 				};
 			};
+			audio_pins_pri: audio_pinmux_pri {
+				mux_1 {
+					pins = "gpio29";
+					function = "audio_pri";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+
+				mux_2 {
+					pins = "gpio30";
+					function = "audio_pri";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+
+				mux_3 {
+					pins = "gpio31";
+					function = "audio_pri";
+					drive-strength = <4>;
+					bias-pull-down;
+				};
+
+				mux_4 {
+					pins = "gpio32";
+					function = "audio_pri";
+					drive-strength = <4>;
+					bias-pull-down;
+				};
+			};
+
+			spi_2_pins: spi-2-pins {
+				pins = "gpio33", "gpio34", "gpio35", "gpio36";
+				function = "blsp2_spi0";
+				drive-strength = <8>;
+				bias-pull-down;
+			};
 		};
 
 		dp1 {
@@ -177,6 +213,13 @@
 				fixup;
 			};
 		};
+
+		pcm: pcm@0xA3C0000{
+			pinctrl-0 = <&audio_pins_pri>;
+			pinctrl-names = "primary";
+			status = "disabled";
+		};
+
 
 		ess-instance {
 			num_devices = <0x2>;
@@ -347,6 +390,13 @@
 				reg = <0>;
 				spi-max-frequency = <50000000>;
 			};
+		};
+
+		spi_2: spi@78b7000 {
+			pinctrl-0 = <&spi_2_pins>;
+			pinctrl-names = "default";
+			cs-select = <0>;
+			status = "disabled";
 		};
 
 		i2c_1: i2c@78b6000 {

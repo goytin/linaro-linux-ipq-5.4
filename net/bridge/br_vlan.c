@@ -954,13 +954,28 @@ int br_vlan_update_stats(struct net_device *dev, u32 vid, u64 rx_bytes, u64 rx_p
 	struct br_vlan_stats *stats;
 	const struct net_bridge *br;
 	struct net_bridge_vlan_group *vg;
+	struct net_device *brdev;
 
 	if (!dev) {
 		return -ENODEV;
 	}
 
+	if (!netif_is_bridge_port(dev) && !netif_is_bridge_master(dev)) {
+		return -EINVAL;
+	}
+
 	rcu_read_lock();
-	br = netdev_priv(dev);
+
+	brdev = dev;
+	if (!netif_is_bridge_master(dev)) {
+		brdev = netdev_master_upper_dev_get_rcu(dev);
+		if (!brdev) {
+			rcu_read_unlock();
+			return -EPERM;
+		}
+	}
+
+	br = netdev_priv(brdev);
 	if (!br || !br_opt_get(br, BROPT_VLAN_STATS_ENABLED)) {
 		rcu_read_unlock();
 		return -EINVAL;

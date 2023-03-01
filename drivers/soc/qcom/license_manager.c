@@ -715,6 +715,7 @@ static void qmi_handle_feature_list_req(struct qmi_handle *handle,
 
 	licensed_features->sq_node = sq->sq_node;
 	licensed_features->sq_port = sq->sq_port;
+	licensed_features->reserved = req->reserved;
 	if(!req->feature_list_valid) {
 		licensed_features->len = 0;
 	} else {
@@ -774,6 +775,9 @@ static ssize_t show_licensed_features(struct kobject *k,
 						max_buf_len-len,
 						" %d\n",itr->list[i]);
 			}
+			len += scnprintf(buf+len, max_buf_len-len,
+					"\nAdditional Info: 0x%08x\n",
+					itr->reserved);
 		}
 	} else
 		len += scnprintf(buf+len, max_buf_len-len,

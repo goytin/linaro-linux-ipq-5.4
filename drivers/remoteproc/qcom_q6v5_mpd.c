@@ -24,6 +24,7 @@
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
 #include <linux/dma-mapping.h>
+#include <linux/debugfs.h>
 #ifdef CONFIG_IPQ_SUBSYSTEM_RAMDUMP
 #include <soc/qcom/ramdump.h>
 #endif
@@ -174,6 +175,8 @@ static int debug_wcss;
 static int userpd1_bootaddr;
 static int userpd2_bootaddr;
 static int userpd3_bootaddr;
+static struct dentry *heartbeat_hdl;
+
 /**
  * enum state - state of a wcss (private)
  * @WCSS_NORMAL: subsystem is operating normally
@@ -2281,6 +2284,7 @@ static int q6_wcss_stop(struct rproc *rproc)
 		lic_param.dma_buf = 0x0;
 	}
 pas_done:
+	debugfs_remove(heartbeat_hdl);
 	qcom_q6v5_unprepare(&wcss->q6);
 
 	return 0;
@@ -2614,6 +2618,65 @@ static int load_userpd_params_to_bootargs(struct device *dev,
 	return ret;
 }
 
+static ssize_t show_smem_addr(struct file *file, char __user *user_buf,
+			      size_t count, loff_t *ppos)
+{
+	void *smem_pa = file->private_data;
+	char _buf[16] = {0};
+
+	snprintf(_buf, sizeof(_buf), "0x%lX\n", (uintptr_t)smem_pa);
+	return simple_read_from_buffer(user_buf, count, ppos, _buf,
+				       strnlen(_buf, 16));
+}
+
+static const struct file_operations heartbeat_smem_ops = {
+	.open = simple_open,
+	.read = show_smem_addr,
+};
+
+static int create_heartbeat_smem(struct device *dev)
+{
+	u32 smem_id;
+	void *ptr;
+	size_t size;
+	int ret;
+	const char *key = "qcom,heartbeat_smem";
+
+	ret = of_property_read_u32(dev->of_node, key, &smem_id);
+	if (ret) {
+		dev_err(dev, "failed to get heartbeat smem id\n");
+		return ret;
+	}
+
+	ret = qcom_smem_alloc(REMOTE_PID, smem_id,
+			      Q6_BOOT_ARGS_SMEM_SIZE);
+	if (ret && ret != -EEXIST) {
+		dev_err(dev, "failed to allocate heartbeat smem segment\n");
+		return ret;
+	}
+
+	ptr = qcom_smem_get(REMOTE_PID, smem_id, &size);
+	if (IS_ERR(ptr)) {
+		dev_err(dev,
+			"Unable to acquire smem item(%d) ret:%ld\n",
+			smem_id, PTR_ERR(ptr));
+		return PTR_ERR(ptr);
+	}
+
+	/* Create sysfs entry to expose smem PA */
+	heartbeat_hdl = debugfs_create_file("heartbeat_address",
+					    0400, NULL,
+					    (void *)qcom_smem_virt_to_phys(ptr),
+					    &heartbeat_smem_ops);
+	if (IS_ERR_OR_NULL(heartbeat_hdl)) {
+		ret = PTR_ERR(heartbeat_hdl);
+		dev_err(dev,
+			"Unable to create heartbeat sysfs entry ret:%ld\n",
+			PTR_ERR(ptr));
+	}
+	return ret;
+}
+
 static int share_bootargs_to_q6(struct device *dev)
 {
 	int ret;
@@ -2705,6 +2768,12 @@ static int share_bootargs_to_q6(struct device *dev)
 	ret = load_userpd_params_to_bootargs(dev, &boot_args);
 	if (ret < 0) {
 		pr_err("failed to read userpd boot args ret:%d\n", ret);
+		return ret;
+	}
+
+	ret = create_heartbeat_smem(dev);
+	if (ret && ret != -EEXIST) {
+		pr_err("failed to create heartbeat smem ret:0x%X\n", ret);
 		return ret;
 	}
 

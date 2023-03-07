@@ -557,7 +557,7 @@ static int qrtr_tx_wait(struct qrtr_node *node, int dest_node, int dest_port,
 		return 1;
 
 	spin_lock_irq(&flow->resume_tx.lock);
-	ret = wait_event_interruptible_locked_irq(node->resume_tx,
+	ret = wait_event_interruptible_locked_irq(flow->resume_tx,
 						  flow->pending < QRTR_TX_FLOW_HIGH ||
 						  flow->tx_failed ||
 						  !node->ep);
@@ -1026,13 +1026,9 @@ static void qrtr_node_rx_work(struct kthread_work *work)
 					mutex_lock(&node->qrtr_tx_lock);
 					radix_tree_for_each_slot(slot, &node->qrtr_tx_flow, &iter, 0) {
 						flow = *slot;
-
-						kfree(flow);
-						radix_tree_delete(&node->qrtr_tx_flow, iter.index);
+						wake_up_interruptible_all(&flow->resume_tx);
 					}
-
 					mutex_unlock(&node->qrtr_tx_lock);
-					wake_up_interruptible_all(&node->resume_tx);
 
 					/* Translate DEL_PROC to BYE for local enqueue */
 					cb->type = QRTR_TYPE_BYE;
@@ -1168,6 +1164,7 @@ void qrtr_endpoint_unregister(struct qrtr_endpoint *ep)
 	struct sockaddr_qrtr src = {AF_QIPCRTR, node->nid, QRTR_PORT_CTRL};
 	struct sockaddr_qrtr dst = {AF_QIPCRTR, qrtr_local_nid, QRTR_PORT_CTRL};
 	struct qrtr_ctrl_pkt *pkt;
+	struct qrtr_tx_flow *flow;
 	struct sk_buff *skb;
 	void __rcu **slot;
 
@@ -1193,6 +1190,13 @@ void qrtr_endpoint_unregister(struct qrtr_endpoint *ep)
 	up_read(&qrtr_node_lock);
 
 	/* Wake up any transmitters waiting for resume-tx from the node */
+	mutex_lock(&node->qrtr_tx_lock);
+	radix_tree_for_each_slot(slot, &node->qrtr_tx_flow, &iter, 0) {
+		flow = *slot;
+		wake_up_interruptible_all(&flow->resume_tx);
+	}
+	mutex_unlock(&node->qrtr_tx_lock);
+
 	wake_up_interruptible_all(&node->resume_tx);
 
 	qrtr_node_release(node);

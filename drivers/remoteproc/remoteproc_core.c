@@ -1688,7 +1688,7 @@ int rproc_trigger_recovery(struct rproc *rproc)
 
 	rproc_subsys_notify(rproc, SUBSYS_RAMDUMP_NOTIFICATION, false);
 	/* generate coredump */
-	rproc_coredump(rproc);
+	rproc->ops->coredump(rproc);
 
 	if (!rproc->backdoor) {
 		/* load firmware */
@@ -1998,6 +1998,10 @@ static int rproc_alloc_ops(struct rproc *rproc, const struct rproc_ops *ops)
 	rproc->ops = kmemdup(ops, sizeof(*ops), GFP_KERNEL);
 	if (!rproc->ops)
 		return -ENOMEM;
+
+	/* Default to rproc_coredump if no coredump function is specified */
+	if (!rproc->ops->coredump)
+		rproc->ops->coredump = rproc_coredump;
 
 	if (rproc->ops->load)
 		return 0;

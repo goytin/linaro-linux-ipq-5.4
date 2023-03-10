@@ -166,6 +166,7 @@ struct fuse_blow {
 #define QTI_SCM_SVC_FUSE		0x8
 #define QTI_KERNEL_AUTH_CMD		0x15
 #define TZ_BLOW_FUSE_SECDAT             0x20
+#define QTI_KERNEL_META_AUTH_CMD	0x23
 #define FUSEPROV_SUCCESS                0x0
 #define FUSEPROV_INVALID_HASH           0x09
 #define FUSEPROV_SECDAT_LOCK_BLOWN      0xB
@@ -210,6 +211,13 @@ extern int qti_qfprom_read_version(uint32_t sw_type,
 extern int qti_sec_upgrade_auth(unsigned int scm_cmd_id, unsigned int sw_type,
 					unsigned int img_size,
 					unsigned int load_addr);
+extern int qti_sec_upgrade_auth_meta_data(unsigned int scm_cmd_id,
+                                                        unsigned int sw_type,
+                                                        unsigned int img_size,
+                                                        unsigned int load_addr,
+                                                        void* hash_addr,
+                                                        unsigned int hash_size);
+
 extern bool qti_scm_sec_auth_available(unsigned int scm_cmd_id);
 extern int qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 					void *cmd_buf, size_t size);
@@ -284,6 +292,12 @@ extern int qti_scm_get_device_provision_response(u32 svc_id, u32 cmd_id,
 extern int __qti_scm_get_device_provision_response(struct device *dev, u32 svc_id,
 		u32 cmd_id, void *provreq_buf, u32 provreq_buf_len,
 		void *provresp_buf, u32 provresp_buf_len, u32 *prov_resp_size);
+extern int qti_scm_get_ecdsa_blob(u32 svc_id, u32 cmd_id, dma_addr_t nonce_buf,
+		u32 nonce_buf_len, dma_addr_t ecdsa_buf, u32 ecdsa_buf_len,
+		u32 *ecdsa_consumed_len);
+extern int __qti_scm_get_ecdsa_blob(struct device *dev, u32 svc_id, u32 cmd_id,
+		dma_addr_t nonce_buf, u32 nonce_buf_len, dma_addr_t ecdsa_buf,
+		u32 ecdsa_buf_len, u32 *ecdsa_consumed_len);
 
 #else
 
@@ -338,6 +352,15 @@ static inline int qti_sec_upgrade_auth(unsigned int scm_cmd_id, unsigned int sw_
 {
 	return -ENODEV;
 }
+static inline int qti_sec_upgrade_auth_meta_data(unsigned int scm_cmd_id, unsigned int sw_type,
+							unsigned int img_size,
+							unsigned int load_addr,
+							void* hash_addr,
+							unsigned int hash_size)
+{
+	return -ENODEV;
+}
+
 static inline bool qti_scm_sec_auth_available(unsigned int scm_cmd_id)
 {
 	return -ENODEV;

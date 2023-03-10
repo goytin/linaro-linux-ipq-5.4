@@ -723,6 +723,41 @@ int __qti_sec_upgrade_auth(struct device *dev, unsigned int scm_cmd_id,
 	return ret ? : res.a1;
 }
 
+int __qti_sec_upgrade_auth_meta_data(struct device *dev, unsigned int scm_cmd_id,
+							unsigned int sw_type,
+							unsigned int img_size,
+							unsigned int load_addr,
+							void* hash_addr,
+							unsigned int hash_size)
+{
+	int ret;
+	struct arm_smccc_res res;
+	struct qcom_scm_desc desc = {0};
+	dma_addr_t hash_address;
+
+	hash_address = dma_map_single(dev, hash_addr, hash_size, DMA_FROM_DEVICE);
+
+	ret = dma_mapping_error(dev, hash_address);
+	if (ret != 0) {
+		pr_err("%s: DMA Mapping Error : %d\n", __func__, ret);
+		return ret;
+	}
+
+	desc.args[0] = sw_type;
+	desc.args[1] = (u64)load_addr;
+	desc.args[2] = img_size;
+	desc.args[3] = hash_address;
+	desc.args[4] = hash_size;
+
+	desc.arginfo = QCOM_SCM_ARGS(5, QCOM_SCM_VAL, QCOM_SCM_RW, QCOM_SCM_VAL,
+							QCOM_SCM_RW, QCOM_SCM_VAL);
+	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, QCOM_SCM_SVC_BOOT,
+			    scm_cmd_id, &desc, &res);
+	dma_unmap_single(dev, hash_address, hash_size, DMA_FROM_DEVICE);
+
+	return ret ? : res.a1;
+}
+
 int __qti_config_ice_sec(struct device *dev, void *conf_buf, int size)
 {
 	int ret;
@@ -1069,6 +1104,59 @@ int __qti_scm_tz_hvc_log(struct device *dev, u32 svc_id, u32 cmd_id,
 			    &desc, &res);
 
 	dma_unmap_single(dev, dma_buf, buf_len, DMA_FROM_DEVICE);
+
+	return ret ? : res.a1;
+}
+
+/**
+ * __qti_scm_get_ecdsa_blob() - Get the ECDSA blob from TME-L by sending NONCE
+ *
+ * @svc_id: SCM service id
+ * @cmd_id: SCM command id
+ * nonce_buf: NONCE buffer which contains the NONCE recieved from Q6.
+ * nonce_buf_len: Variable for NONCE buffer length
+ * ecdsa_buf: ECDSA buffer, used to receive the ECDSA blob from TME
+ * ecdsa_buf_len: Variable which holds the total ECDSA buffer lenght
+ * *ecdsa_consumed_len: Pointer to get the consumed ECDSA buffer lenght from TME
+ *
+ * This function can be used to get the ECDSA blob from TME-L by passing the
+ * NONCE through nonce_buf. nonce_buf and ecdsa_buf should be DMA alloc
+ * coherent and caller should take care of it.
+ */
+int __qti_scm_get_ecdsa_blob(struct device *dev, u32 svc_id, u32 cmd_id,
+		dma_addr_t nonce_buf, u32 nonce_buf_len, dma_addr_t ecdsa_buf,
+		u32 ecdsa_buf_len, u32 *ecdsa_consumed_len)
+{
+	int ret;
+	struct arm_smccc_res res;
+	struct qcom_scm_desc desc = {0};
+
+	dma_addr_t dma_ecdsa_consumed_len;
+
+	dma_ecdsa_consumed_len = dma_map_single(dev, ecdsa_consumed_len,
+			sizeof(u32), DMA_FROM_DEVICE);
+	ret = dma_mapping_error(dev, dma_ecdsa_consumed_len);
+	if (ret != 0) {
+		pr_err("%s: DMA Mapping Error : %d\n", __func__, ret);
+		return ret;
+	}
+
+	desc.args[0] = nonce_buf;
+	desc.args[1] = nonce_buf_len;
+	desc.args[2] = ecdsa_buf;
+	desc.args[3] = ecdsa_buf_len;
+	desc.args[4] = dma_ecdsa_consumed_len;
+
+	desc.arginfo = SCM_ARGS(5, QCOM_SCM_VAL, QCOM_SCM_VAL,
+				QCOM_SCM_VAL, QCOM_SCM_VAL, QCOM_SCM_RW);
+	ret = qcom_scm_call(dev, ARM_SMCCC_OWNER_SIP, svc_id, cmd_id,
+				&desc, &res);
+
+	if (res.a1 != 0)
+		pr_err("%s: Response error code is : %x\n", __func__,
+					(unsigned int)res.a1);
+
+	dma_unmap_single(dev, dma_ecdsa_consumed_len, sizeof(u32), DMA_FROM_DEVICE);
 
 	return ret ? : res.a1;
 }

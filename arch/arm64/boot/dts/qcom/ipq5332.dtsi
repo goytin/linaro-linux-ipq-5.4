@@ -391,6 +391,51 @@
 			};
 		};
 
+		lpass: lpass@0xA000000{
+			compatible = "qca,lpass-ipq5332";
+			reg =  <0xA000000 0x3BFFFF>;
+			clocks = <&gcc GCC_LPASS_SWAY_CLK>,
+			<&gcc GCC_LPASS_CORE_AXIM_CLK>,
+			<&gcc GCC_SNOC_LPASS_CFG_CLK>,
+			<&gcc GCC_PCNOC_LPASS_CLK>;
+			clock-names = "sway", "axim", "snoc_cfg", "pcnoc";
+			resets = <&gcc GCC_LPASS_BCR>;
+			reset-names = "lpass";
+			status = "disabled";
+		};
+
+		pcm: pcm@0xA3C0000{
+			compatible = "qca,ipq5332-lpass-pcm";
+			reg =  <0xA3C0000 0x23014>;
+			status = "disabled";
+
+			pcm0: pcm0@0 {
+				interrupts = <0 370 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "out0";
+				capture_memory = "lpm";
+				playback_memory = "lpm";
+				voice_loopback = <0>;
+				slave = <0>;
+				status = "disabled";
+			};
+
+			pcm1: pcm1@1 {
+				interrupts = <0 371 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "out1";
+				capture_memory = "lpm";
+				playback_memory = "lpm";
+				voice_loopback = <0>;
+				slave = <0>;
+				status = "disabled";
+			};
+
+		};
+
+		pcm_lb: pcm_lb@0 {
+			compatible = "qca,ipq5332-pcm-lb";
+			status = "disabled";
+		};
+
 		mdio@90000 {
 			#address-cells = <1>;
 			#size-cells = <1>;
@@ -1020,6 +1065,21 @@
 			status = "disabled";
 		};
 
+		spi2: spi@78b7000 {
+			compatible = "qcom,spi-qup-v2.2.1";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x078b7000 0x600>;
+			interrupts = <GIC_SPI 294 IRQ_TYPE_LEVEL_HIGH>;
+			spi-max-frequency = <50000000>;
+			clocks = <&gcc GCC_BLSP1_QUP3_SPI_APPS_CLK>,
+				<&gcc GCC_BLSP1_AHB_CLK>;
+			clock-names = "core", "iface";
+			dmas = <&blsp_dma 8>, <&blsp_dma 9>;
+			dma-names = "tx", "rx";
+			status = "disabled";
+		};
+
 		i2c_0: i2c@78b5000 {
 			compatible = "qcom,i2c-qup-v2.2.1";
 			#address-cells = <1>;
@@ -1516,6 +1576,9 @@
 			qcom,rproc = <&q6v5_wcss>;
 			qcom,bdf-addr = <0x4B500000 0x4B500000 0x4B500000
 					 0x0 0x0 0x0>;
+			qcom,caldb-addr = <0x4D600000 0x4D600000 0x0
+					   0x0 0x0 0x0>;
+			qcom,caldb-size = <0x500000>;
 			interrupts = <0 559 1>, /* misc-pulse1 */
 				<0 560 1>, /* misc-latch */
 				<0 561 1>, /* sw-exception */
@@ -2315,6 +2378,7 @@
 			qcom,bootargs_version = <2>;
 			qcom,userpd-bootargs;
 			license-file = "";
+			qcom,heartbeat_smem = <508>;
 			glink-edge {
 				interrupts = <GIC_SPI 417 IRQ_TYPE_EDGE_RISING>;
 				qcom,remote-pid = <1>;
@@ -2402,6 +2466,28 @@
 							"spawn";
 				status = "disabled";
 			};
+
+			q6_wcss_pd3: remoteproc_pd3 {
+				compatible = "qcom,ipq5332-wcss-pcie-mpd";
+				firmware = "IPQ5332/q6_fw3.mdt";
+				qcom,halt-regs = <&tcsr_q6_block 0xa000 0x18 0x0>;
+				interrupts-extended = <&wcss_smp2p_in 24 0>,
+							<&wcss_smp2p_in 25 0>,
+							<&wcss_smp2p_in 28 0>,
+							<&wcss_smp2p_in 27 0>;
+				interrupt-names = "fatal",
+						"ready",
+						"spawn-ack",
+						"stop-ack";
+
+				qcom,smem-states = <&wcss_smp2p_out 24>,
+						<&wcss_smp2p_out 25>,
+						<&wcss_smp2p_out 26>;
+				qcom,smem-state-names = "shutdown",
+							"stop",
+							"spawn";
+				status = "disabled";
+			};
 		};
 
 		apss_clk: qcom,apss_clk@b111000 {
@@ -2421,6 +2507,11 @@
 			tz-log-buf-addr@720 {
 				compatible = "qcom,msm-imem-tz-log-buf-addr";
 				reg = <0x720 4>;
+			};
+
+			restart-reason-buf-addr@7a4 {
+				compatible = "qcom,msm-imem-restart-reason-buf-addr";
+				reg = <0x7a4 4>;
 			};
 		};
 
@@ -2484,7 +2575,7 @@
 	};
 
 	qti,scm_restart_reason {
-		compatible = "qti,scm_restart_reason";
+		compatible = "qti_ipq5332,scm_restart_reason";
 	};
 
 	psci {

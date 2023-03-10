@@ -669,6 +669,15 @@ int qti_sec_upgrade_auth(unsigned int scm_cmd_id, unsigned int sw_type,
 }
 EXPORT_SYMBOL(qti_sec_upgrade_auth);
 
+int qti_sec_upgrade_auth_meta_data(unsigned int scm_cmd_id, unsigned int sw_type,
+					unsigned int img_size, unsigned int load_addr,
+					void* hash_addr, unsigned int hash_size)
+{
+	return __qti_sec_upgrade_auth_meta_data(__scm->dev, scm_cmd_id, sw_type,
+					img_size, load_addr, hash_addr, hash_size);
+}
+EXPORT_SYMBOL(qti_sec_upgrade_auth_meta_data);
+
 /**
  * qti_scm_sec_auth_available() - Check if SEC_AUTH is supported.
  *
@@ -736,6 +745,18 @@ int qti_read_dload_reg()
 	return readl(__scm->dload_reg);
 }
 EXPORT_SYMBOL(qti_read_dload_reg);
+
+int qti_scm_get_ecdsa_blob(u32 svc_id, u32 cmd_id, dma_addr_t nonce_buf,
+			u32 nonce_buf_len, dma_addr_t ecdsa_buf,
+			u32 ecdsa_buf_len, u32 *ecdsa_consumed_len)
+{
+	int ret;
+	ret = __qti_scm_get_ecdsa_blob(__scm->dev, svc_id, cmd_id, nonce_buf,
+			nonce_buf_len, ecdsa_buf, ecdsa_buf_len, ecdsa_consumed_len);
+	return ret;
+
+}
+EXPORT_SYMBOL(qti_scm_get_ecdsa_blob);
 
 int qti_scm_get_device_attestation_ephimeral_key(u32 svc_id, u32 cmd_id,
 			void *key_buf, u32 key_buf_len, u32 *key_len)

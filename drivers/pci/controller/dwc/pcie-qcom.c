@@ -340,6 +340,7 @@ LIST_HEAD(qcom_pcie_list);
 
 extern struct pci_ops dw_pcie_ops;
 struct gpio_desc *mdm2ap_e911;
+static void pcie_slot_remove(int val);
 
 static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
 {
@@ -449,7 +450,7 @@ static irqreturn_t qcom_pcie_wake_irq_handler(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
-static irqreturn_t qcom_pcie_global_irq_handler(int irq, void *data)
+static irqreturn_t qcom_pcie_global_irq_thread_fn(int irq, void *data)
 {
 	struct qcom_pcie *pcie = data;
 	u32 status, mask;
@@ -461,12 +462,14 @@ static irqreturn_t qcom_pcie_global_irq_handler(int irq, void *data)
 
 	status &= mask;
 
-	if (status & PARF_INT_ALL_LINK_DOWN)
+	if (status & PARF_INT_ALL_LINK_DOWN) {
 		dev_info(pcie->pci->dev, "Received Link down event for RC %u\n",
 								pcie->rc_idx);
-	else if (status & PARF_INT_ALL_LINK_UP)
+		pcie_slot_remove(pcie->slot_id);
+	} else if (status & PARF_INT_ALL_LINK_UP) {
 		dev_info(pcie->pci->dev, "Received Link up event for RC %u\n",
 								pcie->rc_idx);
+	}
 
 	return IRQ_HANDLED;
 }
@@ -2867,8 +2870,9 @@ static int qcom_pcie_probe(struct platform_device *pdev)
 
 	pcie->global_irq = platform_get_irq_byname(pdev, "global_irq");
 	if (pcie->global_irq >= 0) {
-		ret = devm_request_irq(&pdev->dev, pcie->global_irq,
-					qcom_pcie_global_irq_handler,
+		ret = devm_request_threaded_irq(&pdev->dev, pcie->global_irq,
+					NULL,
+					qcom_pcie_global_irq_thread_fn,
 					IRQF_TRIGGER_RISING,
 					"pcie-global", pcie);
 		if (ret) {

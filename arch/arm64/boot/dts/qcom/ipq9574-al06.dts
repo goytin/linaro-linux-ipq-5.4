@@ -166,3 +166,11 @@
 		};
 	};
 };
+
+&wifi6 {
+	board_id = <0x1e>;
+};
+
+&wifi7 {
+	board_id = <0x15>;
+};

@@ -96,6 +96,7 @@ struct qca_mdio_data {
 	void __iomem *membase;
 	int phy_irq[PHY_MAX_ADDR];
 	int clk_div;
+	bool force_c22;
 	void (*preinit)(struct mii_bus *bus);
 };
 
@@ -119,7 +120,7 @@ static int qca_mdio_wait_busy(struct qca_mdio_data *am)
 	return -ETIMEDOUT;
 }
 
-static int qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
+static int _qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
 {
 	struct qca_mdio_data *am = bus->priv;
 	int value = 0;
@@ -168,7 +169,7 @@ static int qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
 	return value;
 }
 
-static int qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
+static int _qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
 			  u16 value)
 {
 	struct qca_mdio_data *am = bus->priv;
@@ -214,6 +215,43 @@ static int qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
 		return -ETIMEDOUT;
 
 	return 0;
+}
+
+static int qca_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
+{
+	struct qca_mdio_data *priv = bus->priv;
+
+	if (priv && priv->force_c22 && (regnum & MII_ADDR_C45)) {
+		unsigned int mmd = (regnum >> 16) & 0x1F;
+		unsigned int reg = regnum & 0xFFFF;
+
+		_qca_mdio_write(bus, mii_id, MII_MMD_CTRL, mmd);
+		_qca_mdio_write(bus, mii_id, MII_MMD_DATA, reg);
+		_qca_mdio_write(bus, mii_id, MII_MMD_CTRL, mmd | MII_MMD_CTRL_NOINCR);
+
+		return  _qca_mdio_read(bus, mii_id, MII_MMD_DATA);
+	}
+
+	return _qca_mdio_read(bus, mii_id, regnum);
+}
+
+static int qca_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
+			  u16 value)
+{
+	struct qca_mdio_data *priv = bus->priv;
+
+	if (priv && priv->force_c22 && (regnum & MII_ADDR_C45)) {
+		unsigned int mmd = (regnum >> 16) & 0x1F;
+		unsigned int reg = regnum & 0xFFFF;
+
+		_qca_mdio_write(bus, mii_id, MII_MMD_CTRL, mmd);
+		_qca_mdio_write(bus, mii_id, MII_MMD_DATA, reg);
+		_qca_mdio_write(bus, mii_id, MII_MMD_CTRL, mmd | MII_MMD_CTRL_NOINCR);
+
+		return _qca_mdio_write(bus, mii_id, MII_MMD_DATA, value);
+	}
+
+	return _qca_mdio_write(bus, mii_id, regnum, value);
 }
 
 static int qca_phy_gpio_set(struct platform_device *pdev, int number)
@@ -783,6 +821,8 @@ static int qca_mdio_probe(struct platform_device *pdev)
 	}
 
 	am->clk_div = 0xf;
+	am->force_c22 = of_property_read_bool(pdev->dev.of_node, "force_clause22");
+
 	writel(CTRL_0_REG_DEFAULT_VALUE(am->clk_div), am->membase + MDIO_CTRL_0_REG);
 
 	am->mii_bus->name = "qca_mdio";

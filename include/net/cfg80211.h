@@ -7660,4 +7660,25 @@ void cfg80211_update_owe_info_event(struct net_device *netdev,
 				    struct cfg80211_update_owe_info *owe_info,
 				    gfp_t gfp);
 
+/**
+ * cfg80211_update_current_bss - API to update the current bss param
+ * @dev: network device
+ * @cr: Connection response params
+ * @ssid: SSID
+ * @ssid_len: SSID len
+ *
+ * Return: 0 on success. Non-zero on error.
+ */
+int cfg80211_update_current_bss(struct net_device *dev,
+				struct cfg80211_connect_resp_params *cr,
+				const u8 *ssid, size_t ssid_len);
+
+/**
+ * cfg80211_clear_current_bss - API to clear the current bss param
+ * @dev: network device
+ *
+ * Return: 0 on success. Non-zero on error.
+ */
+int cfg80211_clear_current_bss(struct net_device *dev);
+
 #endif /* __NET_CFG80211_H */

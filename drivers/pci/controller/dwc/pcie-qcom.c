@@ -2188,6 +2188,15 @@ static int qcom_pcie_link_up(struct dw_pcie *pci)
 	return !!(val & PCI_EXP_LNKSTA_DLLLA);
 }
 
+static void qcom_pcie_ltssm_read(struct dw_pcie *pci, u32 *val)
+{
+	struct qcom_pcie *pcie;
+
+	pcie = to_qcom_pcie(pci);
+
+	*val = readl(pcie->parf + PCIE20_PARF_LTSSM);
+}
+
 static int qcom_pcie_host_init(struct pcie_port *pp)
 {
 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
@@ -2366,6 +2375,7 @@ static const struct qcom_pcie_of_data qti_pcie_2_9_0_ipq9574 = {
 
 static const struct dw_pcie_ops qti_dw_pcie_ops = {
 	.link_up = qcom_pcie_link_up,
+	.ltssm_read = qcom_pcie_ltssm_read,
 };
 
 int pcie_rescan(void)

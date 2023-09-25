@@ -215,6 +215,7 @@
 			qcom,mactype = <0>;
 			local-mac-address = [000000000000];
 			phy-mode = "sgmii";
+			qcom,is_switch_connected = <1>;
 		};
 
 		/* EDMA host driver configuration for the board */

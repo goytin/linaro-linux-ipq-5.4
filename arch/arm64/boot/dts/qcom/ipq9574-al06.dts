@@ -110,6 +110,7 @@
 						port_id = <5>;
 						phy_address = <30>;
 						media-type = "sfp"; /* fiber mode */
+						sfp_rx_los_pin = <&tlmm 0xffff GPIO_ACTIVE_HIGH>;
 					};
 				};
 

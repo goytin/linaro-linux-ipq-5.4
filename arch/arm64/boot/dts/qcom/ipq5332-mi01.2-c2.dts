@@ -48,6 +48,14 @@
 			};
 		};
 	};
+
+	dp1 {
+
+		/delete-property/qcom,mdio-bus;
+		/delete-property/qcom,phy-mdio-addr;
+		/delete-property/qcom,link-poll;
+
+	};
 };
 
 &wifi0 {

@@ -7681,4 +7681,18 @@ int cfg80211_update_current_bss(struct net_device *dev,
  */
 int cfg80211_clear_current_bss(struct net_device *dev);
 
+/**
+ * cfg80211_dfs_event_notify - Send DFS events to userspace.
+ * @wiphy: the wireless device
+ * @chandef: the channel definition
+ * @event: DFS event to be sent to userspace
+ * @dev: network device
+ *
+ * Return: void
+ */
+void
+cfg80211_dfs_event_notify(struct wiphy *wiphy,
+			  struct cfg80211_chan_def *chandef,
+			  enum nl80211_radar_event event,
+			  struct net_device *dev);
 #endif /* __NET_CFG80211_H */

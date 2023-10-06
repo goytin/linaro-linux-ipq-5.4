@@ -175,18 +175,18 @@
 			status = "disabled";
 		};
 
-		apc_rail: apc-gpio-regulator {
+		apc_rail1: apc-gpio-regulator {
 			compatible = "regulator-gpio";
 			regulator-name = "vdd-apc";
 			regulator-type = "voltage";
 			regulator-boot-on;
 			regulator-always-on;
-			regulator-min-microvolt = <850000>;
-			regulator-max-microvolt = <925000>;
+			regulator-min-microvolt = <1004000>;
+			regulator-max-microvolt = <1068000>;
 			regulator-ramp-delay = <250>; /* 20ms */
-			gpios = <&tlmm 57 GPIO_ACTIVE_HIGH>;
+			gpios = <&tlmm 45 GPIO_ACTIVE_HIGH>;
 			gpios-states = <0x1>;
-			states = <850000 0>, <925000 1>;
+			states = <1004000 0>, <1068000 1>;
 		};
 
 		cx_rail: cx-gpio-regulator {
@@ -195,90 +195,81 @@
 			regulator-type = "voltage";
 			regulator-boot-on;
 			regulator-always-on;
-			regulator-min-microvolt = <800000>;
-			regulator-max-microvolt = <863000>;
+			regulator-min-microvolt = <850000>;
+			regulator-max-microvolt = <910000>;
 			regulator-ramp-delay = <250>; /* 20ms */
 			gpios = <&tlmm 47 GPIO_ACTIVE_HIGH>;
 			gpios-states = <0x1>;
-			states = <800000 0>, <863000 1>;
+			states = <850000 0>, <910000 1>;
 		};
 
-		mx_rail: mx-gpio-regulator {
+		apc_rail2: apc2-gpio-regulator {
 			compatible = "regulator-gpio";
-			regulator-name = "vdd-mx";
+			regulator-name = "vdd-apc2";
 			regulator-type = "voltage";
 			regulator-boot-on;
 			regulator-always-on;
-			regulator-min-microvolt = <850000>;
-			regulator-max-microvolt = <925000>;
+			regulator-min-microvolt = <863000>;
+			regulator-max-microvolt = <1068000>;
 			regulator-ramp-delay = <250>; /* 20ms */
-			gpios = <&tlmm 45 GPIO_ACTIVE_HIGH>;
+			gpios = <&tlmm 57 GPIO_ACTIVE_HIGH>;
 			gpios-states = <0x1>;
-			states = <850000 0>, <925000 1>;
+			states = <863000 0>, <1068000 1>;
 		};
 
 		qcom,gpio-regulator {
-			compatible = "qcom,ipq9574-gpio-regulator";
+			compatible = "qcom,ipq9574-4state-gpio-regulator";
 			reg = <0xa4000 0x1000>;
 			reg-names = "fuse_base";
-			apc-supply = <&apc_rail>;
+			apc-supply = <&apc_rail1>;
 			cx-supply = <&cx_rail>;
-			mx-supply = <&mx_rail>;
-			/* AL01 RDP's scaled voltage can only support upto CPU Freq
-			 * 1.8 GHz. But SKUs like IPQ9574/IPQ9570 supports 2.2GHz of
-			 * CPU freq. So, if we do scaling on AL01 + IPQ9574/IPQ9570,
-			 * then voltage becomes insufficient when CPU operates at 2.2GHz.
-			 * Below quirk disables the voltage scaling if AL01 has
-			 * IPQ9574/IPQ9570
-			 */
-			skip-voltage-scaling-turboL1-sku-quirk;
 		};
 	};
 };
 
 &CPU0 {
-	cpu0-supply = <&dummy_reg_cpu>;
+        cpu0-supply = <&apc_rail2>;
 };
 
 &CPU1 {
-	cpu-supply = <&dummy_reg_cpu>;
+        cpu-supply = <&apc_rail2>;
 };
 
 &CPU2 {
-	cpu-supply = <&dummy_reg_cpu>;
+        cpu-supply = <&apc_rail2>;
 };
 
 &CPU3 {
-	cpu-supply = <&dummy_reg_cpu>;
+        cpu-supply = <&apc_rail2>;
 };
 
 &cpus {
 	cpu_opp_table: cpu_opp_table {
 		/delete-node/ opp-0;
 		opp-936000000 {
-		      opp-microvolt = <1075000>;
+		      opp-microvolt = <863000>;
 		};
 		opp-1104000000 {
-		       opp-microvolt = <1075000>;
+		       opp-microvolt = <863000>;
 		};
 		opp-1200000000 {
-		       opp-microvolt = <1075000>;
+		       opp-microvolt = <863000>;
 		};
 		opp-1416000000 {
-		       opp-microvolt = <1075000>;
+		       opp-microvolt = <863000>;
 		};
 		opp-1488000000 {
-		       opp-microvolt = <1075000>;
+		       opp-microvolt = <1068000>;
 		};
 		opp-1608000000 {
-		       opp-microvolt = <1075000>;
+		       opp-microvolt = <1068000>;
 		};
 		opp-1800000000 {
-		       opp-microvolt = <1075000>;
-		};
-		opp-2208000000 {
-			opp-microvolt = <1075000>;
-		};
+		       opp-microvolt = <1068000>;
+	       };
+	       opp-2208000000 {
+		       opp-microvolt = <1068000>;
+	       };
 	};
 };
 

@@ -33,6 +33,26 @@ static struct global_recycler glob_recycler;
 static int skb_recycle_spare_max_skbs = SKB_RECYCLE_SPARE_MAX_SKBS;
 #endif
 
+#ifdef CONFIG_DEBUG_MEM_USAGE
+#define mem_debug_update_skb(skb) \
+do { \
+	mem_tracer_update_caller(skb->head); \
+	mem_tracer_update_caller(skb); \
+} while (0)
+
+#define mem_debug_update_skb_list(skb_list) \
+do { \
+	struct sk_buff *skb = NULL, *next = NULL; \
+	skb_queue_walk_safe(skb_list, skb, next) { \
+		if (skb) \
+			mem_debug_update_skb(skb); \
+	} \
+} while (0)
+#else
+#define  mem_debug_update_skb(skb)
+#define  mem_debug_update_skb_list(skb_list)
+#endif
+
 inline struct sk_buff *skb_recycler_alloc(struct net_device *dev,
 					  unsigned int length, bool reset_skb)
 {
@@ -135,6 +155,8 @@ inline struct sk_buff *skb_recycler_alloc(struct net_device *dev,
 		if (likely(recycled_for_ds)) {
 			skb->recycled_for_ds = 1;
 		}
+
+		mem_debug_update_skb(skb);
 	}
 
 	return skb;
@@ -167,6 +189,7 @@ inline bool skb_recycler_consume(struct sk_buff *skb)
 		skbuff_debugobj_sum_update(ln);
 		local_irq_restore(flags);
 		preempt_enable();
+		mem_debug_update_skb(skb);
 		return true;
 	}
 #ifdef CONFIG_SKB_RECYCLER_MULTI_CPU
@@ -212,6 +235,7 @@ inline bool skb_recycler_consume(struct sk_buff *skb)
 
 			local_irq_restore(flags);
 			preempt_enable();
+			mem_debug_update_skb(skb);
 			return true;
 		}
 		/* We still have a full spare because the global is also full */
@@ -228,6 +252,7 @@ inline bool skb_recycler_consume(struct sk_buff *skb)
 		skbuff_debugobj_sum_update(ln);
 		local_irq_restore(flags);
 		preempt_enable();
+		mem_debug_update_skb(skb);
 		return true;
 	}
 #endif
@@ -271,6 +296,7 @@ inline bool skb_recycler_consume_list_fast(struct sk_buff_head *skb_list)
 	local_irq_save(flags);
 	/* Attempt to enqueue the CPU hot recycle list first */
 	if (likely(skb_queue_len(h) < skb_recycle_max_skbs)) {
+		mem_debug_update_skb_list(skb_list);
 		skb_queue_splice(skb_list,h);
 		local_irq_restore(flags);
 		preempt_enable();

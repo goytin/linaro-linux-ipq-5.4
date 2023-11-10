@@ -23,6 +23,7 @@
 #include <linux/of_gpio.h>
 #include "mhi_qti.h"
 #include "../core/internal.h"
+#include "../../../pci/controller/dwc/pcie-designware.h"
 
 #define WDOG_TIMEOUT	30
 #define MHI_PANIC_TIMER_STEP	1000
@@ -1352,7 +1353,11 @@ void mhi_pci_device_removed(struct pci_dev *pci_dev)
 	struct gpio_desc *mdm2ap;
 	static int e911_gpio, e911;
 	bool graceful;
+	struct pcie_port *pp;
+	struct dw_pcie *dw_pci;
 
+	pp = pci_dev->bus->sysdata;
+	dw_pci = to_dw_pcie_from_pp(pp);
 	graceful = SDX55 == pci_dev->device ? 0 : 1;
 	pr_debug("Graceful removal based on modem initialised = %d\n", graceful);
 
@@ -1368,10 +1373,12 @@ void mhi_pci_device_removed(struct pci_dev *pci_dev)
 		} else {
 			e911 = gpio_get_value(e911_gpio);
 			pr_debug("e911 gpio value = %d\n",e911);
-			if (!e911 && mhi_cntrl->dev_state == MHI_STATE_M0)
+			if(ssr_mode == 1 && !e911 && dw_pcie_link_up(dw_pci) == 0)
 				graceful = 0;
 			pr_debug("X65 modem - graceful removal = %d,"
-				"mhi_cntrl->dev_state = %d \n", graceful, mhi_cntrl->dev_state);
+				"mhi_cntrl->dev_state = %d"
+				"dw_pcie_link_up(dw_pci)==%d\n", graceful,
+				mhi_cntrl->dev_state, dw_pcie_link_up(dw_pci));
 		}
 	}
 

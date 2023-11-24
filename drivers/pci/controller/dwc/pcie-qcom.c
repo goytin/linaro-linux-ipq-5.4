@@ -1716,16 +1716,20 @@ static int qcom_pcie_post_init_2_9_0_5018(struct qcom_pcie *pcie)
 	u32 val;
 	struct dw_pcie *pci = pcie->pci;
 	u32 max_speed = SPEED_GEN2;
-	u32 rate_adapter_val = SYSTEM_NOC_PCIE_RATEADAPT_VAL_MAX;
+	u32 rate_adapter_val = 0;
 
-	if (of_device_is_compatible(pci->dev->of_node, "qcom,pcie-ipq5018")
-		&& (pcie->num_lanes == 1))
-		rate_adapter_val = SYSTEM_NOC_PCIE_RATEADAPT_VAL;
+	if (of_device_is_compatible(pci->dev->of_node, "qcom,pcie-ipq5018")) {
+		if (pcie->num_lanes == 1)
+			rate_adapter_val = SYSTEM_NOC_PCIE_RATEADAPT_VAL;
+		else
+			rate_adapter_val = SYSTEM_NOC_PCIE_RATEADAPT_VAL_MAX;
+	}
 
 	if (of_device_is_compatible(pci->dev->of_node, "qti,pcie-ipq5332")) {
 		max_speed = SPEED_GEN3;
 		if (pcie->num_lanes == 2)
 			rate_adapter_val = SYSTEM_NOC_PCIE_RATEADAPT_BYPASS;
+		/* For sigle lane, default value(0) to be used */
 	}
 
 	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);

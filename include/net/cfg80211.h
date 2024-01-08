@@ -22,6 +22,7 @@
 #include <linux/net.h>
 #include <net/regulatory.h>
 
+#define CFG80211_SUPPORT_AUTH_DEAUTH_TA_RANDOMIZATION 1
 /**
  * DOC: Introduction
  *

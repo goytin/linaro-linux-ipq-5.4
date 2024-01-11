@@ -83,4 +83,6 @@ struct qcom_ice_variant_ops {
 	void	(*debug)(struct platform_device *);
 };
 
+void ice_setting_init(struct ice_crypto_setting *settings);
+void ice_setting_deinit(void);
 #endif /* _INLINE_CRYPTO_ENGINE_H_ */

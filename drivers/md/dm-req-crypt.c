@@ -214,7 +214,7 @@ static int qcom_set_ice_config(char **argv)
 	ice->algo_mode = ice_settings->algo_mode;
 	ice->key_mode = ice_settings->key_mode;
 
-	ret = qti_config_sec_ice(ice, sizeof(struct ice_config_sec));
+	ret = qcom_config_sec_ice(ice, sizeof(struct ice_config_sec));
 
 	if (ret)
 		DMERR("%s: ice configuration fail\n", __func__);

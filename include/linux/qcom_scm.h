@@ -276,7 +276,7 @@ extern int qti_sec_crypt(void *buf, int size);
 extern int qti_qcekey_release_xpu_prot(void);
 extern int qti_seccrypt_clearkey(void);
 extern int qti_scm_set_resettype(u32 reset_type);
-extern int qti_config_sec_ice(void *buf, int size);
+extern int qcom_config_sec_ice(void *buf, int size);
 extern int qti_scm_pshold(void);
 extern int qti_scm_extwdt(u32 svc_id, u32 cmd_id, unsigned int regaddr,
 			   unsigned int val);
@@ -320,6 +320,8 @@ extern int qti_scm_get_ecdsa_blob(u32 svc_id, u32 cmd_id, dma_addr_t nonce_buf,
 extern int __qti_scm_get_ecdsa_blob(struct device *dev, u32 svc_id, u32 cmd_id,
 		dma_addr_t nonce_buf, u32 nonce_buf_len, dma_addr_t ecdsa_buf,
 		u32 ecdsa_buf_len, u32 *ecdsa_consumed_len);
+extern int qcom_context_sec_ice(u32 type, u8 key_size, u8 algo_mode,
+		u8 *data_ctxt, u32 data_ctxt_len, u8 *salt_ctxt, u32 salt_ctxt_len);
 
 #else
 

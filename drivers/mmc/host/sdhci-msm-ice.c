@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-
+#include <linux/moduleparam.h>
 #include "sdhci-msm-ice.h"
 
 static int per_part_dun;
@@ -594,4 +594,5 @@ void sdhci_msm_ice_print_regs(struct sdhci_host *host)
 	if (msm_host->ice.vops->debug)
 		msm_host->ice.vops->debug(msm_host->ice.pdev);
 }
+
 module_param(per_part_dun, int, 0);

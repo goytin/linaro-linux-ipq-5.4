@@ -1288,7 +1288,6 @@ static int qcom_ice_config_start(struct platform_device *pdev,
 	if (bio_flagged(req->bio, BIO_INLINECRYPT)) {
 
 		crypto_data = ice_settings;
-		crypto_data = (struct ice_crypto_setting *)info->ptr;
 		if (!crypto_data) {
 			pr_err("%s crypto_data not available in request\n",
 				 __func__);
